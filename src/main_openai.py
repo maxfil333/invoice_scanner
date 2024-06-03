@@ -8,13 +8,13 @@ import re
 import json
 from PIL import Image
 
-from config import config
+from config.config import config
 from utils import base64_encode_pil
 
 
 # ___________________________ GPT ___________________________
 
-def run_chat(*img_paths: str, detail='high') -> str:
+def run_chat(*img_paths: str, detail='high', show_logs=False) -> str:
     load_dotenv()
     openai.api_key = os.environ.get("OPENAI_API_KEY")
 
@@ -50,6 +50,12 @@ def run_chat(*img_paths: str, detail='high') -> str:
     if re_response[0:4] == 'json':
         re_response = re_response[4:]
 
+    if show_logs:
+        print('run_chat response:')
+        print(repr(response))
+        print('run_chat re_response:')
+        print(repr(re_response))
+
     dictionary = json.loads(re_response)
 
     container_regex = r'[A-Z]{4}\s?[0-9]{7}'
@@ -63,7 +69,7 @@ def run_chat(*img_paths: str, detail='high') -> str:
 
 # ___________________________ ASSISTANT ___________________________
 
-def run_assistant(file_path):
+def run_assistant(file_path, show_logs=False):
     load_dotenv()
     openai.api_key = os.environ.get("OPENAI_API_KEY")
     ASSISTANT_ID = os.environ.get("ASSISTANT_ID")
@@ -101,6 +107,12 @@ def run_assistant(file_path):
     if re_response[0:4] == 'json':
         re_response = re_response[4:]
 
+    if show_logs:
+        print('run_chat response:')
+        print(repr(response))
+        print('run_chat re_response:')
+        print(repr(re_response))
+
     dictionary = json.loads(re_response)
 
     container_regex = r'[A-Z]{4}\s?[0-9]{7}'
@@ -113,12 +125,12 @@ def run_assistant(file_path):
 
 
 if __name__ == '__main__':
-    # result = run_chat(os.path.join('..', 'IN/edited/2.jpg'),
-    #                   # os.path.join('..', 'IN/edited/458_TAB2+.jpg'),
+    # result = run_chat(os.path.join('..', 'IN/edited/0_1_jpg.jpg'),
+    #                   os.path.join('..', 'IN/edited/0_1_jpg_TAB2+.jpg'),
     #                   # os.path.join('..', 'IN/edited/458.jpg'),
-    #                   detail='high')
+    #                   detail='high', show_logs=True)
 
-    result = run_assistant( os.path.join('..', 'IN/edited/2.pdf') )
+    result = run_assistant(os.path.join('..', 'IN/edited/Печатная_форма_Акт_№УРKM0000145_от_03.04.24_pdf.pdf'), show_logs=True)
 
     print('#' * 50)
     print(result)

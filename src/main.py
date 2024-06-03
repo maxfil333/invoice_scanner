@@ -2,7 +2,7 @@ from glob import glob
 import os
 # $2.26
 from utils import group_files_by_name
-from config import config
+from config.config import config
 from main_edit import main as main_edit
 from main_openai import run_chat, run_assistant
 from generate_html import create_html_form
@@ -12,7 +12,7 @@ from natsort import os_sorted
 import shutil
 
 
-def main():
+def main(show_logs=False):
     # _____  FILL IN_FOLDER_EDIT  _____
     main_edit()
     files = os_sorted(glob(f"{config['IN_FOLDER_EDIT']}/*.*"))
@@ -28,7 +28,7 @@ def main():
         print('files:', *files, sep='\n')
         json_name = os.path.basename(base[0]) + '.json'
         if base[-1] == 'pdf':
-            result = run_assistant(files[0])
+            result = run_assistant(files[0], show_logs=show_logs)
 
             # result = '1'
             # with open(r'C:\Users\Filipp\PycharmProjects\Invoice_scanner\итеко_82534_pdf.json', 'r', encoding='utf-8') as file: result = file.read()
@@ -36,7 +36,7 @@ def main():
         else:
             files.sort(reverse=True)
 
-            result = run_chat(*files, detail='high')
+            result = run_chat(*files, detail='high', show_logs=show_logs)
 
             # result = '2'
             # with open(r'C:\Users\Filipp\PycharmProjects\Invoice_scanner\итеко_82534_pdf.json', 'r', encoding='utf-8') as file: result = file.read()
@@ -69,9 +69,9 @@ def main():
 
         # _____  STOP ITERATION  _____
         stop = next(c)
-        if stop == 10:
+        if stop == 1:
             break
 
 
 if __name__ == "__main__":
-    main()
+    main(show_logs=True)

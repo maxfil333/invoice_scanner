@@ -1,7 +1,7 @@
 import json
 from html import escape
 import os
-from config import config
+from config.config import config
 
 
 def generate_input_html(key, value):

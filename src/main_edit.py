@@ -1,4 +1,4 @@
-from config import config
+from config.config import config
 from glob import glob
 from natsort import os_sorted
 import os
