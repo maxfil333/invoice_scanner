@@ -79,11 +79,10 @@ def main():
                 os.system(command)
 
             command = f'magick convert {save_path} {config["magick_opt"]} {save_path}'
-            print(command)
             os.system(command)
 
         print(save_path)
-    print('Завершено!')
+    print(f"\nФайлы сохранены в {config['IN_FOLDER_EDIT']}\n")
 
 
 if __name__ == '__main__':

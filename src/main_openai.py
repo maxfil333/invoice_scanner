@@ -38,7 +38,7 @@ def run_chat(*img_paths: str, detail='high', show_logs=False) -> str:
         ],
         max_tokens=2000,
     )
-    print(img_paths)
+    print(f'img_paths: {img_paths}')
     print(f'time: {perf_counter() - start:.2f}')
     print(f'completion_tokens: {response.usage.completion_tokens}')
     print(f'prompt_tokens: {response.usage.prompt_tokens}')
@@ -94,7 +94,7 @@ def run_assistant(file_path, show_logs=False):
         thread_id=thread.id, assistant_id=assistant.id
     )
     if run.status == 'completed':
-        print(file_path)
+        print(f'file_path: {file_path}')
         print(f'time: {perf_counter() - start:.2f}')
         print(f'completion_tokens: {run.usage.completion_tokens}')
         print(f'prompt_tokens: {run.usage.prompt_tokens}')

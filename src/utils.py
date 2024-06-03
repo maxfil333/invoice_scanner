@@ -86,10 +86,10 @@ def group_files_by_name(file_list: list[str]) -> dict:
             groups[file_name].append(file_name)
     return groups
 
+
 # _________ IMAGE _________
 
 def add_text_bar(image: str | Image.Image, text, h=75, font_path='verdana.ttf', font_size=50):
-
     # Открыть изображение
     if isinstance(image, Image.Image):
         pass
@@ -126,7 +126,6 @@ def add_text_bar(image: str | Image.Image, text, h=75, font_path='verdana.ttf', 
     return new_image
 
 
-
 if __name__ == '__main__':
     start = perf_counter()
     # Пример использования
@@ -139,4 +138,4 @@ if __name__ == '__main__':
             print("Этот PDF файл является цифровым документом.")
         elif result is None:
             pass
-    print(perf_counter()-start)
+    print(perf_counter() - start)

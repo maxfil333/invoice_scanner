@@ -1,6 +1,5 @@
 from glob import glob
 import os
-# $2.26
 from utils import group_files_by_name
 from config.config import config
 from main_edit import main as main_edit
@@ -14,7 +13,7 @@ import shutil
 
 def main(show_logs=False):
     # _____  FILL IN_FOLDER_EDIT  _____
-    main_edit()
+    # main_edit()
     files = os_sorted(glob(f"{config['IN_FOLDER_EDIT']}/*.*"))
     files = [file for file in files if os.path.splitext(file)[-1] in ['.pdf', '.jpeg', '.jpg', '.png']]
     print(files)
@@ -31,7 +30,7 @@ def main(show_logs=False):
             result = run_assistant(files[0], show_logs=show_logs)
 
             # result = '1'
-            # with open(r'C:\Users\Filipp\PycharmProjects\Invoice_scanner\итеко_82534_pdf.json', 'r', encoding='utf-8') as file: result = file.read()
+            # with open(r'C:\Users\Filipp\PycharmProjects\Invoice_scanner\__test.json', 'r', encoding='utf-8') as file: result = file.read()
 
         else:
             files.sort(reverse=True)
@@ -39,8 +38,7 @@ def main(show_logs=False):
             result = run_chat(*files, detail='high', show_logs=show_logs)
 
             # result = '2'
-            # with open(r'C:\Users\Filipp\PycharmProjects\Invoice_scanner\итеко_82534_pdf.json', 'r', encoding='utf-8') as file: result = file.read()
-
+            # with open(r'C:\Users\Filipp\PycharmProjects\Invoice_scanner\__test.json', 'r', encoding='utf-8') as file: result = file.read()
 
         json_path = os.path.join(config['CHECK_FOLDER'], json_name)
         with open(json_path, 'w', encoding='utf-8') as file:
