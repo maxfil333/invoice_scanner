@@ -1,0 +1,209 @@
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #f4f4f9;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    min-height: 100vh;
+    color: #333;
+    flex-direction: column;
+}
+
+.container {
+    display: flex;
+    width: 100%;
+    flex-grow: 1;
+    height: 100vh; /* Высота контейнера равна высоте окна */
+}
+
+.left-pane {
+    background-color: #ffffff; /* Белый фон */
+    padding: 20px;
+    width: 50%;
+    box-sizing: border-box;
+    overflow-y: auto; /* Прокрутка только по вертикали */
+    border-right: 2px solid #ddd;
+    height: 100vh; /* Гарантируем, что левая панель занимает всю высоту контейнера */
+}
+
+.right-pane {
+    position: fixed; /* Фиксированное положение */
+    right: 0;
+    top: 0;
+    width: 50%;
+    height: 100vh; /* Гарантируем, что правая панель занимает всю высоту окна */
+    background-color: #333; /* Темно-серый фон для правой панели */
+    color: #fff; /* Белый текст на темном фоне */
+    box-sizing: border-box;
+    overflow: hidden; /* Скрываем прокрутку */
+    padding: 0; /* Убираем padding */
+    margin: 0; /* Убираем margin */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: scroll; /* Добавляем прокрутку при зумировании */
+}
+
+.right-pane img {
+    max-width: none; /* Разрешаем изображению быть больше контейнера */
+    cursor: grab;
+    transition: transform 0.3s ease; /* Переход для плавного масштабирования */
+    position: absolute; /* Абсолютное позиционирование */
+}
+
+.right-pane img.zoomed {
+    transform: scale(2); /* Масштабирование изображения в 2 раза */
+    cursor: move; /* Курсор для перетаскивания */
+}
+
+/* Стили для формы */
+form {
+    background-color: #ffffff; /* Белый фон формы */
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Стили для fieldset и legend */
+fieldset {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 0.5em; /* Уменьшаем внешний отступ */
+    padding: 0.5em; /* Уменьшаем внутренний отступ */
+    box-sizing: border-box;
+    overflow: hidden;
+    background-color: #f9f9f9;
+}
+
+legend {
+    padding: 0 10px;
+    font-weight: bold;
+    margin-bottom: 0.5em; /* Уменьшаем нижний отступ */
+    color: #007bff; /* Синий цвет для заголовков */
+}
+
+/* Стили для label */
+label {
+    display: inline-block;
+    margin-bottom: 0.2em; /* Уменьшаем сам отступ */
+    color: #555;
+    word-wrap: break-word;
+    font-size: 14px; /* Оставляем размер шрифта более компактным */
+    margin-right: 10px; /* Отступ справа для отступа от поля */
+    width: 180px; /* Достаточная ширина для лучшего выравнивания */
+    text-align: right; /* Выравнивание текста по правому краю */
+    white-space: nowrap; /* Убираем переносы слов */
+}
+
+.input-group {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5em; /* Уменьшаем отступ между группами */
+    color: blue; /* Синий цвет для текста */
+    font-size: 16px; /* Увеличиваем размер шрифта */
+}
+
+/* Стили для input и textarea */
+input[type="text"],
+input[type="number"],
+input[type="date"],
+input[type="email"],
+select,
+textarea {
+    width: calc(100% - 190px); /* Корректируем ширину, учитывая ширину label и отступ */
+    padding: 6px; /* Уменьшаем внутренний отступ */
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="date"]:focus,
+input[type="email"]:focus,
+select:focus,
+textarea:focus {
+    border-color: #80bdff;
+    outline: none;
+}
+
+textarea {
+    height: auto;
+    min-height: 20px;
+    resize: none;
+    overflow-y: hidden;
+}
+
+input[type="checkbox"] {
+    margin-right: 0.5em;
+}
+
+#save-button {
+    background-color: #007bff; /* Синий цвет для кнопки */
+    color: white;
+    padding: 8px 16px; /* Уменьшенный отступ */
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 0.5em; /* Уменьшенный верхний отступ */
+    box-sizing: border-box;
+    transition: background-color 0.3s ease;
+}
+
+#save-button:hover {
+    background-color: #0056b3; /* Более темный синий при наведении */
+}
+
+
+/* Стили для кнопок */
+input[type="submit"] {
+    background-color: #007bff; /* Синий цвет для кнопки */
+    color: white;
+    padding: 8px 16px; /* Уменьшаем padding */
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 0.5em; /* Уменьшаем верхний отступ */
+    box-sizing: border-box;
+    transition: background-color 0.3s ease;
+}
+
+input[type="submit"]:hover {
+    background-color: #0056b3; /* Более темный синий при наведении */
+}
+
+/* Адаптивные стили для мобильных устройств */
+@media (max-width: 600px) {
+    .container {
+        flex-direction: column;
+    }
+
+    .left-pane,
+    .right-pane {
+        width: 100%;
+        height: auto; /* Сбрасываем высоту для мобильных устройств */
+    }
+
+    form {
+        width: 95%;
+        padding: 15px;
+    }
+
+    label {
+        width: 120px; /* Уменьшаем ширину label для мобильных устройств */
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    input[type="email"],
+    select, 
+    textarea {
+        width: calc(100% - 130px); /* Корректируем ширину для мобильных устройств */
+    }
+}
