@@ -8,6 +8,7 @@ from time import perf_counter
 import PyPDF2
 from PIL import Image, ImageDraw, ImageFont
 from collections import defaultdict
+import datetime
 
 
 # _________ ENCODERS _________
@@ -85,6 +86,32 @@ def group_files_by_name(file_list: list[str]) -> dict:
         else:
             groups[file_name].append(file_name)
     return groups
+
+
+def delete_all_files(directory):
+    for filename in os.listdir(directory):
+        file_path = os.path.join(directory, filename)
+        try:
+            if os.path.isfile(file_path):
+                os.unlink(file_path)
+        except Exception as e:
+            print(f"Error deleting file {file_path}: {e}")
+
+
+def create_date_folder_in_check(root_dir):
+    """Создать внутри в указанной директории папку с текущей датой-временем и 3 подпапки"""
+
+    # Создаем строку с текущей датой и временем
+    folder_name = datetime.datetime.now().strftime("%d-%m-%Y___%H-%M-%S")
+    # Создаем папку с указанным именем
+    folder_path = os.path.join(root_dir, folder_name)
+    os.makedirs(folder_path, exist_ok=True)
+    # Создаем подпапки
+    subfolders = ["scannedPDFs", "textPDFs", "verified"]
+    for subfolder in subfolders:
+        subfolder_path = os.path.join(folder_path, subfolder)
+        os.makedirs(subfolder_path, exist_ok=True)
+    return folder_path
 
 
 # _________ IMAGE _________
