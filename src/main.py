@@ -1,6 +1,6 @@
 from glob import glob
 import os
-from utils import group_files_by_name
+from utils import group_files_by_name, delete_all_files, create_date_folder_in_check
 from config.config import config
 from main_edit import main as main_edit
 from main_openai import run_chat, run_assistant
@@ -12,11 +12,14 @@ import shutil
 
 
 def main(show_logs=False):
+
     # _____  FILL IN_FOLDER_EDIT  _____
-    # main_edit()
+    date_folder = create_date_folder_in_check(config['CHECK_FOLDER'])
+    delete_all_files(config['IN_FOLDER_EDIT'])
+    main_edit()
+
     files = os_sorted(glob(f"{config['IN_FOLDER_EDIT']}/*.*"))
     files = [file for file in files if os.path.splitext(file)[-1] in ['.pdf', '.jpeg', '.jpg', '.png']]
-    print(files)
 
     grouped_files = group_files_by_name(files)
     c = count(1)
@@ -27,20 +30,20 @@ def main(show_logs=False):
         print('files:', *files, sep='\n')
         json_name = os.path.basename(base[0]) + '_' + '0' * 11 + '.json'
         if base[-1] == 'pdf':
+            text_or_scanned_folder = config['NAME_text']
             # result = run_assistant(files[0], show_logs=show_logs)
-
             # result = '1'
-            with open(r'C:\Users\Filipp\PycharmProjects\Invoice_scanner\__test.json', 'r', encoding='utf-8') as file: result = file.read()
-
+            with open(r'C:\Users\Filipp\PycharmProjects\Invoice_scanner\__test.json', 'r', encoding='utf-8') as file:
+                result = file.read()
         else:
+            text_or_scanned_folder = config['NAME_scanned']
             files.sort(reverse=True)
-
             # result = run_chat(*files, detail='high', show_logs=show_logs)
-
             # result = '2'
-            with open(r'C:\Users\Filipp\PycharmProjects\Invoice_scanner\__test.json', 'r', encoding='utf-8') as file: result = file.read()
+            with open(r'C:\Users\Filipp\PycharmProjects\Invoice_scanner\__test.json', 'r', encoding='utf-8') as file:
+                result = file.read()
 
-        json_path = os.path.join(config['CHECK_FOLDER'], json_name)
+        json_path = os.path.join(date_folder, text_or_scanned_folder, json_name)
         with open(json_path, 'w', encoding='utf-8') as file:
             file.write(result)
 
@@ -56,20 +59,25 @@ def main(show_logs=False):
         original_save_path = os.path.basename((os.path.splitext(original_file_path)[0]
                                                + f'_{original_file_type}'
                                                + os.path.splitext(original_file_path)[1]))
-        original_save_path = os.path.join(config['CHECK_FOLDER'], original_save_path)
+        original_save_path = os.path.join(date_folder, text_or_scanned_folder, original_save_path)
         shutil.copy(original_file_path, original_save_path)
 
         # _____  CREATE HTML  _____
         html_name = os.path.basename(base[0]) + '.html'
-        html_path = os.path.join(config['CHECK_FOLDER'], html_name)
+        html_path = os.path.join(date_folder, text_or_scanned_folder, html_name)
 
         create_html_form(json_path, html_path, original_save_path)
 
         # _____  STOP ITERATION  _____
         stop = next(c)
-        if stop == 1:
+        if stop == 2:
             break
+
+    # _____  RESULT MESSAGE  _____
+    return (f'Сохранено {len(grouped_files.items())} x 3 = {len(grouped_files.items())*3} '
+            f'файлов в \n{os.path.join(config["IN_FOLDER_EDIT"], date_folder)}')
 
 
 if __name__ == "__main__":
-    main(show_logs=True)
+    result_message = main(show_logs=True)
+    print(result_message)
