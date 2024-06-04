@@ -12,7 +12,7 @@ from config.config import config
 from utils import base64_encode_pil
 
 
-# ___________________________ GPT ___________________________
+# ___________________________ CHAT ___________________________
 
 def run_chat(*img_paths: str, detail='high', show_logs=False) -> str:
     load_dotenv()

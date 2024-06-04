@@ -139,7 +139,7 @@ function generateJSON() {
 		
 		function getCurrentTime() {
             // Получаем текущее время в миллисекундах с начала эпохи
-            const milliseconds = Date.now().toString().slice(2);
+            const milliseconds = Date.now().toString().slice(-11);
             return milliseconds;
         }
 
@@ -155,7 +155,9 @@ function generateJSON() {
 		
 		var currentTime = getCurrentTime();
 		var originalFilename = document.getElementById('jsonfilenameid').getAttribute('jsonfilename');
-		var newFilename = originalFilename.replace('.json',  `_${currentTime}.json`);
+
+		// 11 знаков (временная отметка)  + 1 "_" + 5 ".json" = 17 знаков
+		var newFilename = originalFilename.slice(0, -17) + `_${currentTime}.json`;
 		
         link.href = URL.createObjectURL(blob);
         link.download = newFilename;

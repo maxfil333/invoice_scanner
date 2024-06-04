@@ -51,9 +51,11 @@ def create_html_form(json_file, output_file, file_path):
     # Определяем тип файла на основе расширения
     file_extension = os.path.splitext(file_path)[-1].lower()
     if file_extension == '.pdf':
-        file_display = f'<iframe src="{file_path}" width="100%" height="100%"></iframe>'
+        file_display = (f'<iframe src="{os.path.basename(file_path)}" '
+                        f'width="100%" height="100%"></iframe>')
     elif file_extension == '.jpg' or file_extension == '.jpeg':
-        file_display = f'<img src="{file_path}" alt="Image" width="100%" height="100%" style="object-fit: contain;">'
+        file_display = (f'<img src="{os.path.basename(file_path)}" '
+                        f'alt="Image" width="100%" height="100%" style="object-fit: contain;">')
     else:
         file_display = '<p>Unsupported file type. Please upload a PDF or JPG file.</p>'
 

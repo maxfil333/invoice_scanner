@@ -25,20 +25,20 @@ def main(show_logs=False):
         # _____  CREATE JSON  _____
         print('base:', base, sep='\n')
         print('files:', *files, sep='\n')
-        json_name = os.path.basename(base[0]) + '.json'
+        json_name = os.path.basename(base[0]) + '_' + '0' * 11 + '.json'
         if base[-1] == 'pdf':
-            result = run_assistant(files[0], show_logs=show_logs)
+            # result = run_assistant(files[0], show_logs=show_logs)
 
             # result = '1'
-            # with open(r'C:\Users\Filipp\PycharmProjects\Invoice_scanner\__test.json', 'r', encoding='utf-8') as file: result = file.read()
+            with open(r'C:\Users\Filipp\PycharmProjects\Invoice_scanner\__test.json', 'r', encoding='utf-8') as file: result = file.read()
 
         else:
             files.sort(reverse=True)
 
-            result = run_chat(*files, detail='high', show_logs=show_logs)
+            # result = run_chat(*files, detail='high', show_logs=show_logs)
 
             # result = '2'
-            # with open(r'C:\Users\Filipp\PycharmProjects\Invoice_scanner\__test.json', 'r', encoding='utf-8') as file: result = file.read()
+            with open(r'C:\Users\Filipp\PycharmProjects\Invoice_scanner\__test.json', 'r', encoding='utf-8') as file: result = file.read()
 
         json_path = os.path.join(config['CHECK_FOLDER'], json_name)
         with open(json_path, 'w', encoding='utf-8') as file:
