@@ -11,8 +11,7 @@ from natsort import os_sorted
 import shutil
 
 
-def main(show_logs=False):
-
+def main(show_logs=False, test_mode=True):
     # _____  FILL IN_FOLDER_EDIT  _____
     date_folder = create_date_folder_in_check(config['CHECK_FOLDER'])
     delete_all_files(config['IN_FOLDER_EDIT'])
@@ -31,17 +30,21 @@ def main(show_logs=False):
         json_name = os.path.basename(base[0]) + '_' + '0' * 11 + '.json'
         if base[-1] == 'pdf':
             text_or_scanned_folder = config['NAME_text']
-            # result = run_assistant(files[0], show_logs=show_logs)
-            # result = '1'
-            with open(r'C:\Users\Filipp\PycharmProjects\Invoice_scanner\__test.json', 'r', encoding='utf-8') as file:
-                result = file.read()
+            # __ RUN ASSISTANT __
+            if test_mode:
+                with open(os.path.join(config['BASE_DIR'], '__test.json'), 'r', encoding='utf-8') as file:
+                    result = file.read()
+            else:
+                result = run_assistant(files[0], show_logs=show_logs)
         else:
             text_or_scanned_folder = config['NAME_scanned']
             files.sort(reverse=True)
-            # result = run_chat(*files, detail='high', show_logs=show_logs)
-            # result = '2'
-            with open(r'C:\Users\Filipp\PycharmProjects\Invoice_scanner\__test.json', 'r', encoding='utf-8') as file:
-                result = file.read()
+            # __ RUN CHAT __
+            if test_mode:
+                with open(os.path.join(config['BASE_DIR'], '__test.json'), 'r', encoding='utf-8') as file:
+                    result = file.read()
+            else:
+                result = run_chat(*files, detail='high', show_logs=show_logs)
 
         json_path = os.path.join(date_folder, text_or_scanned_folder, json_name)
         with open(json_path, 'w', encoding='utf-8') as file:
@@ -74,10 +77,11 @@ def main(show_logs=False):
             break
 
     # _____  RESULT MESSAGE  _____
-    return (f'Сохранено {len(grouped_files.items())} x 3 = {len(grouped_files.items())*3} '
-            f'файлов в \n{os.path.join(config["IN_FOLDER_EDIT"], date_folder)}')
+    return (f'Сохранено {len(grouped_files.items())} x 3 = {len(grouped_files.items()) * 3} '
+            f'файлов в: \n{date_folder}')
 
 
 if __name__ == "__main__":
-    result_message = main(show_logs=True)
-    print(result_message)
+
+    result_message = main(show_logs=True, test_mode=False)
+    print(f'\nresult_message:\n{result_message}\n')
