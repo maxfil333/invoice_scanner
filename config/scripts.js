@@ -147,7 +147,7 @@ function generateJSON() {
         var generatedJsonObject = setValuesFromArray(originalJsonObject, values);
 
         // Преобразуем объект обратно в строку JSON
-        var generatedJsonString = JSON.stringify(generatedJsonObject, null, 2);
+        var generatedJsonString = JSON.stringify(generatedJsonObject, null, 4);
 
         // Сохраняем JSON строку как текстовый файл
         var blob = new Blob([generatedJsonString], { type: 'application/json' });
