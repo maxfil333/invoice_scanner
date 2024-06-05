@@ -9,7 +9,7 @@ import json
 from PIL import Image
 
 from config.config import config
-from utils import base64_encode_pil
+from utils import base64_encode_pil, convert_json_values_to_strings
 
 
 # ___________________________ CHAT ___________________________
@@ -62,9 +62,9 @@ def run_chat(*img_paths: str, detail='high', show_logs=False) -> str:
     for item in dictionary['Услуги']:
         name = item['Наименование']
         item['Номера контейнеров'] = ' '.join(list(map(lambda x:
-                                                        re.sub(r'\s', '', x), re.findall(container_regex, name))))
-
-    return json.dumps(dictionary, ensure_ascii=False, indent=4)
+                                                       re.sub(r'\s', '', x), re.findall(container_regex, name))))
+    string_dictionary = convert_json_values_to_strings(dictionary)
+    return json.dumps(string_dictionary, ensure_ascii=False, indent=4)
 
 
 # ___________________________ ASSISTANT ___________________________
@@ -119,9 +119,9 @@ def run_assistant(file_path, show_logs=False):
     for item in dictionary['Услуги']:
         name = item['Наименование']
         item['Номера контейнеров'] = ' '.join(list(map(lambda x:
-                                                        re.sub(r'\s', '', x), re.findall(container_regex, name))))
-
-    return json.dumps(dictionary, ensure_ascii=False, indent=4)
+                                                       re.sub(r'\s', '', x), re.findall(container_regex, name))))
+    string_dictionary = convert_json_values_to_strings(dictionary)
+    return json.dumps(string_dictionary, ensure_ascii=False, indent=4)
 
 
 if __name__ == '__main__':
@@ -130,7 +130,8 @@ if __name__ == '__main__':
     #                   # os.path.join('..', 'IN/edited/458.jpg'),
     #                   detail='high', show_logs=True)
 
-    result = run_assistant(os.path.join('..', 'IN/edited/Печатная_форма_Акт_№УРKM0000145_от_03.04.24_pdf.pdf'), show_logs=True)
+    result = run_assistant(os.path.join('..', 'IN/edited/Печатная_форма_Акт_№УРKM0000145_от_03.04.24_pdf.pdf'),
+                           show_logs=True)
 
     print('#' * 50)
     print(result)
