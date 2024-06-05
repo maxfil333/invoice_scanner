@@ -27,21 +27,6 @@ def base64_encode_pil(image: Image.Image):
 
 # _________ COMMON _________
 
-def rename_files_in_directory(directory_path):
-    files = os.listdir(directory_path)  # список файлов в указанной папке
-
-    for filename in files:
-        if not os.path.isdir(os.path.join(directory_path, filename)):  # Исключаем директории из списка файлов
-            new_filename = filename.replace(" ", "_")
-            # new_filename = str(next(counter)) + '.jpg'
-
-            old_filepath = os.path.join(directory_path, filename)
-            new_filepath = os.path.join(directory_path, new_filename)
-            os.rename(old_filepath, new_filepath)
-
-            print(f"Файл '{filename}' переименован в '{new_filename}'")
-
-
 def is_scanned_pdf(file_path):
     try:
         # Открытие PDF файла
@@ -86,6 +71,34 @@ def group_files_by_name(file_list: list[str]) -> dict:
         else:
             groups[file_name].append(file_name)
     return groups
+
+
+def convert_json_values_to_strings(obj):
+    if isinstance(obj, dict):
+        return {k: convert_json_values_to_strings(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_json_values_to_strings(i) for i in obj]
+    elif obj is None:
+        return ""
+    else:
+        return str(obj)
+
+
+# _________ FOLDERS _________
+
+def rename_files_in_directory(directory_path):
+    files = os.listdir(directory_path)  # список файлов в указанной папке
+
+    for filename in files:
+        if not os.path.isdir(os.path.join(directory_path, filename)):  # Исключаем директории из списка файлов
+            new_filename = filename.replace(" ", "_")
+            # new_filename = str(next(counter)) + '.jpg'
+
+            old_filepath = os.path.join(directory_path, filename)
+            new_filepath = os.path.join(directory_path, new_filename)
+            os.rename(old_filepath, new_filepath)
+
+            print(f"Файл '{filename}' переименован в '{new_filename}'")
 
 
 def delete_all_files(directory):
