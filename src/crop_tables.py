@@ -119,17 +119,12 @@ def define_and_return(image_path: str):
         x1, y1, x2, y2 = table_shp.bbox.x1, table_shp.bbox.y1, table_shp.bbox.x2, table_shp.bbox.y2
         table_shp = image.crop((x1, y1, x2, y2))
 
-    if table_ttl is None and table_shp is None:
-        return None
-    else:
-        return table_ttl, table_shp
-
-
+    return table_ttl, table_shp
 
 
 if __name__ == '__main__':
     file = os.path.join('..', 'IN/edited/402.jpg')
     start = perf_counter()
     combined = define_and_combine(file)
-    print(f'time: {perf_counter()-start:.2f}')
+    print(f'time: {perf_counter() - start:.2f}')
     combined.show()
