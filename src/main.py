@@ -72,9 +72,9 @@ def main(show_logs=False, test_mode=True):
         create_html_form(json_path, html_path, original_save_path)
 
         # _____  STOP ITERATION  _____
-        stop = next(c)
-        if stop == 2:
-            break
+        # stop = next(c)
+        # if stop == 1:
+        #     break
 
     # _____  RESULT MESSAGE  _____
     return (f'Сохранено {len(grouped_files.items())} x 3 = {len(grouped_files.items()) * 3} '
