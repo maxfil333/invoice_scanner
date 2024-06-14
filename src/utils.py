@@ -3,12 +3,15 @@ from os import path
 import re
 from glob import glob
 import base64
-from io import BytesIO
+from io import BytesIO, StringIO
 from time import perf_counter
 import PyPDF2
 from PIL import Image, ImageDraw, ImageFont
 from collections import defaultdict
 import datetime
+from cryptography.fernet import Fernet
+from config.config import config
+from dotenv import load_dotenv
 
 
 # _________ ENCODERS _________
@@ -82,6 +85,31 @@ def convert_json_values_to_strings(obj):
         return ""
     else:
         return str(obj)
+
+
+def get_stream_dotenv():
+    """ uses crypto.key to decrypt encrypted environment.
+    returns StringIO (for load_dotenv(stream=...)"""
+
+    f = Fernet(config['crypto_key'])
+    with open(config['crypto_env'], 'rb') as file:
+        encrypted_data = file.read()
+    decrypted_data = f.decrypt(encrypted_data)  # bytes
+    decrypted_data_str = decrypted_data.decode('utf-8')  # string
+    string_stream = StringIO(decrypted_data_str)
+    return string_stream
+
+
+def postprocessing_openai_response(response: str) -> str:
+    # удаление двойных пробелов и переносов строк
+    re_response = re.sub(r'(\s{2,}|\n)', '', response)
+
+    # поиск ```json (RESPONSE)```
+    json = re.findall(r'```\s?json\s?(.*)```', re_response, flags=re.DOTALL)
+    if json:
+        return json[0]
+    else:
+        return re_response
 
 
 # _________ FOLDERS _________
@@ -167,15 +195,17 @@ def add_text_bar(image: str | Image.Image, text, h=75, font_path='verdana.ttf', 
 
 
 if __name__ == '__main__':
-    start = perf_counter()
-    # Пример использования
-    for file in glob('./*.pdf'):
-        print(path.basename(file))
-        result = is_scanned_pdf(file)
-        if result is True:
-            print("Этот PDF файл является сканом документа.")
-        elif result is False:
-            print("Этот PDF файл является цифровым документом.")
-        elif result is None:
-            pass
-    print(perf_counter() - start)
+    # start = perf_counter()
+    # # Пример использования
+    # for file in glob('./*.pdf'):
+    #     print(path.basename(file))
+    #     result = is_scanned_pdf(file)
+    #     if result is True:
+    #         print("Этот PDF файл является сканом документа.")
+    #     elif result is False:
+    #         print("Этот PDF файл является цифровым документом.")
+    #     elif result is None:
+    #         pass
+    # print(perf_counter() - start)
+    load_dotenv(stream=get_stream_dotenv())
+    print(os.getenv('OPENAI_API_KEY'))
