@@ -9,13 +9,13 @@ import json
 from PIL import Image
 
 from config.config import config
-from utils import base64_encode_pil, convert_json_values_to_strings
+from utils import base64_encode_pil, convert_json_values_to_strings, get_stream_dotenv, postprocessing_openai_response
 
 
 # ___________________________ CHAT ___________________________
 
 def run_chat(*img_paths: str, detail='high', show_logs=False) -> str:
-    load_dotenv()
+    load_dotenv(stream=get_stream_dotenv())
     openai.api_key = os.environ.get("OPENAI_API_KEY")
 
     content = []
@@ -46,9 +46,7 @@ def run_chat(*img_paths: str, detail='high', show_logs=False) -> str:
 
     response = response.choices[0].message.content
 
-    re_response = re.sub(r'(\s{2,}|```|\n)', '', response)
-    if re_response[0:4] == 'json':
-        re_response = re_response[4:]
+    re_response = postprocessing_openai_response(response)
 
     if show_logs:
         print('run_chat response:')
@@ -70,7 +68,7 @@ def run_chat(*img_paths: str, detail='high', show_logs=False) -> str:
 # ___________________________ ASSISTANT ___________________________
 
 def run_assistant(file_path, show_logs=False):
-    load_dotenv()
+    load_dotenv(stream=get_stream_dotenv())
     openai.api_key = os.environ.get("OPENAI_API_KEY")
     ASSISTANT_ID = os.environ.get("ASSISTANT_ID")
 
@@ -94,6 +92,7 @@ def run_assistant(file_path, show_logs=False):
         thread_id=thread.id, assistant_id=assistant.id
     )
     if run.status == 'completed':
+        print('assistant model:', assistant.model)
         print(f'file_path: {file_path}')
         print(f'time: {perf_counter() - start:.2f}')
         print(f'completion_tokens: {run.usage.completion_tokens}')
@@ -103,14 +102,12 @@ def run_assistant(file_path, show_logs=False):
     messages = list(client.beta.threads.messages.list(thread_id=thread.id, run_id=run.id))
     response = messages[0].content[0].text.value
 
-    re_response = re.sub(r'(\s{2,}|```|\n)', '', response)
-    if re_response[0:4] == 'json':
-        re_response = re_response[4:]
+    re_response = postprocessing_openai_response(response)
 
     if show_logs:
-        print('run_chat response:')
+        print('run_assistant response:')
         print(repr(response))
-        print('run_chat re_response:')
+        print('run_assistant re_response:')
         print(repr(re_response))
 
     dictionary = json.loads(re_response)
