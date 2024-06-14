@@ -3,6 +3,7 @@ __*
 /IN/
 /OUT/
 /CHECK/
+/config/crypto.key
 
 
 # Игнорировать каталоги и файлы конфигурации PyCharm
@@ -19,6 +20,7 @@ ENV/
 env/
 .venv/
 .env
+encrypted.env
 
 # Игнорировать файлы, скомпилированные Python
 *.pyc
