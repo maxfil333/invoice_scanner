@@ -27,7 +27,7 @@ def define_tables_on_bboxes(img_path: str) -> dict:
         cropped = image.crop((x1, y1, x2, y2))
         table_content = extract_text_from_image(np.array(cropped))
 
-        shipment_regex = r'\b(Сумма|Цена|Всего|Итого|Услуги|Товары|Товара)\b'
+        shipment_regex = r'\b(Сумма|Цена|Всего|Итого|Услуг\w?|Товары|Товара)\b'
         title_regex = r'\b(ИНН|КПП|БИК|получатель|получателя)\b'
 
         if bool(re.search(shipment_regex, table_content, flags=re.IGNORECASE)) and tables_and_marks['shipment'] != '#':
@@ -123,7 +123,7 @@ def define_and_return(image_path: str):
 
 
 if __name__ == '__main__':
-    file = os.path.join('..', 'IN/edited/402.jpg')
+    file = os.path.join('..', 'IN/edited/Альфа_транс_24032708_pdf.jpg')
     start = perf_counter()
     combined = define_and_combine(file)
     print(f'time: {perf_counter() - start:.2f}')
