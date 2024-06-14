@@ -11,11 +11,13 @@ from natsort import os_sorted
 import shutil
 
 
-def main(show_logs=False, test_mode=True):
+def main(show_logs=False, test_mode=True, create_new=True):
     # _____  FILL IN_FOLDER_EDIT  _____
     date_folder = create_date_folder_in_check(config['CHECK_FOLDER'])
-    delete_all_files(config['IN_FOLDER_EDIT'])
-    main_edit()
+
+    if create_new:
+        delete_all_files(config['IN_FOLDER_EDIT'])
+        main_edit()
 
     files = os_sorted(glob(f"{config['IN_FOLDER_EDIT']}/*.*"))
     files = [file for file in files if os.path.splitext(file)[-1] in ['.pdf', '.jpeg', '.jpg', '.png']]
@@ -72,9 +74,9 @@ def main(show_logs=False, test_mode=True):
         create_html_form(json_path, html_path, original_save_path)
 
         # _____  STOP ITERATION  _____
-        # stop = next(c)
-        # if stop == 1:
-        #     break
+        stop = next(c)
+        if stop == 6:
+            break
 
     # _____  RESULT MESSAGE  _____
     return (f'Сохранено {len(grouped_files.items())} x 3 = {len(grouped_files.items()) * 3} '
@@ -83,5 +85,5 @@ def main(show_logs=False, test_mode=True):
 
 if __name__ == "__main__":
 
-    result_message = main(show_logs=True, test_mode=False)
+    result_message = main(show_logs=True, test_mode=False, create_new=False)
     print(f'\nresult_message:\n{result_message}\n')
