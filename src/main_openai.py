@@ -2,6 +2,7 @@ import openai
 from openai import OpenAI
 
 import os
+import inspect
 from dotenv import load_dotenv
 from time import perf_counter
 import re
@@ -12,12 +13,37 @@ from config.config import config
 from utils import base64_encode_pil, convert_json_values_to_strings, get_stream_dotenv, postprocessing_openai_response
 
 
+# ___________________________ general ___________________________
+
+start = perf_counter()
+load_dotenv(stream=get_stream_dotenv())
+openai.api_key = os.environ.get("OPENAI_API_KEY")
+ASSISTANT_ID = os.environ.get("ASSISTANT_ID")
+client = OpenAI()
+
+
+def local_postprocessing(response, show_logs):
+    re_response = postprocessing_openai_response(response)
+    if show_logs:
+        print(f'function "{inspect.stack()[1].function}":')
+        print('response:')
+        print(repr(response))
+        print('re_response:')
+        print(repr(re_response))
+    dictionary = json.loads(re_response)
+
+    container_regex = r'[A-Z]{4}\s?[0-9]{7}'
+    for item in dictionary['Услуги']:
+        name = item['Наименование']
+        item['Номера контейнеров'] = ' '.join(list(map(lambda x:
+                                                       re.sub(r'\s', '', x), re.findall(container_regex, name))))
+    string_dictionary = convert_json_values_to_strings(dictionary)
+    return json.dumps(string_dictionary, ensure_ascii=False, indent=4)
+
+
 # ___________________________ CHAT ___________________________
 
 def run_chat(*img_paths: str, detail='high', show_logs=False) -> str:
-    load_dotenv(stream=get_stream_dotenv())
-    openai.api_key = os.environ.get("OPENAI_API_KEY")
-
     content = []
     for img_path in img_paths:
         d = {
@@ -27,8 +53,6 @@ def run_chat(*img_paths: str, detail='high', show_logs=False) -> str:
         }
         content.append(d)
 
-    start = perf_counter()
-    client = OpenAI()
     response = client.chat.completions.create(
         model="gpt-4o",
         messages=
@@ -45,37 +69,13 @@ def run_chat(*img_paths: str, detail='high', show_logs=False) -> str:
     print(f'total_tokens: {response.usage.total_tokens}')
 
     response = response.choices[0].message.content
-
-    re_response = postprocessing_openai_response(response)
-
-    if show_logs:
-        print('run_chat response:')
-        print(repr(response))
-        print('run_chat re_response:')
-        print(repr(re_response))
-
-    dictionary = json.loads(re_response)
-
-    container_regex = r'[A-Z]{4}\s?[0-9]{7}'
-    for item in dictionary['Услуги']:
-        name = item['Наименование']
-        item['Номера контейнеров'] = ' '.join(list(map(lambda x:
-                                                       re.sub(r'\s', '', x), re.findall(container_regex, name))))
-    string_dictionary = convert_json_values_to_strings(dictionary)
-    return json.dumps(string_dictionary, ensure_ascii=False, indent=4)
+    return local_postprocessing(response, show_logs=show_logs)
 
 
 # ___________________________ ASSISTANT ___________________________
 
 def run_assistant(file_path, show_logs=False):
-    load_dotenv(stream=get_stream_dotenv())
-    openai.api_key = os.environ.get("OPENAI_API_KEY")
-    ASSISTANT_ID = os.environ.get("ASSISTANT_ID")
-
-    start = perf_counter()
-    client = OpenAI()
     assistant = client.beta.assistants.retrieve(assistant_id=ASSISTANT_ID)
-
     message_file = client.files.create(file=open(file_path, "rb"), purpose="assistants")
     # Create a thread and attach the file to the message
     thread = client.beta.threads.create(
@@ -101,24 +101,7 @@ def run_assistant(file_path, show_logs=False):
 
     messages = list(client.beta.threads.messages.list(thread_id=thread.id, run_id=run.id))
     response = messages[0].content[0].text.value
-
-    re_response = postprocessing_openai_response(response)
-
-    if show_logs:
-        print('run_assistant response:')
-        print(repr(response))
-        print('run_assistant re_response:')
-        print(repr(re_response))
-
-    dictionary = json.loads(re_response)
-
-    container_regex = r'[A-Z]{4}\s?[0-9]{7}'
-    for item in dictionary['Услуги']:
-        name = item['Наименование']
-        item['Номера контейнеров'] = ' '.join(list(map(lambda x:
-                                                       re.sub(r'\s', '', x), re.findall(container_regex, name))))
-    string_dictionary = convert_json_values_to_strings(dictionary)
-    return json.dumps(string_dictionary, ensure_ascii=False, indent=4)
+    return local_postprocessing(response, show_logs=show_logs)
 
 
 if __name__ == '__main__':
