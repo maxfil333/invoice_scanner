@@ -13,7 +13,7 @@ config["POPPLER_PATH"] = r'C:\Program Files\poppler-22.01.0\Library\bin'
 config['CSS_PATH'] = os.path.join(config["BASE_DIR"], 'config', 'styles.css')
 config['JS_PATH'] = os.path.join(config["BASE_DIR"], 'config', 'scripts.js')
 config['crypto_env'] = os.path.join(config['BASE_DIR'], 'encrypted.env')
-with open(os.path.join(config['BASE_DIR'], 'config', 'crypto.key'), 'r') as f:
+with open(os.path.join(config['BASE_DIR'], 'crypto.key'), 'r') as f:
     config['crypto_key'] = f.read()
 config['magick_opt'] = '-colorspace Gray'
 
