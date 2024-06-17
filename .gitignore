@@ -3,7 +3,8 @@ __*
 /IN/
 /OUT/
 /CHECK/
-/config/crypto.key
+crypto.key
+main.spec
 
 
 # Игнорировать каталоги и файлы конфигурации PyCharm
