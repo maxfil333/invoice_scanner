@@ -1,21 +1,22 @@
 import os
 
 config = dict()
+config['magick_opt'] = '-colorspace Gray'
+config["POPPLER_PATH"] = r'C:\Program Files\poppler-22.01.0\Library\bin'
+config['NAME_scanned'] = 'scannedPDFs'
+config['NAME_text'] = 'textPDFs'
+config['NAME_verified'] = 'verified'
+
 config['BASE_DIR'] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 config['IN_FOLDER'] = os.path.join(config["BASE_DIR"], 'IN')
 config['IN_FOLDER_EDIT'] = os.path.join(config["IN_FOLDER"], 'edited')
 config['CHECK_FOLDER'] = os.path.join(config["BASE_DIR"], 'CHECK')
-config['NAME_scanned'] = 'scannedPDFs'
-config['NAME_text'] = 'textPDFs'
-config['NAME_verified'] = 'verified'
-config['OUT_FOLDER'] = os.path.join(config["BASE_DIR"], 'OUT')
-config["POPPLER_PATH"] = r'C:\Program Files\poppler-22.01.0\Library\bin'
+
 config['CSS_PATH'] = os.path.join(config["BASE_DIR"], 'config', 'styles.css')
 config['JS_PATH'] = os.path.join(config["BASE_DIR"], 'config', 'scripts.js')
 config['crypto_env'] = os.path.join(config['BASE_DIR'], 'encrypted.env')
 with open(os.path.join(config['BASE_DIR'], 'crypto.key'), 'r') as f:
     config['crypto_key'] = f.read()
-config['magick_opt'] = '-colorspace Gray'
 
 # "magick_opt": '-colorspace Gray -white-threshold 85% -level 0%,100%,0.5 -bilateral-blur 15 '
 #               '-gaussian-blur 6 -quality 100 -units PixelsPerInch -density 350',
@@ -27,7 +28,7 @@ config['magick_opt'] = '-colorspace Gray'
 config['json_struct'] = ('{"Банковские реквизиты поставщика":{"ИНН":"","КПП":"","БИК":"","корреспондентский счет":"",'
                          '"расчетный счет":""},"Банковские реквизиты покупателя":{"ИНН":"","КПП":""},"Номер счета":"",'
                          '"Дата счета":"","Услуги":[{"Наименование":"","Единица":"","Количество":"","Цена":"",'
-                         '"Сумма без НДС":"","Сумма НДС":"","Cумма с учетом НДС":""}, ...],"Итого без НДС":"",'
+                         '"Сумма без НДС":"","Сумма НДС":"","Сумма с учетом НДС":""}, ...],"Итого без НДС":"",'
                          '"Сумма НДС":"","Итого с учетом НДС":""}')
 
 config['system_prompt'] = f"""
