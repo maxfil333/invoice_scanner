@@ -1,22 +1,34 @@
 import os
+import sys
+import msvcrt
 
 config = dict()
 config['magick_opt'] = '-colorspace Gray'
-config["POPPLER_PATH"] = r'C:\Program Files\poppler-22.01.0\Library\bin'
+config['POPPLER_PATH'] = r'C:\Program Files\poppler-22.01.0\Library\bin'
 config['NAME_scanned'] = 'scannedPDFs'
 config['NAME_text'] = 'textPDFs'
 config['NAME_verified'] = 'verified'
 
-config['BASE_DIR'] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-config['IN_FOLDER'] = os.path.join(config["BASE_DIR"], 'IN')
-config['IN_FOLDER_EDIT'] = os.path.join(config["IN_FOLDER"], 'edited')
-config['CHECK_FOLDER'] = os.path.join(config["BASE_DIR"], 'CHECK')
+if getattr(sys, 'frozen', False):
+    config['BASE_DIR'] = os.path.dirname(sys.executable)
+else:
+    config['BASE_DIR'] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-config['CSS_PATH'] = os.path.join(config["BASE_DIR"], 'config', 'styles.css')
-config['JS_PATH'] = os.path.join(config["BASE_DIR"], 'config', 'scripts.js')
+config['IN_FOLDER'] = os.path.join(config['BASE_DIR'], 'IN')
+config['IN_FOLDER_EDIT'] = os.path.join(config['IN_FOLDER'], 'edited')
+config['CHECK_FOLDER'] = os.path.join(config['BASE_DIR'], 'CHECK')
+config['CSS_PATH'] = os.path.join(config['BASE_DIR'], 'config', 'styles.css')
+config['JS_PATH'] = os.path.join(config['BASE_DIR'], 'config', 'scripts.js')
 config['crypto_env'] = os.path.join(config['BASE_DIR'], 'encrypted.env')
-with open(os.path.join(config['BASE_DIR'], 'crypto.key'), 'r') as f:
-    config['crypto_key'] = f.read()
+
+try:
+    with open(os.path.join(config['BASE_DIR'], 'crypto.key'), 'r') as f:
+        config['crypto_key'] = f.read()
+except FileNotFoundError as e:
+    print(e)
+    if getattr(sys, 'frozen', False):
+        msvcrt.getch()
+        sys.exit()
 
 # "magick_opt": '-colorspace Gray -white-threshold 85% -level 0%,100%,0.5 -bilateral-blur 15 '
 #               '-gaussian-blur 6 -quality 100 -units PixelsPerInch -density 350',
@@ -44,7 +56,11 @@ config['system_prompt'] = f"""
 """.strip()
 
 if __name__ == '__main__':
+    print(getattr(sys, 'frozen', False))
     for k, v in config.items():
         print(k)
         print(v)
         print('-' * 50)
+
+    if getattr(sys, 'frozen', False):
+        msvcrt.getch()
