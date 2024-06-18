@@ -1,4 +1,5 @@
 import os
+import sys
 from PIL import Image
 from img2table.document import Image as IMAGE
 import pytesseract
@@ -10,6 +11,11 @@ from preprocessor import main as main_preprocessor
 
 
 def extract_text_from_image(image: np.array, psm=3):
+    if getattr(sys, 'frozen', False):
+        bundle_dir = sys._MEIPASS
+        pytesseract.pytesseract.tesseract_cmd = os.path.join(bundle_dir, 'Tesseract-OCR', 'tesseract.exe')
+        print(pytesseract.pytesseract.tesseract_cmd)
+
     config = f'--psm {psm}'  # --psm 4 --oem 3
     text = pytesseract.image_to_string(image, config=config, lang='rus+eng')
     return text
