@@ -66,6 +66,3 @@ if __name__ == '__main__':
         print(k)
         print(v)
         print('-' * 50)
-
-    if getattr(sys, 'frozen', False):
-        msvcrt.getch()
