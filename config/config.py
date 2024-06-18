@@ -2,17 +2,22 @@ import os
 import sys
 import msvcrt
 
+r"""
+datas=[('C:\\Program Files\\poppler-22.01.0\\Library\\bin', 'poppler')],
+"""
+
 config = dict()
 config['magick_opt'] = '-colorspace Gray'
-config['POPPLER_PATH'] = r'C:\Program Files\poppler-22.01.0\Library\bin'
 config['NAME_scanned'] = 'scannedPDFs'
 config['NAME_text'] = 'textPDFs'
 config['NAME_verified'] = 'verified'
 
 if getattr(sys, 'frozen', False):
     config['BASE_DIR'] = os.path.dirname(sys.executable)
+    config['POPPLER_PATH'] = os.path.join(sys._MEIPASS, 'poppler')
 else:
     config['BASE_DIR'] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    config['POPPLER_PATH'] = r'C:\Program Files\poppler-22.01.0\Library\bin'
 
 config['IN_FOLDER'] = os.path.join(config['BASE_DIR'], 'IN')
 config['IN_FOLDER_EDIT'] = os.path.join(config['IN_FOLDER'], 'edited')
