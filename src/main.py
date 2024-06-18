@@ -1,5 +1,6 @@
 from glob import glob
 import os
+import sys
 from utils import group_files_by_name, delete_all_files, create_date_folder_in_check
 from config.config import config
 from main_edit import main as main_edit
@@ -9,13 +10,14 @@ import json
 from itertools import count
 from natsort import os_sorted
 import shutil
+import msvcrt
 
 
-def main(show_logs=False, test_mode=True, create_new=True):
+def main(show_logs=False, test_mode=True, use_existing=False, stop_when=0):
     # _____  FILL IN_FOLDER_EDIT  _____
     date_folder = create_date_folder_in_check(config['CHECK_FOLDER'])
 
-    if create_new:
+    if not use_existing:
         delete_all_files(config['IN_FOLDER_EDIT'])
         main_edit()
 
@@ -74,9 +76,10 @@ def main(show_logs=False, test_mode=True, create_new=True):
         create_html_form(json_path, html_path, original_save_path)
 
         # _____  STOP ITERATION  _____
-        stop = next(c)
-        if stop == 6:
-            break
+        if stop_when > 0:
+            stop = next(c)
+            if stop == stop_when:
+                break
 
     # _____  RESULT MESSAGE  _____
     return (f'Сохранено {len(grouped_files.items())} x 3 = {len(grouped_files.items()) * 3} '
@@ -84,6 +87,11 @@ def main(show_logs=False, test_mode=True, create_new=True):
 
 
 if __name__ == "__main__":
+    try:
+        result_message = main(show_logs=True, test_mode=False, use_existing=False, stop_when=10)
+        print(f'\nresult_message:\n{result_message}\n')
+    except Exception as error:
+        print(error)
 
-    result_message = main(show_logs=True, test_mode=False, create_new=False)
-    print(f'\nresult_message:\n{result_message}\n')
+    if getattr(sys, 'frozen', False):
+        msvcrt.getch()
