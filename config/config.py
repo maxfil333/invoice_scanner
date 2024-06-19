@@ -61,6 +61,10 @@ config['system_prompt'] = f"""
 """.strip()
 # Верни только JSON-строку и ничего более.
 
+print("CONFIG INFO:")
+print(f'POPPLER_RPATH = {config["POPPLER_PATH"]}')
+
+
 if __name__ == '__main__':
     print(getattr(sys, 'frozen', False))
     for k, v in config.items():

@@ -31,3 +31,17 @@ Users\User\AppData\Local\Temp\%TEMPFOLDERNAME%\Tesseract-OCR;
 ],
 - 2.3. Удалить dist, build
 - 2.4. Выполнить pyinstaller filename.spec
+
+### 3. Добавление ImageMagick
+- IM доступен через cmd-команду \
+*magick convert ...* \
+т.к. обычно находится в системных переменных **Path**.\
+- Команда *magick* может быть заменена полным путем до исполняемого файла, например \
+*"C:\Program Files\ImageMagick-7.1.1-Q16-HDRI\magick.exe" convert ...* \
+- Таким образом надо переписать команду \
+**"magick convert..."** на 
+**"%MAGICK_EXE_PATH% convert ..."** \
+где %MAGICK_EXE_PATH% может быть получен либо через sys._MEIPASS, \
+либо через относительный путь к файлу 
+magick.exe, в случае, если проект собирается без опции --onefile.
+
