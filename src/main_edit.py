@@ -70,15 +70,15 @@ def main():
             if table_title:
                 table_title = add_text_bar(table_title, 'Банковские реквизиты поставщика')
                 table_title.save(cropped_save_path1)
-                command = f'magick convert {cropped_save_path1} {config["magick_opt"]} {cropped_save_path1}'
+                command = f'magick convert "{cropped_save_path1}" {config["magick_opt"]} "{cropped_save_path1}"'
                 os.system(command)
             if table_ship:
                 table_ship = add_text_bar(table_ship, 'Услуги')
                 table_ship.save(cropped_save_path2)
-                command = f'magick convert {cropped_save_path2} {config["magick_opt"]} {cropped_save_path2}'
+                command = f'magick convert "{cropped_save_path2}" {config["magick_opt"]} "{cropped_save_path2}"'
                 os.system(command)
 
-            command = f'magick convert {save_path} {config["magick_opt"]} {save_path}'
+            command = f'magick convert "{save_path}" {config["magick_opt"]} "{save_path}"'
             os.system(command)
 
         print(save_path)
