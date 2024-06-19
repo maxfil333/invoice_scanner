@@ -5,6 +5,7 @@ __*
 /CHECK/
 crypto.key
 main.spec
+*.exe
 
 
 # Игнорировать каталоги и файлы конфигурации PyCharm
