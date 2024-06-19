@@ -1,6 +1,7 @@
 import os
 from os import path
 import re
+import json
 from glob import glob
 import base64
 from io import BytesIO, StringIO
@@ -100,16 +101,30 @@ def get_stream_dotenv():
     return string_stream
 
 
-def postprocessing_openai_response(response: str) -> str:
+def postprocessing_openai_response(response: str, show_logs=False) -> str:
     # удаление двойных пробелов и переносов строк
     re_response = re.sub(r'(\s{2,}|\n)', '', response)
 
-    # поиск ```json (RESPONSE)```
-    json = re.findall(r'```\s?json\s?(.*)```', re_response, flags=re.DOTALL)
-    if json:
-        return json[0]
-    else:
+    # проверка на json-формат
+    try:
+        json.loads(re_response)
+        if show_logs: print('RECOGNIZED: JSON')
         return re_response
+    except json.decoder.JSONDecodeError:
+        # поиск ```json (RESPONSE)```
+        json_response = re.findall(r'```\s?json\s?(.*)```', re_response, flags=re.DOTALL|re.IGNORECASE)
+        if json_response:
+            if show_logs: print('RECOGNIZED: ``` json... ```')
+            return json_response[0]
+        else:
+            # поиск текста в {}
+            figure_response = re.findall(r'{.*}', re_response, flags=re.DOTALL|re.IGNORECASE)
+            if figure_response:
+                if show_logs: print('RECOGNIZED: {...}')
+                return figure_response[0]
+            else:
+                print('NOT RECOGNIZED JSON')
+                return None
 
 
 # _________ FOLDERS _________
@@ -195,17 +210,6 @@ def add_text_bar(image: str | Image.Image, text, h=75, font_path='verdana.ttf', 
 
 
 if __name__ == '__main__':
-    # start = perf_counter()
-    # # Пример использования
-    # for file in glob('./*.pdf'):
-    #     print(path.basename(file))
-    #     result = is_scanned_pdf(file)
-    #     if result is True:
-    #         print("Этот PDF файл является сканом документа.")
-    #     elif result is False:
-    #         print("Этот PDF файл является цифровым документом.")
-    #     elif result is None:
-    #         pass
-    # print(perf_counter() - start)
+
     load_dotenv(stream=get_stream_dotenv())
     print(os.getenv('OPENAI_API_KEY'))
