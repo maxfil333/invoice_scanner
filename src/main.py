@@ -1,16 +1,17 @@
-from glob import glob
 import os
 import sys
-from utils import group_files_by_name, delete_all_files, create_date_folder_in_check
-from config.config import config
-from main_edit import main as main_edit
-from main_openai import run_chat, run_assistant
-from generate_html import create_html_form
 import json
-from itertools import count
-from natsort import os_sorted
 import shutil
 import msvcrt
+from glob import glob
+from itertools import count
+from natsort import os_sorted
+
+from config.config import config
+from generate_html import create_html_form
+from main_openai import run_chat, run_assistant
+from main_edit import main as main_edit
+from utils import group_files_by_name, delete_all_files, create_date_folder_in_check
 
 
 def main(show_logs=False, test_mode=True, use_existing=False, stop_when=0):
