@@ -170,7 +170,7 @@ def create_date_folder_in_check(root_dir):
     return folder_path
 
 
-# _________ IMAGE _________
+# _________ IMAGES _________
 
 def add_text_bar(image: str | Image.Image, text, h=75, font_path='verdana.ttf', font_size=50):
     # Открыть изображение
@@ -208,6 +208,23 @@ def add_text_bar(image: str | Image.Image, text, h=75, font_path='verdana.ttf', 
 
     return new_image
 
+
+# _________ OPENAI _________
+
+def update_assistant(client, assistant_id: str, model: int):
+    if model == 3:
+        model = 'gpt-3.5-turbo'
+    if model == 4:
+        model = 'gpt-4o'
+
+    my_updated_assistant = client.beta.assistants.update(
+        assistant_id,
+        model=model
+    )
+    return my_updated_assistant
+
+
+# _________ TEST _________
 
 if __name__ == '__main__':
 
