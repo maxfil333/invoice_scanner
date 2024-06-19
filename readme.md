@@ -8,6 +8,7 @@ pyinstaller --add-data "C:\Program Files\poppler-22.01.0\Library\bin;poppler" --
 
 - 1.1. Командой
 > pyinstaller --add-data "C:\Program Files\Tesseract-OCR;local_tes" --onefile main.py
+> 
 добавляем копию тессаракта в папку local_tes;
 - 1.2. Получить путь к tesseract.exe через sys._MEIPASS / local_tes / tesseract.exe
 - 1.3. Линкануть полученный путь через pytesseract.tesseract_cmd
