@@ -108,6 +108,8 @@ def run_assistant(file_path, show_logs=False):
     return local_postprocessing(response, show_logs=show_logs)
 
 
+# ___________________________ TEST ___________________________
+
 if __name__ == '__main__':
     # result = run_chat(os.path.join('..', 'IN/edited/0_1_jpg.jpg'),
     #                   os.path.join('..', 'IN/edited/0_1_jpg_TAB2+.jpg'),
