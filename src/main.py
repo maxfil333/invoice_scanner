@@ -50,6 +50,9 @@ def main(show_logs=False, test_mode=True, use_existing=False, stop_when=0):
             else:
                 result = run_chat(*files, detail='high', show_logs=show_logs)
 
+        if result is None:
+            continue
+
         json_path = os.path.join(date_folder, text_or_scanned_folder, json_name)
         with open(json_path, 'w', encoding='utf-8') as file:
             file.write(result)
