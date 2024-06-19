@@ -23,7 +23,9 @@ client = OpenAI()
 
 
 def local_postprocessing(response, show_logs):
-    re_response = postprocessing_openai_response(response)
+    re_response = postprocessing_openai_response(response, show_logs)
+    if re_response is None:
+        return None
     if show_logs:
         print(f'function "{inspect.stack()[1].function}":')
         print('response:')
@@ -55,12 +57,14 @@ def run_chat(*img_paths: str, detail='high', show_logs=False) -> str:
 
     response = client.chat.completions.create(
         model="gpt-4o",
+        response_format={"type": "json_object"},
+        temperature=0.1,
         messages=
         [
             {"role": "system", "content": config['system_prompt']},
             {"role": "user", "content": content}
         ],
-        max_tokens=2000,
+        max_tokens=3000,
     )
     print(f'img_paths: {img_paths}')
     print(f'time: {perf_counter() - start:.2f}')
