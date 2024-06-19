@@ -16,7 +16,9 @@ pyinstaller --add-data "C:\Program Files\poppler-22.01.0\Library\bin;poppler" --
 
 ### 2. Создание и редактирование файла .spec:
 
-- 2.1. Создать файл ___.spec командой pyinstaller --onefile src/___.py
+- 2.1. Создать файл ___.spec командой
+> pyinstaller --onefile src/___.py
+> 
 - 2.2. Файл ___.spec отредактировать. Добавить в datas имена папок с алиасами: 
     datas=[
         ('src', 'src'),
