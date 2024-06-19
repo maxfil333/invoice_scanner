@@ -15,11 +15,11 @@ pyinstaller --add-data "C:\Program Files\Tesseract-OCR;local_tes" --onefile main
 
 ### 2. Создание и редактирование файла .spec:
 
-2.1. Создать файл ___.spec командой pyinstaller --onefile src/___.py
-2.2. Файл ___.spec отредактировать. Добавить в datas имена папок с алиасами: 
+- 2.1. Создать файл ___.spec командой pyinstaller --onefile src/___.py
+- 2.2. Файл ___.spec отредактировать. Добавить в datas имена папок с алиасами: 
     datas=[
         ('src', 'src'),
         ('config', 'config')
     ],
-2.3. Удалить dist, build
-2.4. Выполнить pyinstaller ___.spec
+- 2.3. Удалить dist, build
+- 2.4. Выполнить pyinstaller ___.spec
