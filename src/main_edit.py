@@ -1,17 +1,18 @@
-from config.config import config
-from glob import glob
-from natsort import os_sorted
 import os
 import shutil
+import subprocess
 import numpy as np
-from pdf2image import convert_from_path
+from glob import glob
 from PIL import Image
+from natsort import os_sorted
+from pdf2image import convert_from_path
 
+from config.config import config
 from rotator import main as rotate
+from crop_tables import define_and_return
 from utils import is_scanned_pdf, count_pages
 from utils import rename_files_in_directory
 from utils import add_text_bar
-from crop_tables import define_and_combine, define_and_return
 
 
 def main():
@@ -55,31 +56,23 @@ def main():
                 rotated = rotated.convert('RGB')
             rotated.save(save_path, quality=100)
 
-            # # extract, crop and stuck image tables
-            # cropped_save_path = os.path.splitext(save_path)[0] + '_TAB+' + os.path.splitext(save_path)[1]
-            # cropped = define_and_combine(save_path)
-            # if cropped:
-            #     cropped.save(cropped_save_path)
-            #     command = f'magick convert {cropped_save_path} {config["magick_opt"]} {cropped_save_path}'
-            #     os.system(command)
-
             # extract and crop two tables
-            cropped_save_path1 = os.path.splitext(save_path)[0] + '_TAB1+' + os.path.splitext(save_path)[1]
-            cropped_save_path2 = os.path.splitext(save_path)[0] + '_TAB2+' + os.path.splitext(save_path)[1]
+            cropped_save_pth1 = os.path.splitext(save_path)[0] + '_TAB1+' + os.path.splitext(save_path)[1]
+            cropped_save_pth2 = os.path.splitext(save_path)[0] + '_TAB2+' + os.path.splitext(save_path)[1]
             table_title, table_ship = define_and_return(save_path)
             if table_title:
                 table_title = add_text_bar(table_title, 'Банковские реквизиты поставщика')
-                table_title.save(cropped_save_path1)
-                command = f'{config["magick_exe"]} convert "{cropped_save_path1}" {config["magick_opt"]} "{cropped_save_path1}"'
-                os.system(command)
+                table_title.save(cropped_save_pth1)
+                command = [config["magick_exe"], "convert", cropped_save_pth1, *config["magick_opt"], cropped_save_pth1]
+                subprocess.run(command)
             if table_ship:
                 table_ship = add_text_bar(table_ship, 'Услуги')
-                table_ship.save(cropped_save_path2)
-                command = f'{config["magick_exe"]} convert "{cropped_save_path2}" {config["magick_opt"]} "{cropped_save_path2}"'
-                os.system(command)
+                table_ship.save(cropped_save_pth2)
+                command = [config["magick_exe"], "convert", cropped_save_pth2, *config["magick_opt"], cropped_save_pth2]
+                subprocess.run(command)
 
-            command = f'{config["magick_exe"]} convert "{save_path}" {config["magick_opt"]} "{save_path}"'
-            os.system(command)
+            command = [config["magick_exe"], "convert", save_path, *config["magick_opt"], save_path]
+            subprocess.run(command)
 
         print(save_path)
     print(f"\nФайлы сохранены в {config['IN_FOLDER_EDIT']}\n")
@@ -87,7 +80,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-    # z = os.path.join(os.path.dirname(__file__), '..', 'data', '620.jpg')
-    # z = r'C:\Users\Filipp\PycharmProjects\Invoice_scanner\IN\edited\620.jpg'
-    # print(os.path.splitext(z)[0]+'_tab')
-    # print(os.path.split(z))
