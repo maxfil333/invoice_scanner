@@ -32,16 +32,22 @@ Users\User\AppData\Local\Temp\%TEMPFOLDERNAME%\Tesseract-OCR;
 - 2.3. Удалить dist, build
 - 2.4. Выполнить pyinstaller filename.spec
 
-### 3. Добавление ImageMagick
-- IM доступен через cmd-команду \
-*magick convert ...* \
-т.к. обычно находится в системных переменных **Path**.
-- Команда *magick* может быть заменена полным путем до исполняемого файла, например \
-*"C:\Program Files\ImageMagick-7.1.1-Q16-HDRI\magick.exe" convert ...* 
-- Таким образом надо переписать команду \
-**"magick convert..."** на 
-**"%MAGICK_EXE_PATH% convert ..."** \
-где %MAGICK_EXE_PATH% может быть получен либо через sys._MEIPASS, \
-либо через абсолютный путь к файлу 
-magick.exe, в случае, если проект собирается без опции --onefile.
+### Варианты доступа к переменной в различных сборках (на примере ImageMagick).
+datas=[('C:\\Program Files\\ImageMagick-7.1.1-Q16-HDRI', 'magick')],
 
+5.1 getattr(sys, 'frozen') + --onefile + --add-data/путь добавлен в .spec datas \
+	os.path.join(sys._MEIPASS, 'magick', 'magick.exe')
+
+5.2 getattr(sys, 'frozen') - --onefile + путь добавлен в .spec \
+	os.path.join(sys._MEIPASS, 'magick', 'magick.exe')
+
+5.3 getattr(sys, 'frozen') + --onefile - путь НЕ добавлен в .spec \
+	Положить рядом с main.exe директорию с исполняемым файлом magick/magick.exe \
+	os.path.join(os.path.dirname(sys.executable), 'magick', 'magick.exe')
+	
+5.4 getattr(sys, 'frozen') - --onefile - путь НЕ добавлен в .spec \
+	Положить рядом с main.exe директорию с исполняемым файлом magick/magick.exe \
+	os.path.join(os.path.dirname(sys.executable), 'magick', 'magick.exe')
+
+5.5 Запуск из исходного кода \
+	magick или C:\Program Files\ImageMagick-7.1.1-Q16-HDRI\magick.exe
