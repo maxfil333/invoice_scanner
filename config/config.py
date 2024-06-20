@@ -8,7 +8,7 @@ datas=[('C:\\Program Files\\poppler-22.01.0\\Library\\bin', 'poppler'),
 """
 
 config = dict()
-config['magick_opt'] = '-colorspace Gray'
+config['magick_opt'] = '-colorspace Gray'.split(' ')
 config['NAME_scanned'] = 'scannedPDFs'
 config['NAME_text'] = 'textPDFs'
 config['NAME_verified'] = 'verified'
@@ -39,12 +39,12 @@ except FileNotFoundError as e:
         msvcrt.getch()
         sys.exit()
 
-# "magick_opt": '-colorspace Gray -white-threshold 85% -level 0%,100%,0.5 -bilateral-blur 15 '
-#               '-gaussian-blur 6 -quality 100 -units PixelsPerInch -density 350',
-# "magick_opt": '-colorspace Gray -level 0%,100%,0.7 '
-#               '-quality 100 -units PixelsPerInch -density 350',
-# "magick_opt": '-colorspace Gray -auto-threshold OTSU -gaussian-blur 3 -enhance -enhance -enhance '
-#               '-quality 100 -units PixelsPerInch -density 350',
+# magick_opt = ('-colorspace Gray -white-threshold 85% -level 0%,100%,0.5 -bilateral-blur 15 -gaussian-blur 6 -quality '
+#               '100 -units PixelsPerInch -density 350').split(' ')
+# magick_opt = ('-colorspace Gray -level 0%,100%,0.7 '
+#               '-quality 100 -units PixelsPerInch -density 350').split(' ')
+# magick_opt = ('-colorspace Gray -auto-threshold OTSU -gaussian-blur 3 -enhance -enhance -enhance '
+#               '-quality 100 -units PixelsPerInch -density 350').split(' ')
 
 config['json_struct'] = ('{"Банковские реквизиты поставщика":{"ИНН":"","КПП":"","БИК":"","корреспондентский счет":"",'
                          '"расчетный счет":""},"Банковские реквизиты покупателя":{"ИНН":"","КПП":""},"Номер счета":"",'
@@ -70,7 +70,6 @@ print('sys._MEIPASS:', hasattr(sys, '_MEIPASS'))
 print(f'POPPLER_RPATH = {config["POPPLER_PATH"]}')
 print(f'magick_exe = {config["magick_exe"]}')
 print(f'magick_opt = {config["magick_opt"]}')
-
 
 if __name__ == '__main__':
     print(getattr(sys, 'frozen', False))
