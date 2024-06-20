@@ -30,7 +30,8 @@ def main(show_logs=False, test_mode=True, use_existing=False, stop_when=0):
     for base, files in grouped_files.items():
 
         # _____  CREATE JSON  _____
-        print('base:', base, sep='\n')
+        print('-'*20)
+        print('\nbase:', base, sep='\n')
         print('files:', *files, sep='\n')
         json_name = os.path.basename(base[0]) + '_' + '0' * 11 + '.json'
         if base[-1] == 'pdf':
