@@ -1,18 +1,18 @@
 import os
-from os import path
 import re
+import sys
 import json
-from glob import glob
+import msvcrt
 import base64
 from io import BytesIO, StringIO
-from time import perf_counter
+from dotenv import load_dotenv
 import PyPDF2
+import datetime
 from PIL import Image, ImageDraw, ImageFont
 from collections import defaultdict
-import datetime
 from cryptography.fernet import Fernet
+
 from config.config import config
-from dotenv import load_dotenv
 
 
 # _________ ENCODERS _________
@@ -93,8 +93,16 @@ def get_stream_dotenv():
     returns StringIO (for load_dotenv(stream=...)"""
 
     f = Fernet(config['crypto_key'])
-    with open(config['crypto_env'], 'rb') as file:
-        encrypted_data = file.read()
+    try:
+        with open(config['crypto_env'], 'rb') as file:
+            encrypted_data = file.read()
+    except FileNotFoundError:
+        print(f'Файл {config["crypto_env"]} не найден.')
+        if getattr(sys, 'frozen', False):
+            msvcrt.getch()
+            sys.exit()
+        else:
+            raise
     decrypted_data = f.decrypt(encrypted_data)  # bytes
     decrypted_data_str = decrypted_data.decode('utf-8')  # string
     string_stream = StringIO(decrypted_data_str)
