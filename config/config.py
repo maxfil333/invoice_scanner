@@ -3,7 +3,8 @@ import sys
 import msvcrt
 
 r"""
-datas=[('C:\\Program Files\\poppler-22.01.0\\Library\\bin', 'poppler')],
+datas=[('C:\\Program Files\\poppler-22.01.0\\Library\\bin', 'poppler'),
+        ('C:\\Program Files\\ImageMagick-7.1.1-Q16-HDRI', 'magick')],
 """
 
 config = dict()
@@ -12,12 +13,14 @@ config['NAME_scanned'] = 'scannedPDFs'
 config['NAME_text'] = 'textPDFs'
 config['NAME_verified'] = 'verified'
 
-if getattr(sys, 'frozen', False):
+if getattr(sys, 'frozen', False):  # в сборке
     config['BASE_DIR'] = os.path.dirname(sys.executable)
     config['POPPLER_PATH'] = os.path.join(sys._MEIPASS, 'poppler')
+    config['magick_exe'] = os.path.join(sys._MEIPASS, 'magick', 'magick.exe')
 else:
     config['BASE_DIR'] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     config['POPPLER_PATH'] = r'C:\Program Files\poppler-22.01.0\Library\bin'
+    config['magick_exe'] = 'magick'  # или полный путь до ...magick.exe файла, если не добавлено в Path
 
 config['IN_FOLDER'] = os.path.join(config['BASE_DIR'], 'IN')
 config['IN_FOLDER_EDIT'] = os.path.join(config['IN_FOLDER'], 'edited')
@@ -31,6 +34,7 @@ try:
         config['crypto_key'] = f.read()
 except FileNotFoundError as e:
     print(e)
+    print('Не найден crypto.key')
     if getattr(sys, 'frozen', False):
         msvcrt.getch()
         sys.exit()
@@ -62,7 +66,10 @@ config['system_prompt'] = f"""
 # Верни только JSON-строку и ничего более.
 
 print("CONFIG INFO:")
+print('sys._MEIPASS:', hasattr(sys, '_MEIPASS'))
 print(f'POPPLER_RPATH = {config["POPPLER_PATH"]}')
+print(f'magick_exe = {config["magick_exe"]}')
+print(f'magick_opt = {config["magick_opt"]}')
 
 
 if __name__ == '__main__':
