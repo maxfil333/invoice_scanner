@@ -141,7 +141,10 @@ input[type="checkbox"] {
     margin-right: 0.5em;
 }
 
-#save-button {
+
+
+/* Общие стили для кнопок */
+button {
     background-color: #007bff; /* Синий цвет для кнопки */
     color: white;
     padding: 8px 16px; /* Уменьшенный отступ */
@@ -158,6 +161,33 @@ input[type="checkbox"] {
     background-color: #0056b3; /* Более темный синий при наведении */
 }
 
+/* Стили для кнопки "Добавить услугу" */
+button[onclick="addService(this)"] {
+    background-color: #4CAF50; /* Зеленый фон */
+}
+
+button[onclick="addService(this)"]:hover {
+    background-color: #367d39; /* Темно-зеленый при наведении */
+}
+
+button[onclick="addService(this)"]:active {
+    background-color: #1f4221; /* Темно-зеленый при нажатии */
+    transform: scale(0.98); /* Легкое уменьшение при нажатии */
+}
+
+/* Стили для кнопки "Удалить услугу" */
+button[onclick="removeService(this)"] {
+    background-color: #f44336; /* Красный фон */
+}
+
+button[onclick="removeService(this)"]:hover {
+    background-color: #c9322e; /* Темно-красный при наведении */
+}
+
+button[onclick="removeService(this)"]:active {
+    background-color: #9e2926; /* Темно-красный при нажатии */
+    transform: scale(0.98); /* Легкое уменьшение при нажатии */
+}
 
 /* Стили для кнопок */
 input[type="submit"] {

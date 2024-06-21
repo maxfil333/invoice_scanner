@@ -167,3 +167,43 @@ function generateJSON() {
         alert("Произошла ошибка: " + error.message);
     }
 }
+
+function addService(button) {
+    var fieldset = button.parentElement;
+    var services = fieldset.querySelectorAll('fieldset');
+
+    if (services.length === 0) return;
+
+    var firstService = services[0];
+    var newService = firstService.cloneNode(true);
+
+    var inputs = newService.querySelectorAll('input, textarea');
+    inputs.forEach(function(input) {
+        if (input.type === 'checkbox') {
+            input.checked = false;
+        } else {
+            input.value = '';
+        }
+    });
+
+    var lastService = services[services.length - 1];
+    var lastLegend = lastService.querySelector('legend');
+    var newLegendNumber = parseInt(lastLegend.innerText) + 1;
+
+    var newLegend = newService.querySelector('legend');
+    newLegend.innerText = newLegendNumber;
+
+    fieldset.insertBefore(newService, button);
+}
+
+function removeService(button) {
+    var fieldset = button.parentElement;
+    var services = fieldset.querySelectorAll('fieldset');
+
+    if (services.length > 1) {
+        var lastService = services[services.length - 1];
+        fieldset.removeChild(lastService);
+    } else {
+        alert("Нельзя удалить единственную услугу.");
+    }
+}

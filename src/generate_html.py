@@ -41,6 +41,11 @@ def generate_html_from_json(data, parent_key="", prefix=""):
             html_content += f'<fieldset><legend>{escape(display_key)}</legend>\n'
             html_content += generate_html_from_json(item, new_key, prefix)
             html_content += '</fieldset>\n'
+        if parent_key.endswith("Услуги"):
+            html_content += '<button type="button" onclick="addService(this)">Добавить услугу</button>\n'
+            html_content += '<button type="button" onclick="removeService(this)">Удалить услугу</button>\n'
+
+
     return html_content
 
 
