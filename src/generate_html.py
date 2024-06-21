@@ -11,13 +11,13 @@ def generate_input_html(key, value):
     if isinstance(value, bool):
         input_type = "checkbox"
         checked = 'checked' if value else ''
-        html_content += f'<input type="{input_type}" name="{escape(key)}" {checked}></div>'
+        html_content += f'<input type="{input_type}" name="{escape(key)}" {checked}></div>\n'
     elif isinstance(value, str) and len(value) > 30:
         html_content += (f'<textarea name="{escape(key)}" rows="1" style="resize:none;" '
                          f'oninput="this.style.height=\'auto\'; '
-                         f'this.style.height=(this.scrollHeight)+\'px\';">{escape(value)}</textarea></div>')
+                         f'this.style.height=(this.scrollHeight)+\'px\';">{escape(value)}</textarea></div>\n')
     else:
-        html_content += f'<input type="{input_type}" name="{escape(key)}" value="{escape(str(value))}"></div>'
+        html_content += f'<input type="{input_type}" name="{escape(key)}" value="{escape(str(value))}"></div>\n'
 
     return html_content
 
@@ -29,18 +29,18 @@ def generate_html_from_json(data, parent_key="", prefix=""):
             new_key = f'{parent_key}.{key}' if parent_key else key
             display_key = key
             if isinstance(value, (dict, list)):
-                html_content += f'<fieldset><legend>{escape(display_key)}</legend>'
+                html_content += f'<fieldset><legend>{escape(display_key)}</legend>\n'
                 html_content += generate_html_from_json(value, new_key, prefix)
-                html_content += '</fieldset>'
+                html_content += '</fieldset>\n'
             else:
                 html_content += generate_input_html(display_key, value)
     elif isinstance(data, list):
         for i, item in enumerate(data):
             new_key = f'{parent_key}[{i}]'
             display_key = f'{i + 1}'
-            html_content += f'<fieldset><legend>{escape(display_key)}</legend>'
+            html_content += f'<fieldset><legend>{escape(display_key)}</legend>\n'
             html_content += generate_html_from_json(item, new_key, prefix)
-            html_content += '</fieldset>'
+            html_content += '</fieldset>\n'
     return html_content
 
 
@@ -70,12 +70,14 @@ def create_html_form(json_file, output_file, file_path):
         <div class="container">
             <div class="left-pane">
                 <form>
+                
     '''
 
     html_content += generate_html_from_json(data)
 
     # Завершаем форму и добавляем правую панель с файлом
     html_content += f'''
+    
                      <button type="button" id="save-button">Сохранить</button>
                 </form>
             </div>
@@ -87,6 +89,9 @@ def create_html_form(json_file, output_file, file_path):
         <div jsonfilename="{os.path.basename(json_file)}" id="jsonfilenameid"></div>
         <div id="jsonfiledataid" hidden>
         {json.dumps(data, ensure_ascii=False)}
+        </div>
+        <div id="jsononegoodid" hidden>
+        {data['Услуги'][0]}
         </div>
     </body>
     </html>
