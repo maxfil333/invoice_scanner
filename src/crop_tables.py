@@ -33,7 +33,7 @@ def define_tables_on_bboxes(img_path: str) -> dict:
         table_content = extract_text_from_image(np.array(cropped))
 
         shipment_regex = r'\b(Сумма|Цена|Всего|Итого|Услуг\w?|Товары|Товара)\b'
-        title_regex = r'\b(ИНН|КПП|БИК|получатель|получателя)\b'
+        title_regex = r'\b(ИНН|КПП|БИК|получатель|получателя|(?:408\d{17}|407\d{17}|406\d{17}|405\d{17})|(?:30101\d{15}))\b'
 
         if bool(re.search(shipment_regex, table_content, flags=re.IGNORECASE)) and tables_and_marks['shipment'] != '#':
             if tables_and_marks['shipment'] is None:
