@@ -46,6 +46,7 @@ def generate_html_from_json(data, parent_key="", prefix=""):
             html_content += '<button type="button" onclick="removeService(this)">Удалить услугу</button>\n'
 
 
+
     return html_content
 
 
