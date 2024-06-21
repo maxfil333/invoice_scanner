@@ -147,7 +147,7 @@ input[type="checkbox"] {
 button {
     background-color: #007bff; /* Синий цвет для кнопки */
     color: white;
-    padding: 8px 16px; /* Уменьшенный отступ */
+    padding: 5px 10px;
     border: none;
     border-radius: 4px;
     cursor: pointer;
@@ -155,6 +155,10 @@ button {
     margin-top: 0.5em; /* Уменьшенный верхний отступ */
     box-sizing: border-box;
     transition: background-color 0.3s ease;
+}
+
+#save-button {
+    padding: 10px 10px
 }
 
 #save-button:hover {
@@ -187,24 +191,6 @@ button[onclick="removeService(this)"]:hover {
 button[onclick="removeService(this)"]:active {
     background-color: #9e2926; /* Темно-красный при нажатии */
     transform: scale(0.98); /* Легкое уменьшение при нажатии */
-}
-
-/* Стили для кнопок */
-input[type="submit"] {
-    background-color: #007bff; /* Синий цвет для кнопки */
-    color: white;
-    padding: 8px 16px; /* Уменьшаем padding */
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    margin-top: 0.5em; /* Уменьшаем верхний отступ */
-    box-sizing: border-box;
-    transition: background-color 0.3s ease;
-}
-
-input[type="submit"]:hover {
-    background-color: #0056b3; /* Более темный синий при наведении */
 }
 
 /* Адаптивные стили для мобильных устройств */
