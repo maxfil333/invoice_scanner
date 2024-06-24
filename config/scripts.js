@@ -97,11 +97,9 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 
-
-
-
+// --------------------------------------------------------------------------------------------------------------------
 // Сохранение json файла с внесенными изменениями
-
+/*
 document.getElementById('save-button').addEventListener('click', generateJSON);
 
 function generateJSON() {
@@ -136,7 +134,7 @@ function generateJSON() {
             }
             return recurse(obj);
         }
-		
+
 		function getCurrentTime() {
             // Получаем текущее время в миллисекундах с начала эпохи
             const milliseconds = Date.now().toString().slice(-11);
@@ -152,13 +150,13 @@ function generateJSON() {
         // Сохраняем JSON строку как текстовый файл
         var blob = new Blob([generatedJsonString], { type: 'application/json' });
         var link = document.createElement('a');
-		
+
 		var currentTime = getCurrentTime();
 		var originalFilename = document.getElementById('jsonfilenameid').getAttribute('jsonfilename');
 
 		// 11 знаков (временная отметка)  + 1 "_" + 5 ".json" = 17 знаков
 		var newFilename = originalFilename.slice(0, -17) + `_${currentTime}.json`;
-		
+
         link.href = URL.createObjectURL(blob);
         link.download = newFilename;
         link.click();
@@ -167,6 +165,9 @@ function generateJSON() {
         alert("Произошла ошибка: " + error.message);
     }
 }
+*/
+// --------------------------------------------------------------------------------------------------------------------
+// Добавить новую услугу
 
 function addService(button) {
     var fieldset = button.parentElement;
@@ -196,6 +197,10 @@ function addService(button) {
     fieldset.insertBefore(newService, button);
 }
 
+
+// --------------------------------------------------------------------------------------------------------------------
+// Удалить последнюю услугу
+
 function removeService(button) {
     var fieldset = button.parentElement;
     var services = fieldset.querySelectorAll('fieldset');
@@ -207,3 +212,71 @@ function removeService(button) {
         alert("Нельзя удалить единственную услугу.");
     }
 }
+
+
+// --------------------------------------------------------------------------------------------------------------------
+// Получить текущую структуру JSON
+
+function getFormData(form) {
+    const data = {};
+    const services = [];
+
+    form.querySelectorAll('fieldset').forEach(fieldset => {
+        const legend = fieldset.querySelector('legend');
+        if (legend) {
+            const fieldsetName = legend.textContent.trim();
+
+            if (fieldset.classList.contains('service')) {
+                const serviceData = {};
+                fieldset.querySelectorAll('input, textarea').forEach(input => {
+                    serviceData[input.name] = input.value;
+                });
+                services.push(serviceData);
+            } else if (fieldsetName === 'Услуги') {
+                data[fieldsetName] = services;
+            } else {
+                data[fieldsetName] = {};
+                fieldset.querySelectorAll('input, textarea').forEach(input => {
+                    data[fieldsetName][input.name] = input.value;
+                });
+            }
+        }
+    });
+
+    form.querySelectorAll('input:not(fieldset input), textarea:not(fieldset textarea)').forEach(input => {
+        if (!input.closest('fieldset')) {
+            data[input.name] = input.value;
+        }
+    });
+
+    return data;
+}
+
+document.getElementById('save-button').addEventListener('click', () => {
+
+    function getCurrentTime() {
+    // Получаем текущее время в миллисекундах с начала эпохи
+    const milliseconds = Date.now().toString().slice(-11);
+    return milliseconds;
+    }
+
+    const form = document.getElementById('invoice-form');
+    const data = getFormData(form);
+    // Сохранить JSON в файл
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+
+    var currentTime = getCurrentTime();
+    var originalFilename = document.getElementById('jsonfilenameid').getAttribute('jsonfilename');
+    // 11 знаков (временная отметка)  + 1 "_" + 5 ".json" = 17 знаков
+    var newFilename = originalFilename.slice(0, -17) + `_${currentTime}.json`;
+
+    a.download = newFilename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+});

@@ -38,15 +38,15 @@ def generate_html_from_json(data, parent_key="", prefix=""):
         for i, item in enumerate(data):
             new_key = f'{parent_key}[{i}]'
             display_key = f'{i + 1}'
-            html_content += f'<fieldset><legend>{escape(display_key)}</legend>\n'
+            if parent_key.endswith("Услуги"):
+                html_content += f'<fieldset class="service"><legend>{escape(display_key)}</legend>\n'
+            else:
+                html_content += f'<fieldset><legend>{escape(display_key)}</legend>\n'
             html_content += generate_html_from_json(item, new_key, prefix)
             html_content += '</fieldset>\n'
         if parent_key.endswith("Услуги"):
             html_content += '<button type="button" onclick="addService(this)">Добавить услугу</button>\n'
             html_content += '<button type="button" onclick="removeService(this)">Удалить услугу</button>\n'
-
-
-
     return html_content
 
 
@@ -75,7 +75,7 @@ def create_html_form(json_file, output_file, file_path):
     <body>
         <div class="container">
             <div class="left-pane">
-                <form>
+                <form id="invoice-form">
                 
     '''
 
