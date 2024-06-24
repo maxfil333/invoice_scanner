@@ -93,7 +93,7 @@ def main(show_logs=False, test_mode=True, use_existing=False, stop_when=0):
 
 if __name__ == "__main__":
     try:
-        result_message = main(show_logs=True, test_mode=True, use_existing=True, stop_when=10)
+        result_message = main(show_logs=True, test_mode=False, use_existing=False, stop_when=-1)
         print(f'\nresult_message:\n{result_message}\n')
     except Exception as error:
         print(error)
