@@ -2,6 +2,7 @@ import json
 from html import escape
 import os
 from config.config import config
+from bs4 import BeautifulSoup as bs
 
 
 def generate_input_html(key, value):
@@ -45,8 +46,8 @@ def generate_html_from_json(data, parent_key="", prefix=""):
             html_content += generate_html_from_json(item, new_key, prefix)
             html_content += '</fieldset>\n'
         if parent_key.endswith("Услуги"):
-            html_content += '<button type="button" onclick="addService(this)">Добавить услугу</button>\n'
-            html_content += '<button type="button" onclick="removeService(this)">Удалить услугу</button>\n'
+            html_content += '<button type="button" onclick="addService(this)">+</button>\n'
+            html_content += '<button type="button" onclick="removeService(this)">-</button>\n'
     return html_content
 
 
@@ -81,7 +82,6 @@ def create_html_form(json_file, output_file, file_path):
 
     html_content += generate_html_from_json(data)
 
-    # Завершаем форму и добавляем правую панель с файлом
     html_content += f'''
     
                      <button type="button" id="save-button">Сохранить</button>
@@ -93,17 +93,16 @@ def create_html_form(json_file, output_file, file_path):
         </div>
         <script src="{config['JS_PATH']}"></script>
         <div jsonfilename="{os.path.basename(json_file)}" id="jsonfilenameid"></div>
-        <div id="jsonfiledataid" hidden>
-        {json.dumps(data, ensure_ascii=False)}
-        </div>
-        <div id="jsononegoodid" hidden>
-        {data['Услуги'][0]}
-        </div>
+        <div id="jsonfiledataid" hidden>{json.dumps(data, ensure_ascii=False)}</div>
+        <div id="jsononegoodid" hidden>{data['Услуги'][0]}</div>
     </body>
     </html>
     '''
 
+    soup = bs(html_content, 'html.parser')
+    prettified = soup.prettify()
+
     with open(output_file, 'w', encoding='utf-8') as f:
-        f.write(html_content)
+        f.write(prettified)
 
     print(f'HTML страница сгенерирована и сохранена в {output_file}')

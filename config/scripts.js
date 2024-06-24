@@ -217,7 +217,16 @@ function removeService(button) {
 // --------------------------------------------------------------------------------------------------------------------
 // Получить текущую структуру JSON
 
-function getFormData(form) {
+document.getElementById('save-button').addEventListener('click', getFormData);
+
+function getCurrentTime() {
+    // Получаем текущее время в миллисекундах с начала эпохи
+    const milliseconds = Date.now().toString().slice(0,11);
+    return milliseconds;
+}
+
+function getFormData() {
+    const form = document.getElementById('invoice-form');
     const data = {};
     const services = [];
 
@@ -249,19 +258,6 @@ function getFormData(form) {
         }
     });
 
-    return data;
-}
-
-document.getElementById('save-button').addEventListener('click', () => {
-
-    function getCurrentTime() {
-    // Получаем текущее время в миллисекундах с начала эпохи
-    const milliseconds = Date.now().toString().slice(-11);
-    return milliseconds;
-    }
-
-    const form = document.getElementById('invoice-form');
-    const data = getFormData(form);
     // Сохранить JSON в файл
     const json = JSON.stringify(data, null, 2);
     const blob = new Blob([json], {type: 'application/json'});
@@ -279,4 +275,4 @@ document.getElementById('save-button').addEventListener('click', () => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-});
+}
