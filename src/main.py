@@ -1,8 +1,9 @@
 import os
 import sys
-import json
+import time
 import shutil
 import msvcrt
+import argparse
 from glob import glob
 from itertools import count
 from natsort import os_sorted
@@ -14,13 +15,13 @@ from main_edit import main as main_edit
 from utils import group_files_by_name, delete_all_files, create_date_folder_in_check
 
 
-def main(show_logs=False, test_mode=True, use_existing=False, stop_when=0):
+def main(hide_logs=False, test_mode=True, use_existing=False, stop_when=0):
     # _____  FILL IN_FOLDER_EDIT  _____
     date_folder = create_date_folder_in_check(config['CHECK_FOLDER'])
 
     if not use_existing:
         delete_all_files(config['IN_FOLDER_EDIT'])
-        main_edit()
+        main_edit(hide_logs=hide_logs, stop_when=stop_when)
 
     files = os_sorted(glob(f"{config['IN_FOLDER_EDIT']}/*.*"))
     files = [file for file in files if os.path.splitext(file)[-1] in ['.pdf', '.jpeg', '.jpg', '.png']]
@@ -41,7 +42,7 @@ def main(show_logs=False, test_mode=True, use_existing=False, stop_when=0):
                 with open(os.path.join(config['BASE_DIR'], '__test.json'), 'r', encoding='utf-8') as file:
                     result = file.read()
             else:
-                result = run_assistant(files[0], show_logs=show_logs)
+                result = run_assistant(files[0], hide_logs=hide_logs)
         else:
             text_or_scanned_folder = config['NAME_scanned']
             files.sort(reverse=True)
@@ -50,7 +51,7 @@ def main(show_logs=False, test_mode=True, use_existing=False, stop_when=0):
                 with open(os.path.join(config['BASE_DIR'], '__test.json'), 'r', encoding='utf-8') as file:
                     result = file.read()
             else:
-                result = run_chat(*files, detail='high', show_logs=show_logs)
+                result = run_chat(*files, detail='high', hide_logs=hide_logs)
 
         if result is None:
             continue
@@ -92,11 +93,27 @@ def main(show_logs=False, test_mode=True, use_existing=False, stop_when=0):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="DESCRIPTION: Invoice Scanner")
+    parser.add_argument('--hide_logs', action='store_true', help='Скрыть логи')
+    parser.add_argument('--test_mode', action='store_true', help='Режим тестирования')
+    parser.add_argument('--use_existing', action='store_true', help='Использовать существующие файлы')
+    parser.add_argument('--stop_when', type=int, default=-1, help='Максимальное количество файлов')
+    parser.add_argument('--no_exit', action='store_true', help='Не закрывать окно')
+    args = parser.parse_args()
+    print(args, end='\n\n')
+
     try:
-        result_message = main(show_logs=True, test_mode=False, use_existing=False, stop_when=-1)
+        result_message = main(hide_logs=args.hide_logs,
+                              test_mode=args.test_mode,
+                              use_existing=args.use_existing,
+                              stop_when=args.stop_when)
         print(f'\nresult_message:\n{result_message}\n')
     except Exception as error:
         print(error)
 
     if getattr(sys, 'frozen', False):
-        msvcrt.getch()
+        if args.no_exit:
+            msvcrt.getch()
+        else:
+            print('Завершено. Выполняется закрытие...')
+            time.sleep(3)
