@@ -13,7 +13,7 @@ def generate_input_html(key, value):
         input_type = "checkbox"
         checked = 'checked' if value else ''
         html_content += f'<input type="{input_type}" name="{escape(key)}" {checked}></div>\n'
-    elif isinstance(value, str) and len(value) > 30:
+    elif isinstance(value, str) and (key in ['Наименование', 'Номера контейнеров'] or len(value) > 30):
         html_content += (f'<textarea name="{escape(key)}" rows="1" style="resize:none;" '
                          f'oninput="this.style.height=\'auto\'; '
                          f'this.style.height=(this.scrollHeight)+\'px\';">{escape(value)}</textarea></div>\n')
