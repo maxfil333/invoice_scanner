@@ -22,11 +22,11 @@ ASSISTANT_ID = os.environ.get("ASSISTANT_ID")
 client = OpenAI()
 
 
-def local_postprocessing(response, show_logs):
-    re_response = postprocessing_openai_response(response, show_logs)
+def local_postprocessing(response, hide_logs=False):
+    re_response = postprocessing_openai_response(response, hide_logs)
     if re_response is None:
         return None
-    if show_logs:
+    if not hide_logs:
         print(f'function "{inspect.stack()[1].function}":')
         print('response:')
         print(repr(response))
@@ -45,7 +45,7 @@ def local_postprocessing(response, show_logs):
 
 # ___________________________ CHAT ___________________________
 
-def run_chat(*img_paths: str, detail='high', show_logs=False) -> str:
+def run_chat(*img_paths: str, detail='high', hide_logs=False) -> str:
     content = []
     for img_path in img_paths:
         d = {
@@ -73,12 +73,12 @@ def run_chat(*img_paths: str, detail='high', show_logs=False) -> str:
     print(f'total_tokens: {response.usage.total_tokens}')
 
     response = response.choices[0].message.content
-    return local_postprocessing(response, show_logs=show_logs)
+    return local_postprocessing(response, hide_logs=hide_logs)
 
 
 # ___________________________ ASSISTANT ___________________________
 
-def run_assistant(file_path, show_logs=False):
+def run_assistant(file_path, hide_logs=False):
     assistant = client.beta.assistants.retrieve(assistant_id=ASSISTANT_ID)
     message_file = client.files.create(file=open(file_path, "rb"), purpose="assistants")
     # Create a thread and attach the file to the message
@@ -105,19 +105,15 @@ def run_assistant(file_path, show_logs=False):
 
     messages = list(client.beta.threads.messages.list(thread_id=thread.id, run_id=run.id))
     response = messages[0].content[0].text.value
-    return local_postprocessing(response, show_logs=show_logs)
+    return local_postprocessing(response, hide_logs=hide_logs)
 
 
 # ___________________________ TEST ___________________________
 
 if __name__ == '__main__':
-    # result = run_chat(os.path.join('..', 'IN/edited/0_1_jpg.jpg'),
-    #                   os.path.join('..', 'IN/edited/0_1_jpg_TAB2+.jpg'),
-    #                   # os.path.join('..', 'IN/edited/458.jpg'),
-    #                   detail='high', show_logs=True)
 
     result = run_assistant(os.path.join('..', 'IN/edited/Печатная_форма_Акт_№УРKM0000145_от_03.04.24_pdf.pdf'),
-                           show_logs=True)
+                           hide_logs=False)
 
     print('#' * 50)
     print(result)

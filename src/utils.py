@@ -109,26 +109,26 @@ def get_stream_dotenv():
     return string_stream
 
 
-def postprocessing_openai_response(response: str, show_logs=False) -> str:
+def postprocessing_openai_response(response: str, hide_logs=False) -> str:
     # удаление двойных пробелов и переносов строк
     re_response = re.sub(r'(\s{2,}|\n)', '', response)
 
     # проверка на json-формат
     try:
         json.loads(re_response)
-        if show_logs: print('RECOGNIZED: JSON')
+        if not hide_logs: print('RECOGNIZED: JSON')
         return re_response
     except json.decoder.JSONDecodeError:
         # поиск ```json (RESPONSE)```
         json_response = re.findall(r'```\s?json\s?(.*)```', re_response, flags=re.DOTALL|re.IGNORECASE)
         if json_response:
-            if show_logs: print('RECOGNIZED: ``` json... ```')
+            if not hide_logs: print('RECOGNIZED: ``` json... ```')
             return json_response[0]
         else:
             # поиск текста в {}
             figure_response = re.findall(r'{.*}', re_response, flags=re.DOTALL|re.IGNORECASE)
             if figure_response:
-                if show_logs: print('RECOGNIZED: {...}')
+                if not hide_logs: print('RECOGNIZED: {...}')
                 return figure_response[0]
             else:
                 print('NOT RECOGNIZED JSON')
@@ -137,7 +137,7 @@ def postprocessing_openai_response(response: str, show_logs=False) -> str:
 
 # _________ FOLDERS _________
 
-def rename_files_in_directory(directory_path):
+def rename_files_in_directory(directory_path, hide_logs=False):
     files = os.listdir(directory_path)  # список файлов в указанной папке
 
     for filename in files:
@@ -148,8 +148,8 @@ def rename_files_in_directory(directory_path):
             old_filepath = os.path.join(directory_path, filename)
             new_filepath = os.path.join(directory_path, new_filename)
             os.rename(old_filepath, new_filepath)
-
-            print(f"Файл '{filename}' переименован в '{new_filename}'")
+            if not hide_logs:
+                print(f"Файл '{filename}' переименован в '{new_filename}'")
 
 
 def delete_all_files(directory):

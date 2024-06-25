@@ -4,6 +4,7 @@ import subprocess
 import numpy as np
 from glob import glob
 from PIL import Image
+from itertools import count
 from natsort import os_sorted
 from pdf2image import convert_from_path
 
@@ -15,10 +16,10 @@ from utils import rename_files_in_directory
 from utils import add_text_bar
 
 
-def main():
+def main(hide_logs=False, stop_when=-1):
     """ take all files in IN_FOLDER, preprocess, extract additional and save to IN_FOLDER_EDIT"""
 
-    rename_files_in_directory(config['IN_FOLDER'])
+    rename_files_in_directory(config['IN_FOLDER'], hide_logs=hide_logs)
 
     # collect files
     files, extensions = [], ['.pdf', '.jpeg', '.jpg', '.png']
@@ -26,6 +27,7 @@ def main():
         files.extend(glob(os.path.join(config['IN_FOLDER'], f'*{ext}')))
 
     # preprocess and copy to "edited"
+    c = count(1)
     for file in os_sorted(files):
         file_type = os.path.splitext(file)[1]
         file_name = os.path.basename(file).rsplit('.', 1)[0]
@@ -75,6 +77,13 @@ def main():
             subprocess.run(command)
 
         print(save_path)
+
+        # _____  STOP ITERATION  _____
+        if stop_when > 0:
+            stop = next(c)
+            if stop == stop_when:
+                break
+
     print(f"\nФайлы сохранены в {config['IN_FOLDER_EDIT']}\n")
 
 
