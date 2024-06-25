@@ -11,7 +11,7 @@ from PIL import Image
 
 from config.config import config
 from utils import base64_encode_pil, convert_json_values_to_strings, get_stream_dotenv, postprocessing_openai_response
-
+from utils import replace_container_with_latin
 
 # ___________________________ general ___________________________
 
@@ -34,11 +34,22 @@ def local_postprocessing(response, hide_logs=False):
         print(repr(re_response))
     dictionary = json.loads(re_response)
 
-    container_regex = r'[A-Z]{4}\s?[0-9]{7}'
-    for item in dictionary['Услуги']:
-        name = item['Наименование']
-        item['Номера контейнеров'] = ' '.join(list(map(lambda x:
-                                                       re.sub(r'\s', '', x), re.findall(container_regex, name))))
+    # Найти все контейнеры по паттерну вне зависимости от языка
+    container_regex = r'[A-ZА-Я]{4}\s?[0-9]{7}'
+    container_regex_lt = r'[A-Z]{4}\s?[0-9]{7}'
+
+    for good_dict in dictionary['Услуги']:
+        name = good_dict['Наименование']
+        # Заменить в Наименовании кириллицу в контейнерах
+        good_dict['Наименование'] = replace_container_with_latin(name, container_regex)
+        name = good_dict['Наименование']
+        # Найти контейнеры
+        good_dict['Номера контейнеров'] = ' '.join(list(map(lambda x:
+                                                            re.sub(r'\s', '', x),
+                                                            re.findall(container_regex_lt, name)
+                                                            )
+                                                        )
+                                                   )
     string_dictionary = convert_json_values_to_strings(dictionary)
     return json.dumps(string_dictionary, ensure_ascii=False, indent=4)
 
@@ -111,7 +122,6 @@ def run_assistant(file_path, hide_logs=False):
 # ___________________________ TEST ___________________________
 
 if __name__ == '__main__':
-
     result = run_assistant(os.path.join('..', 'IN/edited/Печатная_форма_Акт_№УРKM0000145_от_03.04.24_pdf.pdf'),
                            hide_logs=False)
 

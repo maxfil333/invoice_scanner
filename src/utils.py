@@ -135,6 +135,31 @@ def postprocessing_openai_response(response: str, hide_logs=False) -> str:
                 return None
 
 
+def replace_symbols_with_latin(match_obj):
+    """ Замена кириллических символов на латиницу """
+
+    text = match_obj.group(0)
+    cyrillic_to_latin = {
+        'А': 'A', 'В': 'B', 'Е': 'E', 'К': 'K', 'М': 'M', 'Н': 'H', 'О': 'O', 'Р': 'P', 'С': 'C', 'Т': 'T', 'У': 'Y',
+        'Х': 'X'
+    }
+    result = ''
+    for char in text:
+        if char in cyrillic_to_latin:
+            result += cyrillic_to_latin[char]
+        else:
+            result += char
+    return result
+
+
+def replace_container_with_latin(text, container_regex):
+    """ Замена в тексте контейнеров на контейнеры латиницей """
+
+    return re.sub(pattern=container_regex,
+                  repl=replace_symbols_with_latin,
+                  string=text)
+
+
 # _________ FOLDERS _________
 
 def rename_files_in_directory(directory_path, hide_logs=False):
