@@ -4,7 +4,6 @@ __*
 /OUT/
 /CHECK/
 crypto.key
-main.spec
 *.exe
 
 
