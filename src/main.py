@@ -39,7 +39,7 @@ def main(hide_logs=False, test_mode=True, use_existing=False, stop_when=0):
             text_or_scanned_folder = config['NAME_text']
             # __ RUN ASSISTANT __
             if test_mode:
-                with open(os.path.join(config['BASE_DIR'], '__test.json'), 'r', encoding='utf-8') as file:
+                with open(config['TESTFILE'], 'r', encoding='utf-8') as file:
                     result = file.read()
             else:
                 result = run_assistant(files[0], hide_logs=hide_logs)
@@ -48,7 +48,7 @@ def main(hide_logs=False, test_mode=True, use_existing=False, stop_when=0):
             files.sort(reverse=True)
             # __ RUN CHAT __
             if test_mode:
-                with open(os.path.join(config['BASE_DIR'], '__test.json'), 'r', encoding='utf-8') as file:
+                with open(config['TESTFILE'], 'r', encoding='utf-8') as file:
                     result = file.read()
             else:
                 result = run_chat(*files, detail='high', hide_logs=hide_logs)

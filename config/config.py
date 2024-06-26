@@ -22,15 +22,17 @@ else:
     config['POPPLER_PATH'] = r'C:\Program Files\poppler-22.01.0\Library\bin'
     config['magick_exe'] = 'magick'  # или полный путь до ...magick.exe файла, если не добавлено в Path
 
+config['CONFIG'] = os.path.join(config['BASE_DIR'], 'config')
 config['IN_FOLDER'] = os.path.join(config['BASE_DIR'], 'IN')
 config['IN_FOLDER_EDIT'] = os.path.join(config['IN_FOLDER'], 'edited')
 config['CHECK_FOLDER'] = os.path.join(config['BASE_DIR'], 'CHECK')
-config['CSS_PATH'] = os.path.join(config['BASE_DIR'], 'config', 'styles.css')
-config['JS_PATH'] = os.path.join(config['BASE_DIR'], 'config', 'scripts.js')
-config['crypto_env'] = os.path.join(config['BASE_DIR'], 'encrypted.env')
+config['CSS_PATH'] = os.path.join(config['CONFIG'], 'styles.css')
+config['JS_PATH'] = os.path.join(config['CONFIG'], 'scripts.js')
+config['crypto_env'] = os.path.join(config['CONFIG'], 'encrypted.env')
+config['TESTFILE'] = os.path.join(config['CONFIG'], '__test.json')
 
 try:
-    with open(os.path.join(config['BASE_DIR'], 'crypto.key'), 'r') as f:
+    with open(os.path.join(config['CONFIG'], 'crypto.key'), 'r') as f:
         config['crypto_key'] = f.read()
 except FileNotFoundError as e:
     print(e)
