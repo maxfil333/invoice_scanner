@@ -9,29 +9,33 @@ class BreakException(Exception):
     pass
 
 
-def parse(pdf_path, n=2, shift=0, max_pdf_amount=100):
-    result_pdf_files = []
+def parse(pdf_path, n_folders, shift_folders, max_pdf_amount):
     folders = glob(pdf_path)
-    folders.sort(key=os.path.getmtime)
-    folders = folders[-(shift + n):-shift] if shift != 0 else folders[-(shift + n):]
-
+    folders.sort(key=os.path.getmtime, reverse=True)
+    folders = folders[0 + shift_folders: n_folders + shift_folders]  # <-- новые : старые -->
+    result = []
     try:
         for f in folders:
-            invoice_path = os.path.join(os.path.abspath(f), r'Счет поставщика\*.pdf')
-            pdfs = glob(invoice_path)
+            invoice_path1 = os.path.join(os.path.abspath(f), r'Счет поставщика\*.pdf')
+            invoice_path2 = os.path.join(os.path.abspath(f), '*.pdf')
+            pdfs1 = glob(invoice_path1)
+            pdfs2 = glob(invoice_path2)
+            pdfs = []
+            pdfs.extend(pdfs1)
+            pdfs.extend(pdfs2)
             for pdf in pdfs:
-                result_pdf_files.append(pdf)
-                if len(result_pdf_files) == max_pdf_amount:
+                result.append(pdf)
+                if len(result) == max_pdf_amount:
                     raise BreakException
     except BreakException:
         pass
-
-    return result_pdf_files
+    return result
 
 
 if __name__ == '__main__':
-    pdf_path = r'\\10.10.0.3\docs\Baltimpex\Invoice\TR\Import\*'
+    base_path = r'\\10.10.0.3\docs\Baltimpex\Invoice\TR\Import\*'
     save_folder = os.path.join(config['IN_FOLDER'], '__data3')
-    res = parse(pdf_path=pdf_path, n=500, shift=0, max_pdf_amount=50)
-    for r in res:
+    res = parse(base_path, 50, 0, max_pdf_amount=9999)
+    for i, r in enumerate(res):
+        print(i, r)
         shutil.copy(r, save_folder)
