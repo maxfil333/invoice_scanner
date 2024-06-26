@@ -2,16 +2,16 @@ import openai
 from openai import OpenAI
 
 import os
-import inspect
-from dotenv import load_dotenv
-from time import perf_counter
 import re
 import json
+import inspect
 from PIL import Image
+from time import perf_counter
+from dotenv import load_dotenv
 
 from config.config import config
-from utils import base64_encode_pil, convert_json_values_to_strings, get_stream_dotenv, postprocessing_openai_response
 from utils import replace_container_with_latin
+from utils import base64_encode_pil, convert_json_values_to_strings, get_stream_dotenv, postprocessing_openai_response
 
 # ___________________________ general ___________________________
 
@@ -39,6 +39,8 @@ def local_postprocessing(response, hide_logs=False):
     container_regex_lt = r'[A-Z]{4}\s?[0-9]{7}'
 
     for good_dict in dictionary['Услуги']:
+
+        # 1. Замена кириллицы в контейнерах
         name = good_dict['Наименование']
         # Заменить в Наименовании кириллицу в контейнерах
         good_dict['Наименование'] = replace_container_with_latin(name, container_regex)
@@ -50,6 +52,16 @@ def local_postprocessing(response, hide_logs=False):
                                                             )
                                                         )
                                                    )
+
+        # 2. Дозаполнение Сумма НДС, Сумма с учетом НДС
+        summa = good_dict['Сумма без НДС']
+        summa_nds = good_dict['Сумма НДС']
+        summa_with_nds = good_dict['Сумма с учетом НДС']
+        if summa_nds == "" or summa_nds is None:
+            summa_nds = good_dict['Сумма НДС'] = "0"
+        if summa_nds in ["0", "0.0", "0.00", "0.000"] and (summa_with_nds == "" or summa_with_nds is None):
+            good_dict['Сумма с учетом НДС'] = summa
+
     string_dictionary = convert_json_values_to_strings(dictionary)
     return json.dumps(string_dictionary, ensure_ascii=False, indent=4)
 
@@ -122,9 +134,4 @@ def run_assistant(file_path, hide_logs=False):
 # ___________________________ TEST ___________________________
 
 if __name__ == '__main__':
-    result = run_assistant(os.path.join('..', 'IN/edited/Печатная_форма_Акт_№УРKM0000145_от_03.04.24_pdf.pdf'),
-                           hide_logs=False)
-
-    print('#' * 50)
-    print(result)
-    print('#' * 50)
+    pass
