@@ -1,8 +1,12 @@
+import os
 import shutil
 from glob import glob
-from os import path
-import os
+
 from config.config import config
+
+
+class BreakException(Exception):
+    pass
 
 
 def parse(pdf_path, n=2, shift=0, max_pdf_amount=100):
@@ -10,20 +14,24 @@ def parse(pdf_path, n=2, shift=0, max_pdf_amount=100):
     folders = glob(pdf_path)
     folders.sort(key=os.path.getmtime)
     folders = folders[-(shift + n):-shift] if shift != 0 else folders[-(shift + n):]
-    for f in folders:
-        invoice_path = path.join(path.abspath(f), r'Счет поставщика\*.pdf')
-        pdfs = glob(invoice_path)
-        for pdf in pdfs:
-            result_pdf_files.append(pdf)
-        if len(result_pdf_files) > max_pdf_amount:
-            break
+
+    try:
+        for f in folders:
+            invoice_path = os.path.join(os.path.abspath(f), r'Счет поставщика\*.pdf')
+            pdfs = glob(invoice_path)
+            for pdf in pdfs:
+                result_pdf_files.append(pdf)
+                if len(result_pdf_files) == max_pdf_amount:
+                    raise BreakException
+    except BreakException:
+        pass
 
     return result_pdf_files
 
 
-pdfpath = r'\\10.10.0.3\docs\Baltimpex\Invoice\TR\Import\*'
-
 if __name__ == '__main__':
-    res = parse(pdf_path=pdfpath, n=500, shift=0)
+    pdf_path = r'\\10.10.0.3\docs\Baltimpex\Invoice\TR\Import\*'
+    save_folder = os.path.join(config['IN_FOLDER'], '__data3')
+    res = parse(pdf_path=pdf_path, n=500, shift=0, max_pdf_amount=50)
     for r in res:
-        shutil.copy(r, config['IN_FOLDER'])
+        shutil.copy(r, save_folder)
