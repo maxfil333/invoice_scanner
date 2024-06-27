@@ -1,4 +1,5 @@
 import os
+import re
 import shutil
 from glob import glob
 
@@ -24,6 +25,8 @@ def parse(pdf_path, n_folders, shift_folders, max_pdf_amount):
             pdfs.extend(pdfs1)
             pdfs.extend(pdfs2)
             for pdf in pdfs:
+                if re.findall(r'.*PATTERN.*', pdf, re.IGNORECASE):
+                    print(f, pdf)
                 result.append(pdf)
                 if len(result) == max_pdf_amount:
                     raise BreakException
@@ -35,7 +38,8 @@ def parse(pdf_path, n_folders, shift_folders, max_pdf_amount):
 if __name__ == '__main__':
     base_path = r'\\10.10.0.3\docs\Baltimpex\Invoice\TR\Import\*'
     save_folder = os.path.join(config['IN_FOLDER'], '__data3')
-    res = parse(base_path, 50, 0, max_pdf_amount=9999)
-    for i, r in enumerate(res):
-        print(i, r)
-        shutil.copy(r, save_folder)
+    res = parse(base_path, 500, 0, max_pdf_amount=9999)
+
+    # for i, r in enumerate(res):
+    #     print(i, r)
+    #     shutil.copy(r, save_folder)
