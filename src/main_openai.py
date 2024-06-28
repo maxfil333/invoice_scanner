@@ -50,37 +50,37 @@ def local_postprocessing(response, hide_logs=False):
             dct['Итого без НДС'] = float(dct['Итого с учетом НДС']) - float(dct['Сумма НДС'])
             print('...fixing wrong nds...')
 
-    for good_dict in dct['Услуги']:
+    for good_dct in dct['Услуги']:
 
         # 1. Замена кириллицы в контейнерах
-        name = good_dict['Наименование']
+        name = good_dct['Наименование']
         # Заменить в Наименовании кириллицу в контейнерах
-        good_dict['Наименование'] = replace_container_with_latin(name, container_regex)
-        name = good_dict['Наименование']
+        good_dct['Наименование'] = replace_container_with_latin(name, container_regex)
+        name = good_dct['Наименование']
         # Найти контейнеры и заполнить "Номера контейнеров"
-        good_dict['Номера контейнеров'] = ' '.join(list(map(lambda x:
-                                                            re.sub(r'\s', '', x),
-                                                            re.findall(container_regex_lt, name)
-                                                            )
-                                                        )
-                                                   )
+        good_dct['Номера контейнеров'] = ' '.join(list(map(lambda x:
+                                                           re.sub(r'\s', '', x),
+                                                           re.findall(container_regex_lt, name)
+                                                           )
+                                                       )
+                                                  )
         # 2. Если "Итого" == "Всего к оплате" и "Сумма НДС" != 0
         if wrong_nds:
-            new_sum_without_nds = float(good_dict["Сумма без НДС"]) * 100 / (100 + nds_rate)
-            new_nds_sum = float(good_dict["Сумма без НДС"]) - new_sum_without_nds
+            new_sum_without_nds = float(good_dct["Сумма без НДС"]) * 100 / (100 + nds_rate)
+            new_nds_sum = float(good_dct["Сумма без НДС"]) - new_sum_without_nds
             new_sum_with_nds = new_nds_sum + new_sum_without_nds
-            good_dict["Сумма без НДС"] = new_sum_without_nds
-            good_dict["Сумма НДС"] = new_nds_sum
-            good_dict["Сумма с учетом НДС"] = new_sum_with_nds
+            good_dct["Сумма без НДС"] = new_sum_without_nds
+            good_dct["Сумма НДС"] = new_nds_sum
+            good_dct["Сумма с учетом НДС"] = new_sum_with_nds
 
         # 3. Дозаполнение Сумма НДС, Сумма с учетом НДС
-        summa = good_dict['Сумма без НДС']
-        summa_nds = good_dict['Сумма НДС']
-        summa_with_nds = good_dict['Сумма с учетом НДС']
+        summa, summa_nds, summa_with_nds = (good_dct['Сумма без НДС'],
+                                            good_dct['Сумма НДС'],
+                                            good_dct['Сумма с учетом НДС'])
         if summa_nds == "" or summa_nds is None:
-            summa_nds = good_dict['Сумма НДС'] = "0.0"
+            summa_nds = good_dct['Сумма НДС'] = "0.0"
         if summa_nds in ["0", "0.0", "0.00", "0.000"] and (summa_with_nds == "" or summa_with_nds is None):
-            good_dict['Сумма с учетом НДС'] = summa
+            good_dct['Сумма с учетом НДС'] = summa
 
     if dct['Сумма НДС'] == '':
         dct['Сумма НДС'] = '0.0'
