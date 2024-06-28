@@ -26,43 +26,65 @@ def local_postprocessing(response, hide_logs=False):
     re_response = postprocessing_openai_response(response, hide_logs)
     if re_response is None:
         return None
-    if not hide_logs:
-        print(f'function "{inspect.stack()[1].function}":')
-        print('response:')
-        print(repr(response))
-        print('re_response:')
-        print(repr(re_response))
-    dictionary = json.loads(re_response)
+    # if not hide_logs:
+    #     print(f'function "{inspect.stack()[1].function}":')
+    #     print('response:')
+    #     print(repr(response))
+    #     print('re_response:')
+    #     print(repr(re_response))
+    dct = json.loads(re_response)
+    dct = convert_json_values_to_strings(dct)
 
     # Найти все контейнеры по паттерну вне зависимости от языка
     container_regex = r'[A-ZА-Я]{4}\s?[0-9]{7}'
     container_regex_lt = r'[A-Z]{4}\s?[0-9]{7}'
 
-    for good_dict in dictionary['Услуги']:
+    # Если "Итого" == "Всего к оплате" и "Сумма НДС" != 0
+    wrong_nds = False
+    if (dct['Итого без НДС'].replace('.', '', 1).isnumeric()
+            and dct['Итого с учетом НДС'].replace('.', '', 1).isnumeric()
+            and float(dct['Итого без НДС']) == float(dct['Итого с учетом НДС'])):
+        if dct['Сумма НДС'].replace('.', '', 1).isnumeric() and float(dct['Сумма НДС']) != 0:
+            nds_rate = (float(dct["Сумма НДС"]) / (float(dct["Итого с учетом НДС"]) - float(dct["Сумма НДС"]))) * 100
+            wrong_nds = True
+            dct['Итого без НДС'] = float(dct['Итого с учетом НДС']) - float(dct['Сумма НДС'])
+            print('...fixing wrong nds...')
+
+    for good_dict in dct['Услуги']:
 
         # 1. Замена кириллицы в контейнерах
         name = good_dict['Наименование']
         # Заменить в Наименовании кириллицу в контейнерах
         good_dict['Наименование'] = replace_container_with_latin(name, container_regex)
         name = good_dict['Наименование']
-        # Найти контейнеры
+        # Найти контейнеры и заполнить "Номера контейнеров"
         good_dict['Номера контейнеров'] = ' '.join(list(map(lambda x:
                                                             re.sub(r'\s', '', x),
                                                             re.findall(container_regex_lt, name)
                                                             )
                                                         )
                                                    )
+        # 2. Если "Итого" == "Всего к оплате" и "Сумма НДС" != 0
+        if wrong_nds:
+            new_sum_without_nds = float(good_dict["Сумма без НДС"]) * 100 / (100 + nds_rate)
+            new_nds_sum = float(good_dict["Сумма без НДС"]) - new_sum_without_nds
+            new_sum_with_nds = new_nds_sum + new_sum_without_nds
+            good_dict["Сумма без НДС"] = new_sum_without_nds
+            good_dict["Сумма НДС"] = new_nds_sum
+            good_dict["Сумма с учетом НДС"] = new_sum_with_nds
 
-        # 2. Дозаполнение Сумма НДС, Сумма с учетом НДС
+        # 3. Дозаполнение Сумма НДС, Сумма с учетом НДС
         summa = good_dict['Сумма без НДС']
         summa_nds = good_dict['Сумма НДС']
         summa_with_nds = good_dict['Сумма с учетом НДС']
         if summa_nds == "" or summa_nds is None:
-            summa_nds = good_dict['Сумма НДС'] = "0"
+            summa_nds = good_dict['Сумма НДС'] = "0.0"
         if summa_nds in ["0", "0.0", "0.00", "0.000"] and (summa_with_nds == "" or summa_with_nds is None):
             good_dict['Сумма с учетом НДС'] = summa
 
-    string_dictionary = convert_json_values_to_strings(dictionary)
+    if dct['Сумма НДС'] == '':
+        dct['Сумма НДС'] = '0.0'
+    string_dictionary = convert_json_values_to_strings(dct)
     return json.dumps(string_dictionary, ensure_ascii=False, indent=4)
 
 
