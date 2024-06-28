@@ -39,7 +39,7 @@ def local_postprocessing(response, hide_logs=False):
     container_regex = r'[A-ZА-Я]{4}\s?[0-9]{7}'
     container_regex_lt = r'[A-Z]{4}\s?[0-9]{7}'
 
-    # Если "Итого" == "Всего к оплате" и "Сумма НДС" != 0
+    # Если "Итого без НДС" == "Итого с учетом НДС" и "Сумма НДС" != 0
     wrong_nds = False
     if (dct['Итого без НДС'].replace('.', '', 1).isnumeric()
             and dct['Итого с учетом НДС'].replace('.', '', 1).isnumeric()
@@ -64,7 +64,7 @@ def local_postprocessing(response, hide_logs=False):
                                                            )
                                                        )
                                                   )
-        # 2. Если "Итого" == "Всего к оплате" и "Сумма НДС" != 0
+        # 2. Если "Итого без НДС" == "Итого с учетом НДС" и "Сумма НДС" != 0
         if wrong_nds:
             new_sum_without_nds = float(good_dct["Сумма без НДС"]) * 100 / (100 + nds_rate)
             new_nds_sum = float(good_dct["Сумма без НДС"]) - new_sum_without_nds
