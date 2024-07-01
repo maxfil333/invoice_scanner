@@ -70,6 +70,7 @@ def create_html_form(json_file, output_file, file_path):
     <!DOCTYPE html>
     <html>
     <head>
+        <meta charset="UTF-8">
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap">
         <link rel="stylesheet" type="text/css" href="{config['CSS_PATH']}">
     </head>
