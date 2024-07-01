@@ -10,9 +10,9 @@ from itertools import count
 from natsort import os_sorted
 
 from config.config import config
+from main_edit import main as main_edit
 from generate_html import create_html_form
 from main_openai import run_chat, run_assistant
-from main_edit import main as main_edit
 from utils import group_files_by_name, delete_all_files, create_date_folder_in_check
 
 
