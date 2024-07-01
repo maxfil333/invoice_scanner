@@ -8,6 +8,7 @@ import traceback
 from glob import glob
 from itertools import count
 from natsort import os_sorted
+from openai import PermissionDeniedError
 
 from config.config import config
 from main_edit import main as main_edit
@@ -87,6 +88,8 @@ def main(hide_logs=False, test_mode=True, use_existing=False, stop_when=0):
                 stop = next(c)
                 if stop == stop_when:
                     break
+        except PermissionDeniedError:
+            raise
         except Exception as error:
             print('ERROR!:', error)
             traceback.print_exc()
@@ -113,6 +116,8 @@ if __name__ == "__main__":
                               use_existing=args.use_existing,
                               stop_when=args.stop_when)
         print(f'\nresult_message:\n{result_message}\n')
+    except PermissionDeniedError:
+        print('ОШИБКА ВЫПОЛНЕНИЯ:\n!!! Включите VPN !!!')
     except Exception as global_error:
         print('GLOBAL_ERROR!:', global_error)
         traceback.print_exc()
