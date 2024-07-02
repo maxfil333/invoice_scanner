@@ -168,11 +168,20 @@ def rename_files_in_directory(directory_path, hide_logs=False):
     for filename in files:
         if not os.path.isdir(os.path.join(directory_path, filename)):  # Исключаем директории из списка файлов
             new_filename = filename.replace(" ", "_")
-            # new_filename = str(next(counter)) + '.jpg'
-
             old_filepath = os.path.join(directory_path, filename)
             new_filepath = os.path.join(directory_path, new_filename)
-            os.rename(old_filepath, new_filepath)
+            try:
+                os.rename(old_filepath, new_filepath)
+            except FileExistsError:
+                c = 1
+                flag = True
+                while flag:
+                    newname = f'{os.path.splitext(new_filepath)[0]}({c}){os.path.splitext(new_filepath)[1]}'
+                    try:
+                        os.rename(old_filepath, newname)
+                        flag = False
+                    except FileExistsError:
+                        c += 1
             if not hide_logs:
                 print(f"Файл '{filename}' переименован в '{new_filename}'")
 
