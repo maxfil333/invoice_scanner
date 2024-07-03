@@ -45,8 +45,9 @@ def main(hide_logs=False, stop_when=-1):
         else:
             # if file is scanned pdf -> get first page in jpg
             if file_type.lower() == '.pdf':
-                image = np.array(convert_from_path(file, first_page=0, last_page=1,
-                                                   fmt='jpg', poppler_path=config["POPPLER_PATH"])[0])
+                image = np.array(convert_from_path(file, first_page=0, last_page=1, fmt='jpg',
+                                                   poppler_path=config["POPPLER_PATH"],
+                                                   jpegopt={"quality": 100})[0])
             # if file is image
             elif file_type.lower() in ['.jpg', '.jpeg', '.png']:
                 image = np.array(Image.open(file))
