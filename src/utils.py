@@ -34,38 +34,6 @@ def base64_encode_pil(image: Image.Image):
 
 # _________ COMMON _________
 
-def is_scanned_pdf(file_path):
-    try:
-        # Открытие PDF файла
-        with open(file_path, 'rb') as file:
-            reader = PyPDF2.PdfReader(file)
-            num_pages = len(reader.pages)
-            # Проверка текста на каждой странице
-            for page_num in range(num_pages):
-                page = reader.pages[page_num]
-                text = page.extract_text()
-                if text.strip():  # Если текст найден
-                    return False
-
-            return True  # Если текст не найден на всех страницах
-
-    except Exception as e:
-        logger.print(f"Error reading PDF file: {e}")
-        return None
-
-
-def count_pages(file_path):
-    try:
-        # Открытие PDF файла
-        with open(file_path, 'rb') as file:
-            reader = PyPDF2.PdfReader(file)
-            return len(reader.pages)
-
-    except Exception as e:
-        logger.print(f"Error reading PDF file: {e}")
-        return None
-
-
 def group_files_by_name(file_list: list[str]) -> dict:
     groups = defaultdict(list)
     pattern = re.compile(r'^(.*?)(?:_TAB\d+\+)?\.(\w{3,4})$')
@@ -124,14 +92,14 @@ def postprocessing_openai_response(response: str, hide_logs=False) -> str:
         return re_response
     except json.decoder.JSONDecodeError:
         # поиск ```json (RESPONSE)```
-        json_response = re.findall(r'```\s?json\s?(.*)```', re_response, flags=re.DOTALL|re.IGNORECASE)
+        json_response = re.findall(r'```\s?json\s?(.*)```', re_response, flags=re.DOTALL | re.IGNORECASE)
         if json_response:
             if not hide_logs:
                 logger.print('RECOGNIZED: ``` json... ```')
             return json_response[0]
         else:
             # поиск текста в {}
-            figure_response = re.findall(r'{.*}', re_response, flags=re.DOTALL|re.IGNORECASE)
+            figure_response = re.findall(r'{.*}', re_response, flags=re.DOTALL | re.IGNORECASE)
             if figure_response:
                 if not hide_logs:
                     logger.print('RECOGNIZED: {...}')
@@ -257,6 +225,40 @@ def add_text_bar(image: str | Image.Image, text, h=75, font_path='verdana.ttf', 
     return new_image
 
 
+# _________ PDF _________
+
+def is_scanned_pdf(file_path):
+    try:
+        # Открытие PDF файла
+        with open(file_path, 'rb') as file:
+            reader = PyPDF2.PdfReader(file)
+            num_pages = len(reader.pages)
+            # Проверка текста на каждой странице
+            for page_num in range(num_pages):
+                page = reader.pages[page_num]
+                text = page.extract_text()
+                if text.strip():  # Если текст найден
+                    return False
+
+            return True  # Если текст не найден на всех страницах
+
+    except Exception as e:
+        logger.print(f"Error reading PDF file: {e}")
+        return None
+
+
+def count_pages(file_path):
+    try:
+        # Открытие PDF файла
+        with open(file_path, 'rb') as file:
+            reader = PyPDF2.PdfReader(file)
+            return len(reader.pages)
+
+    except Exception as e:
+        logger.print(f"Error reading PDF file: {e}")
+        return None
+
+
 # _________ OPENAI _________
 
 def update_assistant(client, assistant_id: str, model: int):
@@ -286,5 +288,5 @@ def update_assistant_system_prompt(new_prompt: str):
 # _________ TEST _________
 
 if __name__ == '__main__':
-
-    update_assistant_system_prompt(config['system_prompt'])
+    pass
+    # update_assistant_system_prompt(config['system_prompt'])
