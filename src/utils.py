@@ -2,15 +2,17 @@ import os
 import re
 import sys
 import json
+import PyPDF2
 import msvcrt
 import base64
+import datetime
+import openai
+from openai import OpenAI
+from PIL import Image, ImageDraw, ImageFont
+from cryptography.fernet import Fernet
+from collections import defaultdict
 from io import BytesIO, StringIO
 from dotenv import load_dotenv
-import PyPDF2
-import datetime
-from PIL import Image, ImageDraw, ImageFont
-from collections import defaultdict
-from cryptography.fernet import Fernet
 
 from config.config import config
 from logger import logger
@@ -270,9 +272,19 @@ def update_assistant(client, assistant_id: str, model: int):
     return my_updated_assistant
 
 
+def update_assistant_system_prompt(new_prompt: str):
+    load_dotenv(stream=get_stream_dotenv())
+    openai.api_key = os.environ.get("OPENAI_API_KEY")
+    ASSISTANT_ID = os.environ.get("ASSISTANT_ID")
+    client = OpenAI()
+    client.beta.assistants.update(
+        ASSISTANT_ID,
+        instructions=new_prompt
+    )
+
+
 # _________ TEST _________
 
 if __name__ == '__main__':
 
-    load_dotenv(stream=get_stream_dotenv())
-    print(os.getenv('OPENAI_API_KEY'))
+    update_assistant_system_prompt(config['system_prompt'])
