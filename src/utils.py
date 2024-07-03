@@ -13,6 +13,7 @@ from collections import defaultdict
 from cryptography.fernet import Fernet
 
 from config.config import config
+from logger import logger
 
 
 # _________ ENCODERS _________
@@ -47,7 +48,7 @@ def is_scanned_pdf(file_path):
             return True  # Если текст не найден на всех страницах
 
     except Exception as e:
-        print(f"Error reading PDF file: {e}")
+        logger.print(f"Error reading PDF file: {e}")
         return None
 
 
@@ -59,7 +60,7 @@ def count_pages(file_path):
             return len(reader.pages)
 
     except Exception as e:
-        print(f"Error reading PDF file: {e}")
+        logger.print(f"Error reading PDF file: {e}")
         return None
 
 
@@ -97,7 +98,7 @@ def get_stream_dotenv():
         with open(config['crypto_env'], 'rb') as file:
             encrypted_data = file.read()
     except FileNotFoundError:
-        print(f'Файл {config["crypto_env"]} не найден.')
+        logger.print(f'Файл {config["crypto_env"]} не найден.')
         if getattr(sys, 'frozen', False):
             msvcrt.getch()
             sys.exit()
@@ -116,22 +117,25 @@ def postprocessing_openai_response(response: str, hide_logs=False) -> str:
     # проверка на json-формат
     try:
         json.loads(re_response)
-        if not hide_logs: print('RECOGNIZED: JSON')
+        if not hide_logs:
+            logger.print('RECOGNIZED: JSON')
         return re_response
     except json.decoder.JSONDecodeError:
         # поиск ```json (RESPONSE)```
         json_response = re.findall(r'```\s?json\s?(.*)```', re_response, flags=re.DOTALL|re.IGNORECASE)
         if json_response:
-            if not hide_logs: print('RECOGNIZED: ``` json... ```')
+            if not hide_logs:
+                logger.print('RECOGNIZED: ``` json... ```')
             return json_response[0]
         else:
             # поиск текста в {}
             figure_response = re.findall(r'{.*}', re_response, flags=re.DOTALL|re.IGNORECASE)
             if figure_response:
-                if not hide_logs: print('RECOGNIZED: {...}')
+                if not hide_logs:
+                    logger.print('RECOGNIZED: {...}')
                 return figure_response[0]
             else:
-                print('NOT RECOGNIZED JSON')
+                logger.print('NOT RECOGNIZED JSON')
                 return None
 
 
@@ -183,7 +187,7 @@ def rename_files_in_directory(directory_path, hide_logs=False):
                     except FileExistsError:
                         c += 1
             if not hide_logs:
-                print(f"Файл '{filename}' переименован в '{new_filename}'")
+                logger.print(f"Файл '{filename}' переименован в '{new_filename}'")
 
 
 def delete_all_files(directory):
@@ -193,7 +197,7 @@ def delete_all_files(directory):
             if os.path.isfile(file_path):
                 os.unlink(file_path)
         except Exception as e:
-            print(f"Error deleting file {file_path}: {e}")
+            logger.print(f"Error deleting file {file_path}: {e}")
 
 
 def create_date_folder_in_check(root_dir):

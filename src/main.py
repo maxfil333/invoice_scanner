@@ -10,6 +10,7 @@ from itertools import count
 from natsort import os_sorted
 from openai import PermissionDeniedError
 
+from logger import logger
 from config.config import config
 from main_edit import main as main_edit
 from generate_html import create_html_form
@@ -17,10 +18,8 @@ from main_openai import run_chat, run_assistant
 from utils import group_files_by_name, delete_all_files, create_date_folder_in_check
 
 
-def main(hide_logs=False, test_mode=True, use_existing=False, stop_when=0):
+def main(date_folder, hide_logs=False, test_mode=True, use_existing=False, stop_when=0):
     # _____  FILL IN_FOLDER_EDIT  _____
-    date_folder = create_date_folder_in_check(config['CHECK_FOLDER'])
-
     if not use_existing:
         delete_all_files(config['IN_FOLDER_EDIT'])
         main_edit(hide_logs=hide_logs, stop_when=stop_when)
@@ -33,9 +32,9 @@ def main(hide_logs=False, test_mode=True, use_existing=False, stop_when=0):
     for base, files in grouped_files.items():
         try:
             # _____  CREATE JSON  _____
-            print('-'*20)
-            print('\nbase:', base, sep='\n')
-            print('files:', *files, sep='\n')
+            logger.print('-' * 20)
+            logger.print('\nbase:', base, sep='\n')
+            logger.print('files:', *files, sep='\n')
             json_name = os.path.basename(base[0]) + '_' + '0' * 11 + '.json'
             if base[-1] == 'pdf':
                 text_or_scanned_folder = config['NAME_text']
@@ -91,8 +90,8 @@ def main(hide_logs=False, test_mode=True, use_existing=False, stop_when=0):
         except PermissionDeniedError:
             raise
         except Exception as error:
-            print('ERROR!:', error)
-            traceback.print_exc()
+            logger.print('ERROR!:', error)
+            logger.print(traceback.format_exc())
             continue
 
     # _____  RESULT MESSAGE  _____
@@ -101,6 +100,12 @@ def main(hide_logs=False, test_mode=True, use_existing=False, stop_when=0):
 
 
 if __name__ == "__main__":
+    logger.print("CONFIG INFO:")
+    logger.print('sys._MEIPASS:', hasattr(sys, '_MEIPASS'))
+    logger.print(f'POPPLER_RPATH = {config["POPPLER_PATH"]}')
+    logger.print(f'magick_exe = {config["magick_exe"]}')
+    logger.print(f'magick_opt = {config["magick_opt"]}')
+
     parser = argparse.ArgumentParser(description="DESCRIPTION: Invoice Scanner")
     parser.add_argument('--hide_logs', action='store_true', help='Скрыть логи')
     parser.add_argument('--test_mode', action='store_true', help='Режим тестирования')
@@ -108,23 +113,27 @@ if __name__ == "__main__":
     parser.add_argument('--stop_when', type=int, default=-1, help='Максимальное количество файлов')
     parser.add_argument('--no_exit', action='store_true', help='Не закрывать окно')
     args = parser.parse_args()
-    print(args, end='\n\n')
+    logger.print(args, end='\n\n')
 
+    date_folder = create_date_folder_in_check(config['CHECK_FOLDER'])
     try:
-        result_message = main(hide_logs=args.hide_logs,
+        result_message = main(date_folder=date_folder,
+                              hide_logs=args.hide_logs,
                               test_mode=args.test_mode,
                               use_existing=args.use_existing,
                               stop_when=args.stop_when)
-        print(f'\nresult_message:\n{result_message}\n')
+        logger.print(f'\nresult_message:\n{result_message}\n')
     except PermissionDeniedError:
-        print('ОШИБКА ВЫПОЛНЕНИЯ:\n!!! Включите VPN !!!')
+        logger.print('ОШИБКА ВЫПОЛНЕНИЯ:\n!!! Включите VPN !!!')
     except Exception as global_error:
-        print('GLOBAL_ERROR!:', global_error)
-        traceback.print_exc()
+        logger.print('GLOBAL_ERROR!:', global_error)
+        logger.print(traceback.format_exc())
 
     if getattr(sys, 'frozen', False):
         if args.no_exit:
             msvcrt.getch()
         else:
-            print('Завершено. Выполняется закрытие...')
-            time.sleep(3)
+            logger.print('Завершено. Выполняется закрытие...')
+
+    logger.save(date_folder)
+    time.sleep(3)

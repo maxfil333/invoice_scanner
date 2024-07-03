@@ -1,8 +1,10 @@
+import os
 import json
 from html import escape
-import os
-from config.config import config
 from bs4 import BeautifulSoup as bs
+
+from logger import logger
+from config.config import config
 
 
 def generate_input_html(key, value):
@@ -106,4 +108,4 @@ def create_html_form(json_file, output_file, file_path):
     with open(output_file, 'w', encoding='utf-8') as f:
         f.write(prettified)
 
-    print(f'HTML страница сгенерирована и сохранена в {output_file}')
+    logger.print(f'HTML страница сгенерирована и сохранена в {output_file}')

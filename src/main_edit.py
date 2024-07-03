@@ -8,6 +8,7 @@ from itertools import count
 from natsort import os_sorted
 from pdf2image import convert_from_path
 
+from logger import logger
 from config.config import config
 from rotator import main as rotate
 from crop_tables import define_and_return
@@ -35,7 +36,7 @@ def main(hide_logs=False, stop_when=-1):
         # if digital pdf
         if (file_type.lower() == '.pdf') and (is_scanned_pdf(file) is False):
             if count_pages(file) > 5:
-                print(f'page limit exceeded in {file}')
+                logger.print(f'page limit exceeded in {file}')
                 continue
             save_path = os.path.join(config['IN_FOLDER_EDIT'], file_name + f'_{file_type.replace(".", "")}' + '.pdf')
             shutil.copy(file, save_path)
@@ -50,7 +51,7 @@ def main(hide_logs=False, stop_when=-1):
             elif file_type.lower() in ['.jpg', '.jpeg', '.png']:
                 image = np.array(Image.open(file))
             else:
-                print(f'ERROR IN: {file}')
+                logger.print(f'ERROR IN: {file}')
                 continue
             rotated = Image.fromarray(rotate(image))
             save_path = os.path.join(config['IN_FOLDER_EDIT'], file_name + f'_{file_type.replace(".", "")}' + '.jpg')
@@ -76,7 +77,7 @@ def main(hide_logs=False, stop_when=-1):
             command = [config["magick_exe"], "convert", save_path, *config["magick_opt"], save_path]
             subprocess.run(command)
 
-        print(save_path)
+        logger.print(save_path)
 
         # _____  STOP ITERATION  _____
         if stop_when > 0:
@@ -84,7 +85,7 @@ def main(hide_logs=False, stop_when=-1):
             if stop == stop_when:
                 break
 
-    print(f"\nФайлы сохранены в {config['IN_FOLDER_EDIT']}\n")
+    logger.print(f"\nФайлы сохранены в {config['IN_FOLDER_EDIT']}\n")
 
 
 if __name__ == '__main__':

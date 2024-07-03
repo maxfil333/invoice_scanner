@@ -1,6 +1,7 @@
 import os
 import sys
 import msvcrt
+from logger import logger
 
 r"""
 datas=[('C:\\Program Files\\poppler-22.01.0\\Library\\bin', 'poppler'),
@@ -35,8 +36,8 @@ try:
     with open(os.path.join(config['CONFIG'], 'crypto.key'), 'r') as f:
         config['crypto_key'] = f.read()
 except FileNotFoundError as e:
-    print(e)
-    print('Не найден crypto.key')
+    logger.print(e)
+    logger.print('Не найден crypto.key')
     if getattr(sys, 'frozen', False):
         msvcrt.getch()
         sys.exit()
@@ -66,11 +67,6 @@ config['system_prompt'] = f"""
 """.strip()
 # Верни только JSON-строку и ничего более.
 
-print("CONFIG INFO:")
-print('sys._MEIPASS:', hasattr(sys, '_MEIPASS'))
-print(f'POPPLER_RPATH = {config["POPPLER_PATH"]}')
-print(f'magick_exe = {config["magick_exe"]}')
-print(f'magick_opt = {config["magick_opt"]}')
 
 if __name__ == '__main__':
     print(getattr(sys, 'frozen', False))

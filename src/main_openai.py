@@ -9,6 +9,7 @@ from PIL import Image
 from time import perf_counter
 from dotenv import load_dotenv
 
+from logger import logger
 from config.config import config
 from utils import replace_container_with_latin
 from utils import base64_encode_pil, convert_json_values_to_strings, get_stream_dotenv, postprocessing_openai_response
@@ -27,11 +28,11 @@ def local_postprocessing(response, hide_logs=False):
     if re_response is None:
         return None
     # if not hide_logs:
-    #     print(f'function "{inspect.stack()[1].function}":')
-    #     print('response:')
-    #     print(repr(response))
-    #     print('re_response:')
-    #     print(repr(re_response))
+    #     logger.print(f'function "{inspect.stack()[1].function}":')
+    #     logger.print('response:')
+    #     logger.print(repr(response))
+    #     logger.print('re_response:')
+    #     logger.print(repr(re_response))
     dct = json.loads(re_response)
     dct = convert_json_values_to_strings(dct)
 
@@ -51,7 +52,7 @@ def local_postprocessing(response, hide_logs=False):
             nds_rate = (float(dct["Сумма НДС"]) / (float(dct["Итого с учетом НДС"]) - float(dct["Сумма НДС"]))) * 100
             wrong_nds = True
             dct['Итого без НДС'] = float(dct['Итого с учетом НДС']) - float(dct['Сумма НДС'])
-            print('...fixing wrong nds...')
+            logger.print('...fixing wrong nds...')
 
     for good_dct in dct['Услуги']:
 
@@ -114,11 +115,11 @@ def run_chat(*img_paths: str, detail='high', hide_logs=False) -> str:
         ],
         max_tokens=3000,
     )
-    print(f'img_paths: {img_paths}')
-    print(f'time: {perf_counter() - start:.2f}')
-    print(f'completion_tokens: {response.usage.completion_tokens}')
-    print(f'prompt_tokens: {response.usage.prompt_tokens}')
-    print(f'total_tokens: {response.usage.total_tokens}')
+    logger.print(f'img_paths: {img_paths}')
+    logger.print(f'time: {perf_counter() - start:.2f}')
+    logger.print(f'completion_tokens: {response.usage.completion_tokens}')
+    logger.print(f'prompt_tokens: {response.usage.prompt_tokens}')
+    logger.print(f'total_tokens: {response.usage.total_tokens}')
 
     response = response.choices[0].message.content
     return local_postprocessing(response, hide_logs=hide_logs)
@@ -144,12 +145,12 @@ def run_assistant(file_path, hide_logs=False):
         thread_id=thread.id, assistant_id=assistant.id
     )
     if run.status == 'completed':
-        print('assistant model:', assistant.model)
-        print(f'file_path: {file_path}')
-        print(f'time: {perf_counter() - start:.2f}')
-        print(f'completion_tokens: {run.usage.completion_tokens}')
-        print(f'prompt_tokens: {run.usage.prompt_tokens}')
-        print(f'total_tokens: {run.usage.total_tokens}')
+        logger.print('assistant model:', assistant.model)
+        logger.print(f'file_path: {file_path}')
+        logger.print(f'time: {perf_counter() - start:.2f}')
+        logger.print(f'completion_tokens: {run.usage.completion_tokens}')
+        logger.print(f'prompt_tokens: {run.usage.prompt_tokens}')
+        logger.print(f'total_tokens: {run.usage.total_tokens}')
 
     messages = list(client.beta.threads.messages.list(thread_id=thread.id, run_id=run.id))
     response = messages[0].content[0].text.value

@@ -1,6 +1,8 @@
 import cv2
-from PIL import Image
 import numpy as np
+from PIL import Image
+
+from logger import logger
 
 
 def is_horizontal(line):
@@ -30,7 +32,7 @@ def get_rotation_angle(image: np.array):
 
     no_lines_detected = False
     if lines is None:
-        print('no lines, threshhold -> 300')
+        logger.print('no lines, threshhold -> 300')
         no_lines_detected = True
     else:
         hor_lines = []
@@ -38,7 +40,7 @@ def get_rotation_angle(image: np.array):
             if is_horizontal(line[0]):
                 hor_lines.append(line[0])
         if not hor_lines:
-            print('no horizontal lines, threshhold -> 300')
+            logger.print('no horizontal lines, threshhold -> 300')
             no_lines_detected = True
 
     if no_lines_detected:
@@ -46,7 +48,7 @@ def get_rotation_angle(image: np.array):
         lines = cv2.HoughLinesP(edges, rho, theta, threshold, np.array([]),
                                 min_line_length, max_line_gap)
         if lines is None:
-            print('threshhold=300, no lines')
+            logger.print('threshhold=300, no lines')
             return 0
         else:
             hor_lines = []
@@ -54,7 +56,7 @@ def get_rotation_angle(image: np.array):
                 if is_horizontal(line[0]):
                     hor_lines.append(line[0])
             if not hor_lines:
-                print('threshhold=300, no horizontal lines')
+                logger.print('threshhold=300, no horizontal lines')
                 return 0
 
     angles = []
