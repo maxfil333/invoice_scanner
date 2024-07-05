@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 
 from logger import logger
 from config.config import config
+from utils import extract_text_with_fitz
 from utils import replace_container_with_latin
 from utils import base64_encode_pil, convert_json_values_to_strings, get_stream_dotenv, postprocessing_openai_response
 
@@ -45,7 +46,7 @@ def local_postprocessing(response, hide_logs=False):
         good_dct['Наименование'] = replace_container_with_latin(name, container_regex)
         name = good_dct['Наименование']
         # Найти контейнеры и заполнить "Номера контейнеров"
-        good_dct['Контейнеры(Наименование)'] = ' '.join(list(map(lambda x:
+        good_dct['Контейнеры(наименование)'] = ' '.join(list(map(lambda x:
                                                                  re.sub(r'\s', '', x),
                                                                  re.findall(container_regex_lt, name)
                                                                  )
@@ -68,15 +69,20 @@ def local_postprocessing(response, hide_logs=False):
 
 # ___________________________ CHAT ___________________________
 
-def run_chat(*img_paths: str, detail='high', hide_logs=False) -> str:
-    content = []
-    for img_path in img_paths:
-        d = {
-            "type": "image_url",
-            "image_url": {"url": f"data:image/jpeg;base64,{base64_encode_pil(Image.open(img_path))}",
-                          "detail": detail}
-        }
-        content.append(d)
+def run_chat(*img_paths: str, detail='high', hide_logs=False, text_mode=False) -> str:
+    if text_mode:
+        if len(img_paths) != 1:
+            logger.print("ВНИМАНИЕ! На вход run_chat пришли pdf-файлы в количестве != 1")
+        content = extract_text_with_fitz(img_paths[0])
+    else:
+        content = []
+        for img_path in img_paths:
+            d = {
+                "type": "image_url",
+                "image_url": {"url": f"data:image/jpeg;base64,{base64_encode_pil(Image.open(img_path))}",
+                              "detail": detail}
+            }
+            content.append(d)
 
     response = client.chat.completions.create(
         model="gpt-4o",
