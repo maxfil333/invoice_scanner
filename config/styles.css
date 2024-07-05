@@ -112,6 +112,7 @@ input[type="date"],
 input[type="email"],
 select,
 textarea {
+    font-family: Monaco, monospace; /* Устанавливаем шрифт monospace */
     width: calc(100% - 190px); /* Корректируем ширину, учитывая ширину label и отступ */
     padding: 6px; /* Уменьшаем внутренний отступ */
     border: 1px solid #ced4da;
@@ -131,6 +132,7 @@ textarea:focus {
 }
 
 textarea {
+    font-family: Monaco, monospace; /* Устанавливаем шрифт monospace */
     height: auto;
     min-height: 20px;
     resize: none;
