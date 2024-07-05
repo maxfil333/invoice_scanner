@@ -2,6 +2,7 @@ import os
 import re
 import sys
 import json
+import fitz
 import PyPDF2
 import msvcrt
 import base64
@@ -257,6 +258,15 @@ def count_pages(file_path):
     except Exception as e:
         logger.print(f"Error reading PDF file: {e}")
         return None
+
+
+def extract_text_with_fitz(pdf_path):
+    document = fitz.open(pdf_path)
+    text = ""
+    for page_num in range(len(document)):
+        page = document.load_page(page_num)  # загружаем страницу
+        text += page.get_text()  # извлекаем текст
+    return text
 
 
 # _________ OPENAI _________
