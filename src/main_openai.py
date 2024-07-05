@@ -39,19 +39,28 @@ def local_postprocessing(response, hide_logs=False):
     container_regex_lt = r'[A-Z]{4}\s?[0-9]{7}'
 
     for good_dct in dct['Услуги']:
-
-        # 1. Замена кириллицы в контейнерах
+        # 1. Замена кириллицы в Наименовании, создание Контейнеры(Наименование)
         name = good_dct['Наименование']
         # Заменить в Наименовании кириллицу в контейнерах
         good_dct['Наименование'] = replace_container_with_latin(name, container_regex)
         name = good_dct['Наименование']
         # Найти контейнеры и заполнить "Номера контейнеров"
-        good_dct['Номера контейнеров'] = ' '.join(list(map(lambda x:
-                                                           re.sub(r'\s', '', x),
-                                                           re.findall(container_regex_lt, name)
-                                                           )
-                                                       )
-                                                  )
+        good_dct['Контейнеры(Наименование)'] = ' '.join(list(map(lambda x:
+                                                                 re.sub(r'\s', '', x),
+                                                                 re.findall(container_regex_lt, name)
+                                                                 )
+                                                             )
+                                                        )
+        # 2. Замена кириллицы в Контейнеры
+        name = good_dct['Контейнеры']
+        good_dct['Контейнеры'] = replace_container_with_latin(name, container_regex)
+        name = good_dct['Контейнеры']
+        good_dct['Контейнеры'] = ' '.join(list(map(lambda x:
+                                                   re.sub(r'\s', '', x),
+                                                   re.findall(container_regex_lt, name)
+                                                   )
+                                               )
+                                          )
 
     string_dictionary = convert_json_values_to_strings(dct)
     return json.dumps(string_dictionary, ensure_ascii=False, indent=4)
