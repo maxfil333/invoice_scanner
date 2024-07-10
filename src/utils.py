@@ -3,20 +3,20 @@ import re
 import sys
 import json
 import fitz
+import datetime
 import PyPDF2
 import msvcrt
 import base64
-import datetime
 import openai
 from openai import OpenAI
-from PIL import Image, ImageDraw, ImageFont
-from cryptography.fernet import Fernet
-from collections import defaultdict
-from io import BytesIO, StringIO
 from dotenv import load_dotenv
+from io import BytesIO, StringIO
+from collections import defaultdict
+from cryptography.fernet import Fernet
+from PIL import Image, ImageDraw, ImageFont
 
-from config.config import config
 from logger import logger
+from config.config import config, NAMES
 
 
 # _________ ENCODERS _________
@@ -180,7 +180,7 @@ def create_date_folder_in_check(root_dir):
     folder_path = os.path.join(root_dir, folder_name)
     os.makedirs(folder_path, exist_ok=True)
     # Создаем подпапки
-    subfolders = ["scannedPDFs", "textPDFs", "verified"]
+    subfolders = [config['NAME_scanned'], config['NAME_text'], config['NAME_verified']]
     for subfolder in subfolders:
         subfolder_path = os.path.join(folder_path, subfolder)
         os.makedirs(subfolder_path, exist_ok=True)
@@ -269,6 +269,41 @@ def extract_text_with_fitz(pdf_path):
     return text
 
 
+def align_pdf_orientation(input_pdf_path, output_pdf_path):
+    """ get input_pdf_path - save to output_pdf_path - returns None """
+
+    # Открываем PDF-документ
+    pdf_document = fitz.open(input_pdf_path)
+    for page_number in range(len(pdf_document)):
+        page = pdf_document[page_number]
+        # Извлекаем текст со страницы
+        text = page.get_text("text")
+        # Если текст есть, определяем его ориентацию
+        if text:
+            # Определяем ориентацию страницы (0, 90, 180, 270 градусов)
+            # Основываемся на высоте и ширине bounding box для текста
+            blocks = page.get_text("blocks")
+            if blocks:
+                print(blocks[0])
+                _, _, width, height, _, _, _ = blocks[0]
+                if width > height:
+                    if width > height:
+                        # Текст ориентирован горизонтально
+                        page.set_rotation(0)
+                    else:
+                        # Текст ориентирован вертикально (90 градусов)
+                        page.set_rotation(90)
+                else:
+                    if height > width:
+                        # Текст ориентирован вертикально (90 или 270 градусов)
+                        page.set_rotation(90)
+                    else:
+                        # Текст ориентирован горизонтально (0 или 180 градусов)
+                        page.set_rotation(0)
+    # Сохраняем PDF-документ с поворотами
+    pdf_document.save(output_pdf_path)
+
+
 # _________ OPENAI _________
 
 def update_assistant(client, assistant_id: str, model: int):
@@ -295,8 +330,110 @@ def update_assistant_system_prompt(new_prompt: str):
     )
 
 
+# _________ LOCAL _________
+
+def check_sums(dct):
+    """
+    Если количество == '': принимается количество равное 1
+    nds_type = "Сверху" / "В т.ч." - выбирается исходя из того как в чеке записана цена (без НДС / с НДС)
+    """
+
+    logger.print('--- start check_sums ---')
+    total_with_nds = float(dct[NAMES.total_with]) if dct[NAMES.total_with] != '' else None
+    total_nds = float(dct[NAMES.total_nds]) if dct[NAMES.total_nds] != '' else None
+    if not total_with_nds:
+        logger.print('!!! total_with_nds not found !!! total_with_nds = sum("Сумма включая НДС")')
+        total_with_nds = sum([x[NAMES.sum_with] for x in dct[NAMES.goods]])
+    if total_nds is not None:
+        total_without_nds = round(total_with_nds - total_nds, 2)
+        nds = round((total_nds / total_without_nds) * 100, 2)
+    else:
+        logger.print('!!! total_nds not found !!! nds = 0')
+        nds = 0
+        total_without_nds = total_with_nds
+
+    cum_sum = 0
+    cum_amount_and_price = 0
+    for good_dct in dct[NAMES.goods]:
+        try:
+            cum_sum += float(good_dct[NAMES.sum_with])
+        except:
+            logger.print('cum_sum pass')
+            pass
+        try:
+            amount = float(good_dct[NAMES.amount]) if good_dct[NAMES.amount] != '' else 1
+            cum_amount_and_price += float(amount) * float(good_dct[NAMES.price])
+        except:
+            logger.print('cum_amount_and_price pass')
+            pass
+
+    if round(cum_sum, 1) == round(total_with_nds, 1):
+        sum_type = 'with'
+    elif round(cum_sum, 1) == round(total_without_nds, 1):
+        sum_type = 'without'
+    else:
+        sum_type = 'None'
+
+    for good_dct in dct[NAMES.goods]:
+        old_sum = round(float(good_dct.pop(NAMES.sum_with)), 2)  # Сумма "включая/не включая" НДС
+        good_dct.pop(NAMES.sum_nds)
+        if sum_type == 'with':
+            good_dct['Сумма (без НДС)'] = round(old_sum / (1 + (nds / 100)), 2)
+            good_dct['Сумма (с НДС)'] = old_sum
+        elif sum_type == 'without':
+            good_dct['Сумма (без НДС)'] = old_sum
+            good_dct['Сумма (с НДС)'] = round(old_sum * (1 + (nds / 100)), 2)
+        else:
+            good_dct['Сумма (без НДС)'] = round(old_sum / (1 + (nds / 100)), 2)
+            good_dct['Сумма (с НДС)'] = old_sum
+
+    if round(cum_amount_and_price, 1) == round(total_with_nds, 1):
+        nds_type = 'В т.ч.'
+        for good_dct in dct[NAMES.goods]:
+            old_price = float(good_dct.pop(NAMES.price))
+            good_dct['Цена (без НДС)'] = round(old_price / (1 + (nds / 100)), 2)
+            good_dct['Цена (с НДС)'] = old_price
+            good_dct['price_type'] = nds_type
+    elif round(cum_amount_and_price, 1) == round(total_without_nds, 1):
+        nds_type = 'Сверху'
+        for good_dct in dct[NAMES.goods]:
+            old_price = float(good_dct.pop(NAMES.price))
+            good_dct['Цена (без НДС)'] = old_price
+            good_dct['Цена (с НДС)'] = round(old_price * (1 + (nds / 100)), 2)
+            good_dct['price_type'] = nds_type
+    else:
+        # Цена неправильно считана (ее вообще нет или она взята из неправильного поля).
+        logger.print('Неверно посчитана цена: рассчитываем. Тип такой же, как у sum_type')
+        for good_dct in dct[NAMES.goods]:
+            amount = float(good_dct[NAMES.amount]) if good_dct[NAMES.amount] != '' else 1
+            old_price = float(good_dct.pop(NAMES.price))
+            good_dct['Цена (без НДС)'] = round(good_dct['Сумма (без НДС)'] / amount, 2)
+            good_dct['Цена (с НДС)'] = round(good_dct['Сумма (с НДС)'] / amount, 2)
+            if nds != 0:
+                nds_type = 'В т.ч.'
+                good_dct['price_type'] = nds_type
+            else:
+                nds_type = 'Сверху'
+                good_dct['price_type'] = nds_type
+            good_dct['price_type'] = nds_type
+
+    dct['nds (%)'] = nds
+
+    new_order = [NAMES.name, NAMES.cont, NAMES.cont_names, NAMES.unit, NAMES.amount,
+                 'Цена (без НДС)', 'Сумма (без НДС)', 'Цена (с НДС)', 'Сумма (с НДС)',
+                 'price_type']
+    ordered_goods = []
+    for good_dct in dct[NAMES.goods]:
+        one_reordered_goods_dct = {k: good_dct[k] for k in new_order}
+        ordered_goods.append(one_reordered_goods_dct)
+    dct[NAMES.goods] = ordered_goods
+
+    logger.print('--- end check_sums ---')
+
+    return dct
+
+
 # _________ TEST _________
 
 if __name__ == '__main__':
     pass
-    # update_assistant_system_prompt(config['system_prompt'])
