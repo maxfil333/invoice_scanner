@@ -348,7 +348,7 @@ def check_sums(dct):
         total_without_nds = round(total_with_nds - total_nds, 2)
         nds = round((total_nds / total_without_nds) * 100, 2)
     else:
-        logger.print('!!! total_nds not found !!! nds = 0')
+        logger.print('!! total_nds not found !! nds = 0')
         nds = 0
         total_without_nds = total_with_nds
 
