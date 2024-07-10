@@ -11,7 +11,17 @@ def generate_input_html(key, value):
     input_type = "text"
     html_content = f'<div class="input-group"><label>{escape(key)}</label>'
 
-    if isinstance(value, bool):
+    if key == NAMES.price_type:
+        select_options = {
+            "Сверху": "Сверху",
+            "В т.ч.": "В т.ч."
+        }
+        html_content += '<select name="{0}">'.format(escape(key))
+        for option_value, option_label in select_options.items():
+            selected = 'selected' if value == option_value else ''
+            html_content += '<option value="{0}" {1}>{2}</option>'.format(escape(option_value), selected, escape(option_label))
+        html_content += '</select></div>\n'
+    elif isinstance(value, bool):
         input_type = "checkbox"
         checked = 'checked' if value else ''
         html_content += f'<input type="{input_type}" name="{escape(key)}" {checked}></div>\n'
