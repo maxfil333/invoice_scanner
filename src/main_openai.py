@@ -10,9 +10,9 @@ from time import perf_counter
 from dotenv import load_dotenv
 
 from logger import logger
-from config.config import config
-from utils import extract_text_with_fitz
+from config.config import config, NAMES
 from utils import replace_container_with_latin
+from utils import extract_text_with_fitz, check_sums
 from utils import base64_encode_pil, convert_json_values_to_strings, get_stream_dotenv, postprocessing_openai_response
 
 # ___________________________ general ___________________________
@@ -36,32 +36,33 @@ def local_postprocessing(response, hide_logs=False):
     dct = convert_json_values_to_strings(dct)
 
     # Найти все контейнеры по паттерну вне зависимости от языка
-    container_regex = r'[A-ZА-Я]{4}\s?[0-9]{7}'
-    container_regex_lt = r'[A-Z]{4}\s?[0-9]{7}'
+    container_regex = r'[A-ZА-Я]{3}U\s?[0-9]{7}'
+    container_regex_lt = r'[A-Z]{3}U\s?[0-9]{7}'
 
-    for good_dct in dct['Услуги']:
-        # 1. Замена кириллицы в Наименовании, создание Контейнеры(Наименование)
-        name = good_dct['Наименование']
+    for good_dct in dct[NAMES.goods]:
+        # 1. Замена кириллицы в Наименовании, создание Контейнеры(наименование)
+        name = good_dct[NAMES.name]
         # Заменить в Наименовании кириллицу в контейнерах
-        good_dct['Наименование'] = replace_container_with_latin(name, container_regex)
-        name = good_dct['Наименование']
-        # Найти контейнеры и заполнить "Номера контейнеров"
-        good_dct['Контейнеры(наименование)'] = ' '.join(list(map(lambda x:
-                                                                 re.sub(r'\s', '', x),
-                                                                 re.findall(container_regex_lt, name)
-                                                                 )
-                                                             )
-                                                        )
+        good_dct[NAMES.name] = replace_container_with_latin(name, container_regex)  # re.sub(pattern, repl, text)
+        name = good_dct[NAMES.name]
+        # Найти контейнеры, оставить уникальные
+        containers = list(map(lambda x: re.sub(r'\s', '', x), re.findall(container_regex_lt, name)))
+        uniq_containers = list(dict.fromkeys(containers))
+        # Заполнить "Номера контейнеров"
+        good_dct[NAMES.cont_names] = ' '.join(uniq_containers)
+
         # 2. Замена кириллицы в Контейнеры
-        name = good_dct['Контейнеры']
-        good_dct['Контейнеры'] = replace_container_with_latin(name, container_regex)
-        name = good_dct['Контейнеры']
-        good_dct['Контейнеры'] = ' '.join(list(map(lambda x:
-                                                   re.sub(r'\s', '', x),
-                                                   re.findall(container_regex_lt, name)
-                                                   )
-                                               )
-                                          )
+        name = good_dct[NAMES.cont]
+        good_dct[NAMES.cont] = replace_container_with_latin(name, container_regex)
+        name = good_dct[NAMES.cont]
+        good_dct[NAMES.cont] = ' '.join(list(map(lambda x:
+                                                 re.sub(r'\s', '', x),
+                                                 re.findall(container_regex_lt, name)
+                                                 )
+                                             )
+                                        )
+    # 3. check_sums
+    dct = check_sums(dct)
 
     string_dictionary = convert_json_values_to_strings(dct)
     return json.dumps(string_dictionary, ensure_ascii=False, indent=4)
