@@ -5,6 +5,7 @@ __*
 /CHECK/
 crypto.key
 *.exe
+config/parameters.json
 
 
 # Игнорировать каталоги и файлы конфигурации PyCharm
