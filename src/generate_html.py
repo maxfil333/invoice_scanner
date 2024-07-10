@@ -4,7 +4,7 @@ from html import escape
 from bs4 import BeautifulSoup as bs
 
 from logger import logger
-from config.config import config
+from config.config import config, NAMES
 
 
 def generate_input_html(key, value):
@@ -15,7 +15,7 @@ def generate_input_html(key, value):
         input_type = "checkbox"
         checked = 'checked' if value else ''
         html_content += f'<input type="{input_type}" name="{escape(key)}" {checked}></div>\n'
-    elif isinstance(value, str) and (key in ['Наименование', 'Номера контейнеров'] or len(value) > 30):
+    elif isinstance(value, str) and (key in [NAMES.name, NAMES.cont, NAMES.cont_names] or len(value) > 30):
         html_content += (f'<textarea name="{escape(key)}" rows="1" style="resize:none;" '
                          f'oninput="this.style.height=\'auto\'; '
                          f'this.style.height=(this.scrollHeight)+\'px\';">{escape(value)}</textarea></div>\n')
@@ -41,13 +41,13 @@ def generate_html_from_json(data, parent_key="", prefix=""):
         for i, item in enumerate(data):
             new_key = f'{parent_key}[{i}]'
             display_key = f'{i + 1}'
-            if parent_key.endswith("Услуги"):
+            if parent_key.endswith(NAMES.goods):
                 html_content += f'<fieldset class="service"><legend>{escape(display_key)}</legend>\n'
             else:
                 html_content += f'<fieldset><legend>{escape(display_key)}</legend>\n'
             html_content += generate_html_from_json(item, new_key, prefix)
             html_content += '</fieldset>\n'
-        if parent_key.endswith("Услуги"):
+        if parent_key.endswith(NAMES.goods):
             html_content += '<button type="button" onclick="addService(this)">+</button>\n'
             html_content += '<button type="button" onclick="removeService(this)">-</button>\n'
     return html_content
@@ -97,7 +97,7 @@ def create_html_form(json_file, output_file, file_path):
         <script src="{config['JS_PATH']}"></script>
         <div jsonfilename="{os.path.basename(json_file)}" id="jsonfilenameid"></div>
         <div id="jsonfiledataid" hidden>{json.dumps(data, ensure_ascii=False)}</div>
-        <div id="jsononegoodid" hidden>{data['Услуги'][0]}</div>
+        <div id="jsononegoodid" hidden>{data[NAMES.goods][0]}</div>
     </body>
     </html>
     '''
