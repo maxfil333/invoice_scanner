@@ -237,7 +237,7 @@ function getFormData() {
 
             if (fieldset.classList.contains('service')) {
                 const serviceData = {};
-                fieldset.querySelectorAll('input, textarea').forEach(input => {
+                fieldset.querySelectorAll('input, textarea, select').forEach(input => {
                     serviceData[input.name] = input.value;
                 });
                 services.push(serviceData);
@@ -245,14 +245,14 @@ function getFormData() {
                 data[fieldsetName] = services;
             } else {
                 data[fieldsetName] = {};
-                fieldset.querySelectorAll('input, textarea').forEach(input => {
+                fieldset.querySelectorAll('input, textarea, select').forEach(input => {
                     data[fieldsetName][input.name] = input.value;
                 });
             }
         }
     });
 
-    form.querySelectorAll('input:not(fieldset input), textarea:not(fieldset textarea)').forEach(input => {
+    form.querySelectorAll('input:not(fieldset input), textarea:not(fieldset textarea), select:not(fieldset select)').forEach(input => {
         if (!input.closest('fieldset')) {
             data[input.name] = input.value;
         }
