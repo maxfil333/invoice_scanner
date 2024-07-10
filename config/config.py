@@ -4,9 +4,15 @@ import json
 import msvcrt
 from logger import logger
 
+# main.spec
 r"""
-datas=[('C:\\Program Files\\poppler-22.01.0\\Library\\bin', 'poppler'),
-        ('C:\\Program Files\\ImageMagick-7.1.1-Q16-HDRI', 'magick')],
+datas=[
+    ('C:\\Program Files\\poppler-22.01.0\\Library\\bin', 'poppler'),
+    ('src', 'src'),
+    ('config', 'config'),
+    ('C:\\Program Files\\Tesseract-OCR', 'Tesseract-OCR'),
+    ('C:\\Program Files\\ImageMagick-7.1.1-Q16-HDRI', 'magick')
+],
 """
 
 config = dict()
@@ -43,17 +49,33 @@ except FileNotFoundError as e:
         msvcrt.getch()
         sys.exit()
 
-# config['magick_opt'] = (
-#     '-colorspace Gray -white-threshold 85% -level 0%,100%,0.5 -bilateral-blur 15 -gaussian-blur 6 -quality '
-#     '100 -units PixelsPerInch -density 350').split(' ')
-# config['magick_opt'] = ('-colorspace Gray -level 0%,100%,0.7 '
-#                         '-quality 100 -units PixelsPerInch -density 350').split(' ')
 
-config['json_struct'] = ('{"Банковские реквизиты поставщика":{"ИНН":"","КПП":"","БИК":"","корреспондентский счет":"",'
-                         '"расчетный счет":""},"Банковские реквизиты покупателя":{"ИНН":"","КПП":""},"Номер счета":"",'
-                         '"Дата счета":"","Услуги":[{"Наименование":"","Контейнеры":"",'
-                         '"Единица":"","Количество":"","Цена":"",'
-                         '"Сумма включая НДС":"","Сумма НДС":""}],"Всего к оплате включая НДС":"","Всего НДС":""}')
+class ConfigNames:
+    goods = 'Услуги'
+    name = 'Наименование'
+    cont = 'Контейнеры'
+    cont_names = 'Контейнеры (наименование)'
+    unit = 'Единица'
+    amount = 'Количество'
+    price = 'Цена'
+    sum_with = 'Сумма включая НДС'
+    sum_nds = 'Сумма НДС'
+    total_with = 'Всего к оплате включая НДС'
+    total_nds = 'Всего НДС'
+
+
+NAMES = ConfigNames()
+
+config['json_struct'] = (
+    f'{{"Банковские реквизиты поставщика":{{"ИНН":"","КПП":"","БИК":"","корреспондентский счет":"",'
+    f'"расчетный счет":""}},"Банковские реквизиты покупателя":{{"ИНН":"","КПП":""}},'
+    f'"Номер счета":"",'
+    f'"Дата счета":"",'
+    f'"{NAMES.goods}":[{{"{NAMES.name}":"","{NAMES.cont}":"",'
+    f'"{NAMES.unit}":"","{NAMES.amount}":"","{NAMES.price}":"",'
+    f'"{NAMES.sum_with}":"","{NAMES.sum_nds}":""}}],'
+    f'"{NAMES.total_with}":"","{NAMES.total_nds}":""}}'
+)
 
 config['system_prompt'] = f"""
 Ты бот, заполняющий json шаблон основе отсканированного файла.
@@ -69,8 +91,10 @@ config['system_prompt'] = f"""
 - Денежные данные записывай как число.
 - Запиши результат в одну строку.
 """.strip()
-# Верни только JSON-строку и ничего более.
 
+params_path = os.path.join(config['BASE_DIR'], 'config', 'parameters.json')
+with open(params_path, 'w', encoding='utf-8') as f:
+    json.dump(config, f, ensure_ascii=False, indent=4)
 
 if __name__ == '__main__':
     print(getattr(sys, 'frozen', False))
