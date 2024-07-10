@@ -62,6 +62,7 @@ class ConfigNames:
     sum_nds = 'Сумма НДС'
     total_with = 'Всего к оплате включая НДС'
     total_nds = 'Всего НДС'
+    price_type = 'price_type'
 
 
 NAMES = ConfigNames()
