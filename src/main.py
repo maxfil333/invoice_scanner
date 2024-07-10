@@ -38,7 +38,7 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
             json_name = os.path.basename(base[0]) + '_' + '0' * 11 + '.json'
             if base[-1] == 'pdf':
                 text_or_scanned_folder = config['NAME_text']
-                # __ RUN ASSISTANT __
+                # ___ RUN ASSISTANT (or CHAT in text_mode if --text_mode) ___
                 if test_mode:
                     with open(config['TESTFILE'], 'r', encoding='utf-8') as file:
                         result = file.read()
@@ -50,7 +50,7 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
             else:
                 text_or_scanned_folder = config['NAME_scanned']
                 files.sort(reverse=True)
-                # __ RUN CHAT __
+                # ___ RUN CHAT ___
                 if test_mode:
                     with open(config['TESTFILE'], 'r', encoding='utf-8') as file:
                         result = file.read()
