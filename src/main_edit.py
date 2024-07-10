@@ -9,12 +9,11 @@ from natsort import os_sorted
 from pdf2image import convert_from_path
 
 from logger import logger
-from config.config import config
+from config.config import config, NAMES
 from rotator import main as rotate
 from crop_tables import define_and_return
-from utils import is_scanned_pdf, count_pages
-from utils import rename_files_in_directory
-from utils import add_text_bar
+from utils import add_text_bar, rename_files_in_directory
+from utils import is_scanned_pdf, count_pages, align_pdf_orientation
 
 
 def main(hide_logs=False, stop_when=-1):
@@ -35,11 +34,11 @@ def main(hide_logs=False, stop_when=-1):
 
         # if digital pdf
         if (file_type.lower() == '.pdf') and (is_scanned_pdf(file) is False):
-            if count_pages(file) > 5:
+            if count_pages(file) > 6:
                 logger.print(f'page limit exceeded in {file}')
                 continue
             save_path = os.path.join(config['IN_FOLDER_EDIT'], file_name + f'_{file_type.replace(".", "")}' + '.pdf')
-            shutil.copy(file, save_path)
+            align_pdf_orientation(file, save_path)
 
         # if file is image, or file is scanned pdf
         else:
@@ -70,7 +69,7 @@ def main(hide_logs=False, stop_when=-1):
                 command = [config["magick_exe"], "convert", cropped_save_pth1, *config["magick_opt"], cropped_save_pth1]
                 subprocess.run(command)
             if table_ship:
-                table_ship = add_text_bar(table_ship, 'Услуги')
+                table_ship = add_text_bar(table_ship, NAMES.goods)
                 table_ship.save(cropped_save_pth2)
                 command = [config["magick_exe"], "convert", cropped_save_pth2, *config["magick_opt"], cropped_save_pth2]
                 subprocess.run(command)
