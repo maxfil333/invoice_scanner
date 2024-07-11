@@ -12,7 +12,7 @@ from logger import logger
 from config.config import config, NAMES
 from rotator import main as rotate
 from crop_tables import define_and_return
-from utils import add_text_bar, rename_files_in_directory
+from utils import add_text_bar, image_upstanding, rename_files_in_directory
 from utils import is_scanned_pdf, count_pages, align_pdf_orientation
 
 
@@ -53,7 +53,8 @@ def main(hide_logs=False, stop_when=-1):
             else:
                 logger.print(f'ERROR IN: {file}')
                 continue
-            rotated = Image.fromarray(rotate(image))
+            upstanding = image_upstanding(image)  # 0-90-180-270 rotate
+            rotated = Image.fromarray(rotate(upstanding))  # accurate rotate
             save_path = os.path.join(config['IN_FOLDER_EDIT'], file_name + f'_{file_type.replace(".", "")}' + '.jpg')
             if rotated.mode == "RGBA":
                 rotated = rotated.convert('RGB')

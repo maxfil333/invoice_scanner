@@ -3,11 +3,13 @@ import re
 import sys
 import json
 import fitz
-import datetime
 import PyPDF2
 import msvcrt
 import base64
 import openai
+import datetime
+import pytesseract
+import numpy as np
 from openai import OpenAI
 from dotenv import load_dotenv
 from io import BytesIO, StringIO
@@ -226,6 +228,17 @@ def add_text_bar(image: str | Image.Image, text, h=75, font_path='verdana.ttf', 
     return new_image
 
 
+def image_upstanding(img: np.ndarray) -> np.ndarray:
+    pil_img = Image.fromarray(img)
+    osd = pytesseract.image_to_osd(pil_img)
+    rotation = int(osd.split("\n")[2].split(":")[1].strip())
+    confidence = float(osd.split("\n")[3].split(":")[1].strip())
+    logger.print('rotation, confidence:', rotation, confidence)
+    if confidence > 3:
+        return np.array(pil_img.rotate(-rotation, expand=True))
+    return img
+
+
 # _________ PDF _________
 
 def is_scanned_pdf(file_path):
@@ -284,7 +297,6 @@ def align_pdf_orientation(input_pdf_path, output_pdf_path):
             # Основываемся на высоте и ширине bounding box для текста
             blocks = page.get_text("blocks")
             if blocks:
-                print(blocks[0])
                 _, _, width, height, _, _, _ = blocks[0]
                 if width > height:
                     if width > height:
