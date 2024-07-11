@@ -80,7 +80,7 @@ def rotate_image(image: np.array, angle, center=None, scale=1.0):
     return rotated_image
 
 
-def main(image: str | np.ndarray):
+def main(image: str | np.ndarray) -> np.ndarray:
     if isinstance(image, np.ndarray):
         pass
     elif isinstance(image, str):
