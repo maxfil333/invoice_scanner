@@ -81,7 +81,7 @@ legend {
     padding: 0 10px;
     font-weight: bold;
     margin-bottom: 0.5em; /* Уменьшаем нижний отступ */
-    color: #007bff; /* Синий цвет для заголовков */
+    color: #4E995B; /* Синий цвет для заголовков */
 }
 
 /* Стили для label */
@@ -147,7 +147,7 @@ input[type="checkbox"] {
 
 /* Общие стили для кнопок */
 button {
-    background-color: #007bff; /* Синий цвет для кнопки */
+    background-color: #4E995B; /* Темно-зеленый цвет для кнопки */
     color: white;
     padding: 5px 10px;
     border: none;
@@ -164,7 +164,11 @@ button {
 }
 
 #save-button:hover {
-    background-color: #0056b3; /* Более темный синий при наведении */
+    opacity: 0.8; /* Снижение непрозрачности до 80% при наведении */
+}
+
+#save-button:active {
+    transform: scale(0.95); /* Уменьшение размера на 5% при нажатии */
 }
 
 /* Стили для кнопки "Добавить услугу" */
@@ -172,16 +176,15 @@ button[onclick="addService(this)"] {
     font-family: 'Consolas', Courier, monospace;
     text-align: center;
     font-size: 18px;
-    background-color: #4CAF50; /* Зеленый фон */
+    background-color: #39C452; /* Зеленый фон */
 }
 
 button[onclick="addService(this)"]:hover {
-    background-color: #367d39; /* Темно-зеленый при наведении */
+    opacity: 0.8; /* Снижение непрозрачности до 80% при наведении */
 }
 
 button[onclick="addService(this)"]:active {
-    background-color: #1f4221; /* Темно-зеленый при нажатии */
-    transform: scale(0.98); /* Легкое уменьшение при нажатии */
+    transform: scale(0.95); /* Легкое уменьшение при нажатии */
 }
 
 /* Стили для кнопки "Удалить услугу" */
@@ -189,16 +192,19 @@ button[onclick="removeService(this)"] {
     font-family: 'Consolas', Courier, monospace;
     text-align: center;
     font-size: 18px;
-    background-color: #f44336; /* Красный фон */
+    background-color: #AD747F; /* Красный фон */
 }
 
 button[onclick="removeService(this)"]:hover {
-    background-color: #c9322e; /* Темно-красный при наведении */
+    opacity: 0.8; /* Снижение непрозрачности до 80% при наведении */
 }
 
 button[onclick="removeService(this)"]:active {
-    background-color: #9e2926; /* Темно-красный при нажатии */
-    transform: scale(0.98); /* Легкое уменьшение при нажатии */
+    transform: scale(0.95); /* Легкое уменьшение при нажатии */
+}
+
+.error {
+    background-color: #f2dce0;
 }
 
 /* Адаптивные стили для мобильных устройств */
