@@ -276,3 +276,39 @@ function getFormData() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 }
+
+
+// --------------------------------------------------------------------------------------------------------------------
+// Подсветить ошибки
+
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('invoice-form');
+    const keyNames = ['ИНН', 'КПП', 'БИК', 'корреспондентский счет', 'расчетный счет'];
+    const regexes = [
+        /^\d{10}$|^\d{12}$/, // inn
+        /^\d{9}$/,           // kpp
+        /^04\d{7}$/,         // bik
+        /^30101\d{15}$/,     // ks
+        /^(?:408|407|406|405)\d{17}$/ // rs
+    ];
+
+    const inputs = form.querySelectorAll('input');
+
+    function validateInput(input) {
+        const name = input.name;
+        const index = keyNames.indexOf(name);
+        if (index !== -1) {
+            const regex = regexes[index];
+            if (regex.test(input.value)) {
+                input.classList.remove('error');
+            } else {
+                input.classList.add('error');
+            }
+        }
+    }
+
+    inputs.forEach(input => {
+        input.addEventListener('input', () => validateInput(input));
+        validateInput(input); // Initial validation
+    });
+});
