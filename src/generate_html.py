@@ -89,7 +89,7 @@ def create_html_form(json_file, output_file, file_path):
     <body>
         <div class="container">
             <div class="left-pane">
-                <form id="invoice-form">
+                <form id="invoice-form" autocomplete="off">
                 
     '''
 
