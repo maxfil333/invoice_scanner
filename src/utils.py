@@ -85,7 +85,7 @@ def get_stream_dotenv():
 
 def postprocessing_openai_response(response: str, hide_logs=False) -> str:
     # удаление двойных пробелов и переносов строк
-    re_response = re.sub(r'(\s{2,}|\n)', '', response)
+    re_response = re.sub(r'(\s{2,}|\n)', ' ', response)
 
     # проверка на json-формат
     try:
