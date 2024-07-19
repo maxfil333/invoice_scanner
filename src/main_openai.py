@@ -86,7 +86,7 @@ def run_chat(*img_paths: str, detail='high', hide_logs=False, text_mode=False) -
             content.append(d)
 
     response = client.chat.completions.create(
-        model="gpt-4o",
+        model=config['GPTMODEL'],
         response_format={"type": "json_object"},
         temperature=0.1,
         messages=
@@ -96,6 +96,7 @@ def run_chat(*img_paths: str, detail='high', hide_logs=False, text_mode=False) -
         ],
         max_tokens=3000,
     )
+    logger.print('chat model:', response.model)
     logger.print(f'img_paths: {img_paths}')
     logger.print(f'time: {perf_counter() - start:.2f}')
     logger.print(f'completion_tokens: {response.usage.completion_tokens}')
