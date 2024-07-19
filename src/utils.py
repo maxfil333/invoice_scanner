@@ -11,6 +11,7 @@ import datetime
 import pytesseract
 import numpy as np
 from openai import OpenAI
+from typing import Literal
 from dotenv import load_dotenv
 from io import BytesIO, StringIO
 from collections import defaultdict
@@ -318,16 +319,13 @@ def align_pdf_orientation(input_pdf_path, output_pdf_path):
 
 # _________ OPENAI _________
 
-def update_assistant(client, assistant_id: str, model: int):
-    if model == 3:
-        model = 'gpt-3.5-turbo'
-    if model == 4:
-        model = 'gpt-4o'
-
+def update_assistant(client, assistant_id: str, model: Literal['gpt-4o', 'gpt-4o-mini']):
     my_updated_assistant = client.beta.assistants.update(
         assistant_id,
         model=model
     )
+    print(f'model replaced by {model}')
+
     return my_updated_assistant
 
 
@@ -450,4 +448,10 @@ def check_sums(dct):
 # _________ TEST _________
 
 if __name__ == '__main__':
-    pass
+    load_dotenv(stream=get_stream_dotenv())
+    openai.api_key = os.environ.get("OPENAI_API_KEY")
+    ASSISTANT_ID = os.environ.get("ASSISTANT_ID")
+    client = OpenAI()
+
+    update_assistant(client, ASSISTANT_ID, config['GPTMODEL'])
+
