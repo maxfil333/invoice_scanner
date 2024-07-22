@@ -5,7 +5,10 @@ __*
 /CHECK/
 crypto.key
 *.exe
+*.xls
+*.xlsx
 config/parameters.json
+unique_comments.json
 
 
 # Игнорировать каталоги и файлы конфигурации PyCharm

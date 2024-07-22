@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import msvcrt
+from glob import glob
 from logger import logger
 
 # main.spec
@@ -38,8 +39,10 @@ config['CSS_PATH'] = os.path.join(config['CONFIG'], 'styles.css')
 config['JS_PATH'] = os.path.join(config['CONFIG'], 'scripts.js')
 config['crypto_env'] = os.path.join(config['CONFIG'], 'encrypted.env')
 config['TESTFILE'] = os.path.join(config['CONFIG'], '__test.json')
-# config['GPTMODEL'] = 'gpt-4o'
-config['GPTMODEL'] = 'gpt-4o-mini'
+config['services_excel_file'] = os.path.join(config['CONFIG'], glob(os.path.join(config['CONFIG'], '*.xls*'))[0])
+config['uniq_comments'] = os.path.join(config['CONFIG'], 'unique_comments.json')
+config['GPTMODEL'] = 'gpt-4o'
+# config['GPTMODEL'] = 'gpt-4o-mini'
 
 try:
     with open(os.path.join(config['CONFIG'], 'crypto.key'), 'r') as f:
