@@ -230,6 +230,8 @@ def add_text_bar(image: str | Image.Image, text, h=75, font_path='verdana.ttf', 
 
 
 def image_upstanding(img: np.ndarray) -> np.ndarray:
+    """ Приведение изображений в вертикальное положение с помощью tesseract"""
+
     pil_img = Image.fromarray(img)
     osd = pytesseract.image_to_osd(pil_img)
     rotation = int(osd.split("\n")[2].split(":")[1].strip())
@@ -460,10 +462,12 @@ def check_sums(dct):
 # _________ TEST _________
 
 if __name__ == '__main__':
-    load_dotenv(stream=get_stream_dotenv())
-    openai.api_key = os.environ.get("OPENAI_API_KEY")
-    ASSISTANT_ID = os.environ.get("ASSISTANT_ID")
-    client = OpenAI()
+    # load_dotenv(stream=get_stream_dotenv())
+    # openai.api_key = os.environ.get("OPENAI_API_KEY")
+    # ASSISTANT_ID = os.environ.get("ASSISTANT_ID")
+    # client = OpenAI()
+    #
+    # update_assistant(client, ASSISTANT_ID, config['GPTMODEL'])
 
-    update_assistant(client, ASSISTANT_ID, config['GPTMODEL'])
+    pass
 
