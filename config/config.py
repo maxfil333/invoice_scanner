@@ -39,10 +39,17 @@ config['CSS_PATH'] = os.path.join(config['CONFIG'], 'styles.css')
 config['JS_PATH'] = os.path.join(config['CONFIG'], 'scripts.js')
 config['crypto_env'] = os.path.join(config['CONFIG'], 'encrypted.env')
 config['TESTFILE'] = os.path.join(config['CONFIG'], '__test.json')
-config['services_excel_file'] = os.path.join(config['CONFIG'], glob(os.path.join(config['CONFIG'], '*.xls*'))[0])
-config['uniq_comments'] = os.path.join(config['CONFIG'], 'unique_comments.json')
 config['GPTMODEL'] = 'gpt-4o'
 # config['GPTMODEL'] = 'gpt-4o-mini'
+
+config['services_excel_file'] = os.path.join(config['CONFIG'], glob(os.path.join(config['CONFIG'], '*.xls*'))[0])
+config['uniq_comments_file'] = os.path.join(config['CONFIG'], 'unique_comments.json')
+try:
+    with open(config['uniq_comments_file'], 'r', encoding='utf-8') as f:
+        config['uniq_comments_dict'] = json.load(f)
+except FileNotFoundError:
+    logger.print(f"ERROR: FILE {config['uniq_comments_file']} NOT FOUND!")
+    config['uniq_comments_dict'] = None
 
 try:
     with open(os.path.join(config['CONFIG'], 'crypto.key'), 'r') as f:
@@ -58,6 +65,7 @@ except FileNotFoundError as e:
 class ConfigNames:
     goods = 'Услуги'
     name = 'Наименование'
+    good1C = 'Услуга1С'
     cont = 'Контейнеры'
     cont_names = 'Контейнеры (наименование)'
     unit = 'Единица'
@@ -72,6 +80,13 @@ class ConfigNames:
 
 NAMES = ConfigNames()
 
+# 11 = 7(оригинальных) - (price - sum_with - sum_nds)(3) + (2*Сумма + 2*Цена)(4) + price_type + good1C + cont_names
+# 11 = 7 - 3 + 4 + 3
+config['services_order'] = [NAMES.name, NAMES.good1C, NAMES.cont, NAMES.cont_names, NAMES.unit, NAMES.amount,
+                            'Цена (без НДС)', 'Сумма (без НДС)', 'Цена (с НДС)', 'Сумма (с НДС)',
+                            'price_type']
+
+# для system_prompt (1 Наименование, 2 Контейнеры, 3 Единица, 4 Количество, 5 Цена, 6 Сумма включая НДС, 7 Сумма НДС)
 config['json_struct'] = (
     f'{{"Банковские реквизиты поставщика":{{"ИНН":"","КПП":"","БИК":"","корреспондентский счет":"",'
     f'"расчетный счет":""}},"Банковские реквизиты покупателя":{{"ИНН":"","КПП":""}},'
@@ -105,12 +120,13 @@ with open(params_path, 'w', encoding='utf-8') as f:
 if __name__ == '__main__':
     print(getattr(sys, 'frozen', False))
     for k, v in config.items():
-        print(k)
-        print(v)
-        print('-' * 50)
-        if k == 'json_struct':
-            try:
-                json.loads(v)
-            except json.decoder.JSONDecodeError:
-                print("Нарушена структура json")
-                break
+        if k not in ['uniq_comments_dict']:
+            print(k)
+            print(v)
+            print('-' * 50)
+            if k == 'json_struct':
+                try:
+                    json.loads(v)
+                except json.decoder.JSONDecodeError:
+                    print("Нарушена структура json")
+                    break

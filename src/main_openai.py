@@ -61,6 +61,10 @@ def local_postprocessing(response, hide_logs=False):
                                                  )
                                              )
                                         )
+
+        # добавление 'Услуга1С'
+        good_dct['Услуга1С'] = ''
+
     # 3. check_sums
     dct = check_sums(dct)
 
