@@ -350,6 +350,7 @@ def check_sums(dct):
     """
     logger.print('--- start check_sums ---')
 
+    # _____ Определение ставки НДС _____
     total_with_nds = float(dct[NAMES.total_with]) if dct[NAMES.total_with] != '' else None
     if not total_with_nds:  # Всего к оплате включая НДС
         logger.print('!!! total_with_nds not found !!! total_with_nds = sum("Сумма включая НДС")')
@@ -366,21 +367,16 @@ def check_sums(dct):
         total_without_nds = total_with_nds
     dct['nds (%)'] = nds
 
+    # _____ считаем сумму "сумм с НДС" _____
     cum_sum = 0
-    cum_amount_and_price = 0
     for good_dct in dct[NAMES.goods]:
         try:
             cum_sum += float(good_dct[NAMES.sum_with])
         except:
             logger.print('cum_sum pass')
             pass
-        try:
-            amount = float(good_dct[NAMES.amount]) if good_dct[NAMES.amount] != '' else 1
-            cum_amount_and_price += float(amount) * float(good_dct[NAMES.price])
-        except:
-            logger.print('cum_amount_and_price pass')
-            pass
 
+    # сравниваем сумму "сумм с НДС" с Всего -> определяем тип "сумм"
     if round(cum_sum, 1) == round(total_with_nds, 1):
         sum_type = 'with'
     elif round(cum_sum, 1) == round(total_without_nds, 1):
@@ -388,27 +384,37 @@ def check_sums(dct):
     else:
         sum_type = 'None'
 
+    # в зависимости от того была ли "сумма" из оригинального json "суммой с НДС" или "суммой без НДС" заполняем поля:
     for good_dct in dct[NAMES.goods]:
         old_sum = round(float(good_dct.pop(NAMES.sum_with)), 2)  # Сумма "включая/не включая" НДС
         good_dct.pop(NAMES.sum_nds)
-        if sum_type == 'with':
+        if sum_type in ['with', 'None']:
             good_dct['Сумма (без НДС)'] = round(old_sum / (1 + (nds / 100)), 2)
             good_dct['Сумма (с НДС)'] = old_sum
         elif sum_type == 'without':
             good_dct['Сумма (без НДС)'] = old_sum
             good_dct['Сумма (с НДС)'] = round(old_sum * (1 + (nds / 100)), 2)
-        else:
-            good_dct['Сумма (без НДС)'] = round(old_sum / (1 + (nds / 100)), 2)
-            good_dct['Сумма (с НДС)'] = old_sum
 
-    if round(cum_amount_and_price, 1) == round(total_with_nds, 1):
+    # _____ считаем сумму (количество * цена) _____
+    cum_amount_and_price = 0
+    for good_dct in dct[NAMES.goods]:
+        try:
+            amount = float(good_dct[NAMES.amount]) if good_dct[NAMES.amount] != '' else 1
+            cum_amount_and_price += float(amount) * float(good_dct[NAMES.price])
+        except:
+            logger.print('cum_amount_and_price pass')
+            pass
+
+    # сравниваем сумму (количество * цена) с Всего -> определяем тип "Цены"
+    # исходя из того как в чеке записана цена (тип: без НДС / с НДС) выбирается nds_type
+    if round(cum_amount_and_price, 1) == round(total_with_nds, 1):  # с НДС -> В т.ч.
         nds_type = 'В т.ч.'
         for good_dct in dct[NAMES.goods]:
             old_price = float(good_dct.pop(NAMES.price))
             good_dct['Цена (без НДС)'] = round(old_price / (1 + (nds / 100)), 2)
             good_dct['Цена (с НДС)'] = old_price
             good_dct['price_type'] = nds_type
-    elif round(cum_amount_and_price, 1) == round(total_without_nds, 1):
+    elif round(cum_amount_and_price, 1) == round(total_without_nds, 1):  # без НДС -> Сверху
         nds_type = 'Сверху'
         for good_dct in dct[NAMES.goods]:
             old_price = float(good_dct.pop(NAMES.price))
@@ -431,14 +437,20 @@ def check_sums(dct):
                 good_dct['price_type'] = nds_type
             good_dct['price_type'] = nds_type
 
-    new_order = [NAMES.name, NAMES.cont, NAMES.cont_names, NAMES.unit, NAMES.amount,
-                 'Цена (без НДС)', 'Сумма (без НДС)', 'Цена (с НДС)', 'Сумма (с НДС)',
-                 'price_type']
-    ordered_goods = []
-    for good_dct in dct[NAMES.goods]:
-        one_reordered_goods_dct = {k: good_dct[k] for k in new_order}
-        ordered_goods.append(one_reordered_goods_dct)
-    dct[NAMES.goods] = ordered_goods
+    # _____ сортировка ключей Услуг _____
+    new_order = config['services_order']
+    for i in dct[NAMES.goods]:  # цикл на случай если dct['Услуги'] == []
+        if len(new_order) != len(i):
+            logger.print('\n!!! При сортировке ключей в "Услугах" произошла ошибка.\n'
+                         'проверьте количество ключей по следующей формуле:\n'
+                         'KEYS(config[system_prompt]) + NEWKEYS(local_postprocessing) = config[services_order] !!!\n')
+        else:
+            ordered_goods = []
+            for good_dct in dct[NAMES.goods]:
+                one_reordered_goods_dct = {k: good_dct[k] for k in new_order}
+                ordered_goods.append(one_reordered_goods_dct)
+            dct[NAMES.goods] = ordered_goods
+        break
 
     logger.print('--- end check_sums ---')
 
