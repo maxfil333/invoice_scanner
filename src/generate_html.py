@@ -7,7 +7,7 @@ from logger import logger
 from config.config import config, NAMES
 
 
-def generate_input_html(key, value):
+def generate_input_html(key, val):
     input_type = "text"
     html_content = f'<div class="input-group"><label>{escape(key)}</label>'
 
@@ -18,19 +18,22 @@ def generate_input_html(key, value):
         }
         html_content += '<select name="{0}">'.format(escape(key))
         for option_value, option_label in select_options.items():
-            selected = 'selected' if value == option_value else ''
+            selected = 'selected' if val == option_value else ''
             html_content += '<option value="{0}" {1}>{2}</option>'.format(escape(option_value), selected, escape(option_label))
         html_content += '</select></div>\n'
-    elif isinstance(value, bool):
+    elif isinstance(val, bool):
         input_type = "checkbox"
-        checked = 'checked' if value else ''
+        checked = 'checked' if val else ''
         html_content += f'<input type="{input_type}" name="{escape(key)}" {checked}></div>\n'
-    elif isinstance(value, str) and (key in [NAMES.name, NAMES.cont, NAMES.cont_names] or len(value) > 30):
-        html_content += (f'<textarea name="{escape(key)}" rows="1" style="resize:none;" '
+    elif isinstance(val, str) and (key in [NAMES.name, NAMES.cont, NAMES.cont_names, NAMES.good1C] or len(val) > 30):
+        class_ = ''
+        if key == NAMES.good1C:
+            class_ = 'class="service1C" '
+        html_content += (f'<textarea name="{escape(key)}" {class_}rows="1" style="resize:none;" '
                          f'oninput="this.style.height=\'auto\'; '
-                         f'this.style.height=(this.scrollHeight)+\'px\';">{escape(value)}</textarea></div>\n')
+                         f'this.style.height=(this.scrollHeight)+\'px\';">{escape(val)}</textarea></div>\n')
     else:
-        html_content += f'<input type="{input_type}" name="{escape(key)}" value="{escape(str(value))}"></div>\n'
+        html_content += f'<input type="{input_type}" name="{escape(key)}" value="{escape(str(val))}"></div>\n'
 
     return html_content
 
