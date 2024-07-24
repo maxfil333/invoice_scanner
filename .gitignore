@@ -9,6 +9,7 @@ crypto.key
 *.xlsx
 config/parameters.json
 unique_comments.json
+config/chroma
 
 
 # Игнорировать каталоги и файлы конфигурации PyCharm
