@@ -312,3 +312,91 @@ document.addEventListener('DOMContentLoaded', function() {
         validateInput(input); // Initial validation
     });
 });
+
+
+// --------------------------------------------------------------------------------------------------------------------
+// Список Услуг1С
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Встроенные данные
+    var originalJsonString = document.getElementById('services_dict').textContent;
+    try {
+        // Преобразуем строку JSON в объект JavaScript
+        var data = JSON.parse(originalJsonString);
+    } catch (error) {
+        // В случае ошибки выводим сообщение об ошибке
+        alert("Произошла ошибка: " + error.message);
+    }
+
+    const searchInputs = document.querySelectorAll('.Услуга1С');
+	console.log("searchInputs", searchInputs)
+    const dropdowns = document.querySelectorAll('.dropdown');
+	console.log("dropdowns", dropdowns)
+
+    let lastValidValue = '';
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	searchInputs.forEach((element, index) => {
+		const dropdown = dropdowns[index]
+		element.addEventListener('input', function() {
+			const query = this.value.toLowerCase();
+			dropdown.innerHTML = ''; // Очистка выпадающего списка
+			if (query) {
+				const filteredData = data.filter(item => item.comment.toLowerCase().includes(query));
+				if (filteredData.length > 0) {
+					filteredData.forEach(item => {
+						const div = document.createElement('div');
+						div.classList.add('dropdown-item');
+						div.textContent = item.comment;
+						div.addEventListener('click', function() {
+							// Подсвечивание элемента зеленым цветом на 0.2 секунду
+							div.classList.add('highlight');
+							setTimeout(() => {
+								div.classList.remove('highlight');
+								element.value = item.comment;
+								lastValidValue = item.comment;
+								dropdown.innerHTML = '';
+								dropdown.style.display = 'none';
+							}, 150);
+						});
+						dropdown.appendChild(div);
+					});
+					dropdown.style.display = 'block';
+				} else {
+					dropdown.style.display = 'none';
+				}
+			} else {
+				dropdown.style.display = 'none';
+			}
+		});
+
+		element.addEventListener('blur', function() {
+        const value = this.value;
+        const isValid = data.some(item => item.comment === value) || value === '';
+        if (!isValid) {
+            this.value = "";
+			}
+		});
+
+		// Закрытие выпадающего списка при клике вне его
+		let isDragging = false;
+
+		document.addEventListener('mousedown', function(event) {
+			isDragging = false;
+		});
+
+		document.addEventListener('mousemove', function(event) {
+			isDragging = true;
+		});
+
+		document.addEventListener('mouseup', function(event) {
+			if (!isDragging && !element.contains(event.target) && !dropdown.contains(event.target)) {
+				dropdown.style.display = 'none';
+			}
+			isDragging = false; // Сброс состояния перетаскивания
+		});
+	});
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+});
