@@ -195,6 +195,9 @@ function addService(button) {
     newLegend.innerText = newLegendNumber;
 
     fieldset.insertBefore(newService, button);
+
+    // Вызов функции dropdownService1C после добавления нового service
+    dropdownService1C();
 }
 
 
@@ -317,7 +320,9 @@ document.addEventListener('DOMContentLoaded', function() {
 // --------------------------------------------------------------------------------------------------------------------
 // Список Услуг1С
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', dropdownService1C);
+
+function dropdownService1C() {
     // Встроенные данные
     var originalJsonString = document.getElementById('services_dict').textContent;
     try {
@@ -326,77 +331,70 @@ document.addEventListener('DOMContentLoaded', function() {
     } catch (error) {
         // В случае ошибки выводим сообщение об ошибке
         alert("Произошла ошибка: " + error.message);
+        return;
     }
 
     const searchInputs = document.querySelectorAll('.Услуга1С');
-	console.log("searchInputs", searchInputs)
     const dropdowns = document.querySelectorAll('.dropdown');
-	console.log("dropdowns", dropdowns)
-
     let lastValidValue = '';
 
+    searchInputs.forEach((element, index) => {
+        const dropdown = dropdowns[index];
+        element.addEventListener('input', function() {
+            const query = this.value.toLowerCase();
+            dropdown.innerHTML = ''; // Очистка выпадающего списка
+            if (query) {
+                const filteredData = data.filter(item => item.comment.toLowerCase().includes(query));
+                if (filteredData.length > 0) {
+                    filteredData.forEach(item => {
+                        const div = document.createElement('div');
+                        div.classList.add('dropdown-item');
+                        div.textContent = item.comment;
+                        div.addEventListener('click', function() {
+                            // Подсвечивание элемента зеленым цветом на 0.2 секунду
+                            div.classList.add('highlight');
+                            setTimeout(() => {
+                                div.classList.remove('highlight');
+                                element.value = item.comment;
+                                lastValidValue = item.comment;
+                                dropdown.innerHTML = '';
+                                dropdown.style.display = 'none';
+                            }, 150);
+                        });
+                        dropdown.appendChild(div);
+                    });
+                    dropdown.style.display = 'block';
+                } else {
+                    dropdown.style.display = 'none';
+                }
+            } else {
+                dropdown.style.display = 'none';
+            }
+        });
 
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	searchInputs.forEach((element, index) => {
-		const dropdown = dropdowns[index]
-		element.addEventListener('input', function() {
-			const query = this.value.toLowerCase();
-			dropdown.innerHTML = ''; // Очистка выпадающего списка
-			if (query) {
-				const filteredData = data.filter(item => item.comment.toLowerCase().includes(query));
-				if (filteredData.length > 0) {
-					filteredData.forEach(item => {
-						const div = document.createElement('div');
-						div.classList.add('dropdown-item');
-						div.textContent = item.comment;
-						div.addEventListener('click', function() {
-							// Подсвечивание элемента зеленым цветом на 0.2 секунду
-							div.classList.add('highlight');
-							setTimeout(() => {
-								div.classList.remove('highlight');
-								element.value = item.comment;
-								lastValidValue = item.comment;
-								dropdown.innerHTML = '';
-								dropdown.style.display = 'none';
-							}, 150);
-						});
-						dropdown.appendChild(div);
-					});
-					dropdown.style.display = 'block';
-				} else {
-					dropdown.style.display = 'none';
-				}
-			} else {
-				dropdown.style.display = 'none';
-			}
-		});
+        element.addEventListener('blur', function() {
+            const value = this.value;
+            const isValid = data.some(item => item.comment === value) || value === '';
+            if (!isValid) {
+                this.value = "";
+            }
+        });
 
-		element.addEventListener('blur', function() {
-        const value = this.value;
-        const isValid = data.some(item => item.comment === value) || value === '';
-        if (!isValid) {
-            this.value = "";
-			}
-		});
+        let isDragging = false;
 
-		// Закрытие выпадающего списка при клике вне его
-		let isDragging = false;
+        document.addEventListener('mousedown', function(event) {
+            isDragging = false;
+        });
 
-		document.addEventListener('mousedown', function(event) {
-			isDragging = false;
-		});
+        document.addEventListener('mousemove', function(event) {
+            isDragging = true;
+        });
 
-		document.addEventListener('mousemove', function(event) {
-			isDragging = true;
-		});
-
-		document.addEventListener('mouseup', function(event) {
-			if (!isDragging && !element.contains(event.target) && !dropdown.contains(event.target)) {
-				dropdown.style.display = 'none';
-			}
-			isDragging = false; // Сброс состояния перетаскивания
-		});
-	});
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-});
+        document.addEventListener('mouseup', function(event) {
+            if (!isDragging && !element.contains(event.target) && !dropdown.contains(event.target)) {
+                dropdown.style.display = 'none';
+            }
+            isDragging = false;
+        });
+    });
+}
