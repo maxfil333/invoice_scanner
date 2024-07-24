@@ -18,7 +18,16 @@ from main_openai import run_chat, run_assistant
 from utils import group_files_by_name, delete_all_files, create_date_folder_in_check
 
 
-def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text_mode=False, stop_when=0):
+def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text_to_assistant=False, stop_when=0):
+    """
+    :param date_folder: folder for saving results
+    :param hide_logs: run without logs
+    :param test_mode: run without main_openai using "config/__test.json"
+    :param use_existing: run without main_edit using files in "IN/edited" folder
+    :param text_to_assistant: do not use OCR to extract text from digital pdf, use loading pdf to assistant instead
+    :param stop_when: stop script after N files
+    :return:
+    """
     # _____  FILL IN_FOLDER_EDIT  _____
     if not use_existing:
         delete_all_files(config['IN_FOLDER_EDIT'])
@@ -38,12 +47,12 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
             json_name = os.path.basename(base[0]) + '_' + '0' * 11 + '.json'
             if base[-1] == 'pdf':
                 text_or_scanned_folder = config['NAME_text']
-                # ___ RUN ASSISTANT (or CHAT in text_mode if --text_mode) ___
+                # ___ RUN ASSISTANT (or CHAT in text_to_assistant is False) ___
                 if test_mode:
                     with open(config['TESTFILE'], 'r', encoding='utf-8') as file:
                         result = file.read()
                 else:
-                    if text_mode:
+                    if not text_to_assistant:
                         result = run_chat(files[0], detail='high', hide_logs=hide_logs, text_mode=True)
                     else:
                         result = run_assistant(files[0], hide_logs=hide_logs)
@@ -113,7 +122,7 @@ if __name__ == "__main__":
     parser.add_argument('--hide_logs', action='store_true', help='Скрыть логи')
     parser.add_argument('--test_mode', action='store_true', help='Режим тестирования')
     parser.add_argument('--use_existing', action='store_true', help='Использовать существующие файлы')
-    parser.add_argument('--text_mode', action='store_true', help='Извлечь текст из pdf')
+    parser.add_argument('--text_to_assistant', action='store_true', help='Извлечь текст из pdf')
     parser.add_argument('--no_exit', action='store_true', help='Не закрывать окно')
     parser.add_argument('--stop_when', type=int, default=-1, help='Максимальное количество файлов')
     args = parser.parse_args()
@@ -125,7 +134,7 @@ if __name__ == "__main__":
                               hide_logs=args.hide_logs,
                               test_mode=args.test_mode,
                               use_existing=args.use_existing,
-                              text_mode=args.text_mode,
+                              text_to_assistant=args.text_to_assistant,
                               stop_when=args.stop_when)
         logger.print(f'\nresult_message:\n{result_message}\n')
     except PermissionDeniedError:
