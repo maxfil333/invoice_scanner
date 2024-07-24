@@ -236,7 +236,7 @@ def image_upstanding(img: np.ndarray) -> np.ndarray:
     osd = pytesseract.image_to_osd(pil_img)
     rotation = int(osd.split("\n")[2].split(":")[1].strip())
     confidence = float(osd.split("\n")[3].split(":")[1].strip())
-    logger.print('rotation, confidence:', rotation, confidence)
+    logger.print('rotation:', rotation, 'confidence:', confidence)
     if confidence > 3:
         return np.array(pil_img.rotate(-rotation, expand=True))
     return img
