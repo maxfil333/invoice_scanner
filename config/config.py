@@ -42,14 +42,15 @@ config['TESTFILE'] = os.path.join(config['CONFIG'], '__test.json')
 config['GPTMODEL'] = 'gpt-4o'
 # config['GPTMODEL'] = 'gpt-4o-mini'
 
+config['chroma_path'] = os.path.join(config['CONFIG'], 'chroma')
 config['services_excel_file'] = os.path.join(config['CONFIG'], glob(os.path.join(config['CONFIG'], '*.xls*'))[0])
-config['uniq_comments_file'] = os.path.join(config['CONFIG'], 'unique_comments.json')
+config['unique_comments_file'] = os.path.join(config['CONFIG'], 'unique_comments.json')
+config['unique_comments_dict'] = None  # to html <div id="services_dict..."
 try:
-    with open(config['uniq_comments_file'], 'r', encoding='utf-8') as f:
-        config['uniq_comments_dict'] = json.load(f)
+    with open(config['unique_comments_file'], 'r', encoding='utf-8') as f:
+        config['unique_comments_dict'] = json.load(f)
 except FileNotFoundError:
-    logger.print(f"ERROR: FILE {config['uniq_comments_file']} NOT FOUND!")
-    config['uniq_comments_dict'] = None
+    logger.print(f"ERROR: FILE {config['unique_comments_file']} NOT FOUND!")
 
 try:
     with open(os.path.join(config['CONFIG'], 'crypto.key'), 'r') as f:
@@ -120,7 +121,7 @@ with open(params_path, 'w', encoding='utf-8') as f:
 if __name__ == '__main__':
     print(getattr(sys, 'frozen', False))
     for k, v in config.items():
-        if k not in ['uniq_comments_dict']:
+        if k not in ['unique_comments_dict']:
             print(k)
             print(v)
             print('-' * 50)
