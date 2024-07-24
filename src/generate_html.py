@@ -9,7 +9,8 @@ from config.config import config, NAMES
 
 def generate_input_html(key, val):
     input_type = "text"
-    html_content = f'<div class="input-group"><label>{escape(key)}</label>'
+    html_content = (f'<div class="input-group">\n'
+                    f'<label>{escape(key)}</label>\n')
 
     if key == NAMES.price_type:
         select_options = {
@@ -26,12 +27,12 @@ def generate_input_html(key, val):
         checked = 'checked' if val else ''
         html_content += f'<input type="{input_type}" name="{escape(key)}" {checked}></div>\n'
     elif isinstance(val, str) and (key in [NAMES.name, NAMES.cont, NAMES.cont_names, NAMES.good1C] or len(val) > 30):
-        class_ = ''
-        if key == NAMES.good1C:
-            class_ = 'class="service1C" '
-        html_content += (f'<textarea name="{escape(key)}" {class_}rows="1" style="resize:none;" '
+        html_content += (f'<textarea name="{escape(key)}" class="{escape(key)}" rows="1" style="resize:none;" '
                          f'oninput="this.style.height=\'auto\'; '
-                         f'this.style.height=(this.scrollHeight)+\'px\';">{escape(val)}</textarea></div>\n')
+                         f'this.style.height=(this.scrollHeight)+\'px\';">{escape(val)}</textarea>')
+        if key == NAMES.good1C:
+            html_content += '<div class="dropdown"></div>\n'
+        html_content += '</div>\n'
     else:
         html_content += f'<input type="{input_type}" name="{escape(key)}" value="{escape(str(val))}"></div>\n'
 
