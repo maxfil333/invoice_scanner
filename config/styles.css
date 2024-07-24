@@ -9,6 +9,48 @@ body {
     flex-direction: column;
 }
 
+.dropdown {
+    width: 50%; /* Установить ширину в 80% от родительского элемента */
+    max-height: 340px; /* Ограничение по максимальной высоте, если необходимо */
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    display: none; /* Это свойство необходимо для скрытия элемента по умолчанию */
+    position: absolute;
+    background-color: white;
+    z-index: 1000;
+    resize: vertical; /* Позволяет изменение размера */
+    overflow: auto; /* Позволяет прокрутку при изменении размера */
+    top: 100%; /* Настройте расположение по вашему усмотрению */
+    right: 0%; /* Настройте расположение по вашему усмотрению */
+}
+
+
+.dropdown-item {
+    font-size: 14px;
+    border: 1px solid #ddd;
+    padding: 5px;
+    cursor: pointer;
+    color: #4E995B;
+
+    &:hover {
+        background-color: #f0f0f0;
+    }
+}
+
+
+.highlight {
+    background-color: #DCEDDE !important;
+    transition: background-color 0.1s;
+}
+
+#search-container {
+    position: relative;
+    width: 300px;
+}
+
+
+
 .container {
     display: flex;
     width: 100%;
@@ -21,7 +63,6 @@ body {
     padding: 20px;
     width: 50%;
     box-sizing: border-box;
-    overflow-y: auto; /* Прокрутка только по вертикали */
     border-right: 2px solid #ddd;
     height: 100vh; /* Гарантируем, что левая панель занимает всю высоту контейнера */
 }
@@ -75,6 +116,7 @@ fieldset {
     box-sizing: border-box;
     overflow: hidden;
     background-color: #f9f9f9;
+    position: relative; /* Добавить относительное позиционирование к родительскому элементу */
 }
 
 legend {
@@ -98,6 +140,7 @@ label {
 }
 
 .input-group {
+    position: relative; /* Добавить относительное позиционирование к родительскому элементу */
     display: flex;
     align-items: center;
     margin-bottom: 0.5em; /* Уменьшаем отступ между группами */
@@ -232,7 +275,7 @@ button[onclick="removeService(this)"]:active {
     input[type="number"],
     input[type="date"],
     input[type="email"],
-    select, 
+    select,
     textarea {
         width: calc(100% - 130px); /* Корректируем ширину для мобильных устройств */
     }
