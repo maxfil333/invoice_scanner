@@ -32,12 +32,10 @@ def local_postprocessing(response, hide_logs=False):
         return None
     if not hide_logs:
         logger.print(f'function "{inspect.stack()[1].function}":')
-        logger.print('re_response:')
-        logger.print(repr(re_response))
+        logger.print('re_response:\n',repr(re_response))
     dct = json.loads(re_response)
     dct = convert_json_values_to_strings(dct)
 
-    # Найти все контейнеры по паттерну вне зависимости от языка
     container_regex = r'[A-ZА-Я]{3}U\s?[0-9]{7}'
     container_regex_lt = r'[A-Z]{3}U\s?[0-9]{7}'
 
@@ -67,11 +65,16 @@ def local_postprocessing(response, hide_logs=False):
                                                  )
                                              )
                                         )
+        # 3. Количество, Единица измерения (очистка от лишних символов)
+        amount = good_dct[NAMES.amount]
+        good_dct[NAMES.amount] = re.sub(r'[^\d.]', '', amount).strip('.')
+        unit = good_dct[NAMES.unit]
+        good_dct[NAMES.unit] = re.sub(r'[^a-zA-Zа-яА-Я]', '', unit)
 
-        # 3. добавление 'Услуга1С'
+        # 4. добавление 'Услуга1С'
         good_dct['Услуга1С'] = ''
 
-        # 4. заполнение 'Услуга1С'
+        # 5. заполнение 'Услуга1С'
         name_without_containers = replace_container_with_none(good_dct[NAMES.name], container_regex)
         idx_comment_tuples = chroma_get_relevant(query=name_without_containers,
                                                  chroma_path=config['chroma_path'],
@@ -85,7 +88,7 @@ def local_postprocessing(response, hide_logs=False):
             # перезаписываем поле "Услуга1С"
             good_dct['Услуга1С'] = good1C
 
-    # 5. check_sums
+    # 6. check_sums
     dct = check_sums(dct)
 
     string_dictionary = convert_json_values_to_strings(dct)
