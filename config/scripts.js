@@ -334,6 +334,9 @@ function dropdownService1C() {
         return;
     }
 
+    // Извлекаем уникальные значения из service_list
+    const uniqueServices = [...new Set(data.flatMap(item => item.service_list))];
+
     const searchInputs = document.querySelectorAll('.Услуга1С');
     const dropdowns = document.querySelectorAll('.dropdown');
     let lastValidValue = '';
@@ -344,19 +347,19 @@ function dropdownService1C() {
             const query = this.value.toLowerCase();
             dropdown.innerHTML = ''; // Очистка выпадающего списка
             if (query) {
-                const filteredData = data.filter(item => item.comment.toLowerCase().includes(query));
+                const filteredData = uniqueServices.filter(service => service.toLowerCase().includes(query));
                 if (filteredData.length > 0) {
-                    filteredData.forEach(item => {
+                    filteredData.forEach(service => {
                         const div = document.createElement('div');
                         div.classList.add('dropdown-item');
-                        div.textContent = item.comment;
+                        div.textContent = service;
                         div.addEventListener('click', function() {
                             // Подсвечивание элемента зеленым цветом на 0.2 секунду
                             div.classList.add('highlight');
                             setTimeout(() => {
                                 div.classList.remove('highlight');
-                                element.value = item.comment;
-                                lastValidValue = item.comment;
+                                element.value = service;
+                                lastValidValue = service;
                                 dropdown.innerHTML = '';
                                 dropdown.style.display = 'none';
                             }, 150);
@@ -374,7 +377,7 @@ function dropdownService1C() {
 
         element.addEventListener('blur', function() {
             const value = this.value;
-            const isValid = data.some(item => item.comment === value) || value === '';
+            const isValid = uniqueServices.includes(value) || value === '';
             if (!isValid) {
                 this.value = "";
             }
