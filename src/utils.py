@@ -156,7 +156,7 @@ def rename_files_in_directory(directory_path, hide_logs=False):
 
     for filename in files:
         if not os.path.isdir(os.path.join(directory_path, filename)):  # Исключаем директории из списка файлов
-            new_filename = filename.replace(" ", "_")
+            new_filename = re.sub(r'\s+', '_', filename)
             old_filepath = os.path.join(directory_path, filename)
             new_filepath = os.path.join(directory_path, new_filename)
             try:
