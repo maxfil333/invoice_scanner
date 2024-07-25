@@ -1,5 +1,6 @@
 import openai
 from openai import OpenAI
+from langchain_openai import OpenAIEmbeddings
 
 import os
 import re
@@ -11,8 +12,9 @@ from dotenv import load_dotenv
 
 from logger import logger
 from config.config import config, NAMES
-from utils import replace_container_with_latin
+from utils import chroma_get_relevant
 from utils import extract_text_with_fitz, check_sums
+from utils import replace_container_with_latin, replace_container_with_none
 from utils import base64_encode_pil, convert_json_values_to_strings, get_stream_dotenv, postprocessing_openai_response
 
 # ___________________________ general ___________________________
@@ -39,6 +41,10 @@ def local_postprocessing(response, hide_logs=False):
     container_regex = r'[A-ZА-Я]{3}U\s?[0-9]{7}'
     container_regex_lt = r'[A-Z]{3}U\s?[0-9]{7}'
 
+    load_dotenv(stream=get_stream_dotenv())
+    openai.api_key = os.environ.get("OPENAI_API_KEY")
+    embedding_func = OpenAIEmbeddings()
+
     for good_dct in dct[NAMES.goods]:
         # 1. Замена кириллицы в Наименовании, создание Контейнеры(наименование)
         name = good_dct[NAMES.name]
@@ -52,20 +58,34 @@ def local_postprocessing(response, hide_logs=False):
         good_dct[NAMES.cont_names] = ' '.join(uniq_containers)
 
         # 2. Замена кириллицы в Контейнеры
-        name = good_dct[NAMES.cont]
-        good_dct[NAMES.cont] = replace_container_with_latin(name, container_regex)
-        name = good_dct[NAMES.cont]
+        cont = good_dct[NAMES.cont]
+        good_dct[NAMES.cont] = replace_container_with_latin(cont, container_regex)
+        cont = good_dct[NAMES.cont]
         good_dct[NAMES.cont] = ' '.join(list(map(lambda x:
                                                  re.sub(r'\s', '', x),
-                                                 re.findall(container_regex_lt, name)
+                                                 re.findall(container_regex_lt, cont)
                                                  )
                                              )
                                         )
 
-        # добавление 'Услуга1С'
+        # 3. добавление 'Услуга1С'
         good_dct['Услуга1С'] = ''
 
-    # 3. check_sums
+        # 4. заполнение 'Услуга1С'
+        name_without_containers = replace_container_with_none(good_dct[NAMES.name], container_regex)
+        idx_comment_tuples = chroma_get_relevant(query=name_without_containers,
+                                                 chroma_path=config['chroma_path'],
+                                                 embedding_func=embedding_func,
+                                                 k=1)
+        if idx_comment_tuples:
+            # берем id и comment первого (наиболее вероятного) элемента из списка кортежей
+            idx, comment = idx_comment_tuples[0]
+            # берем первый "service" в ключе "service_list" элемента словаря с индексом idx-1
+            good1C = config['unique_comments_dict'][idx - 1]['service_list'][0]
+            # перезаписываем поле "Услуга1С"
+            good_dct['Услуга1С'] = good1C
+
+    # 5. check_sums
     dct = check_sums(dct)
 
     string_dictionary = convert_json_values_to_strings(dct)

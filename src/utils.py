@@ -3,6 +3,7 @@ import re
 import sys
 import json
 import fitz
+import shutil
 import PyPDF2
 import msvcrt
 import base64
@@ -17,6 +18,8 @@ from io import BytesIO, StringIO
 from collections import defaultdict
 from cryptography.fernet import Fernet
 from PIL import Image, ImageDraw, ImageFont
+from langchain_openai import OpenAIEmbeddings
+from langchain_community.vectorstores import Chroma
 
 from logger import logger
 from config.config import config, NAMES
@@ -135,6 +138,14 @@ def replace_container_with_latin(text, container_regex):
 
     return re.sub(pattern=container_regex,
                   repl=replace_symbols_with_latin,
+                  string=text)
+
+
+def replace_container_with_none(text, container_regex):
+    """ Замена в тексте контейнеров на контейнеры латиницей """
+
+    return re.sub(pattern=container_regex,
+                  repl='',
                   string=text)
 
 
@@ -321,9 +332,14 @@ def align_pdf_orientation(input_pdf_path, output_pdf_path):
 
 # _________ OPENAI _________
 
-def update_assistant(client, assistant_id: str, model: Literal['gpt-4o', 'gpt-4o-mini']):
+def update_assistant(model: Literal['gpt-4o', 'gpt-4o-mini']):
+    load_dotenv(stream=get_stream_dotenv())
+    openai.api_key = os.environ.get("OPENAI_API_KEY")
+    ASSISTANT_ID = os.environ.get("ASSISTANT_ID")
+    client = OpenAI()
+
     my_updated_assistant = client.beta.assistants.update(
-        assistant_id,
+        ASSISTANT_ID,
         model=model
     )
     print(f'model replaced by {model}')
@@ -344,7 +360,7 @@ def update_assistant_system_prompt(new_prompt: str):
 
 # _________ LOCAL _________
 
-def check_sums(dct):
+def check_sums(dct: dict) -> dict:
     """
     Если количество == '': принимается количество равное 1
     nds_type = "Сверху" / "В т.ч." - выбирается исходя из того как в чеке записана цена (без НДС / с НДС)
@@ -459,15 +475,63 @@ def check_sums(dct):
     return dct
 
 
+# _________ CHROMA DATABASE (CREATE CHUNKS AND DB) _________
+
+def create_chunks_from_json(json_path, truncation=200):
+    with open(json_path, encoding='utf-8') as f:
+        json_ = json.load(f)
+        chunks = [f"[{d['id']}] {d['comment'][0:truncation]}" for d in json_]
+        return chunks
+
+
+def chroma_create_db_from_chunks(chroma_path, chunks: list[str]):
+    load_dotenv(stream=get_stream_dotenv())
+    openai.api_key = os.environ.get("OPENAI_API_KEY")
+    embedding_func = OpenAIEmbeddings()
+
+    # Clear out the database first.
+    if os.path.exists(chroma_path):
+        shutil.rmtree(chroma_path)
+
+    Chroma.from_texts(chunks, embedding_func, persist_directory=chroma_path)
+
+
+def create_vector_database():
+    chunks = create_chunks_from_json(json_path=config['unique_comments_file'])
+    chroma_create_db_from_chunks(chroma_path=config['chroma_path'], chunks=chunks)
+    print('БАЗА ДАННЫХ СОЗДАНА.')
+
+
+def chroma_get_relevant(query, chroma_path, embedding_func, k=1, query_truncate=600):
+    def get_idx_and_comment(lst):
+        idx_comment_tuples = []
+        regex = r'\[(\d{1,10})\] (.*)'
+        for s in lst:
+            match = re.fullmatch(regex, s)
+            idx, text = int(match[1]), match[2]
+            idx_comment_tuples.append((idx, text))
+        return idx_comment_tuples
+
+    db = Chroma(persist_directory=chroma_path, embedding_function=embedding_func)
+    retriever = db.as_retriever(search_type='similarity', search_kwargs={"k": k})
+    results = retriever.invoke(query[0:query_truncate])  # aka get_relevant_documents
+    if len(results) == 0:
+        logger.print(f"!!! CHROMA: Unable to find matching results !!!")
+        return
+
+    return get_idx_and_comment(list(map(lambda x: x.page_content, results)))
+
+
 # _________ TEST _________
 
 if __name__ == '__main__':
     # load_dotenv(stream=get_stream_dotenv())
     # openai.api_key = os.environ.get("OPENAI_API_KEY")
-    # ASSISTANT_ID = os.environ.get("ASSISTANT_ID")
-    # client = OpenAI()
-    #
-    # update_assistant(client, ASSISTANT_ID, config['GPTMODEL'])
+    # embedding_func = OpenAIEmbeddings()
+
+    # print(chroma_get_relevant('Лабораторные исследования',
+    #                           config['chroma_path'],
+    #                           OpenAIEmbeddings(),
+    #                           k=5))
 
     pass
-
