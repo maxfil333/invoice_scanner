@@ -1,3 +1,17 @@
+// Размер textarea
+
+function autoResize(textarea) {
+    textarea.style.height = 'auto';
+    textarea.style.height = (textarea.scrollHeight) + 'px';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Инициализация начального размера для всех текстовых полей
+    document.querySelectorAll('textarea').forEach(textarea => {
+        autoResize(textarea);
+    });
+});
+
 // Зумирование jpg в правой части страницы
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -342,8 +356,10 @@ function dropdownService1C() {
     let lastValidValue = '';
 
     searchInputs.forEach((element, index) => {
+        autoResize(element);
         const dropdown = dropdowns[index];
         element.addEventListener('input', function() {
+            autoResize(this);
             const query = this.value.toLowerCase();
             dropdown.innerHTML = ''; // Очистка выпадающего списка
             if (query) {
@@ -362,6 +378,7 @@ function dropdownService1C() {
                                 lastValidValue = service;
                                 dropdown.innerHTML = '';
                                 dropdown.style.display = 'none';
+                                autoResize(element);
                             }, 150);
                         });
                         dropdown.appendChild(div);
@@ -380,6 +397,7 @@ function dropdownService1C() {
             const isValid = uniqueServices.includes(value) || value === '';
             if (!isValid) {
                 this.value = "";
+                autoResize(this);
             }
         });
 
