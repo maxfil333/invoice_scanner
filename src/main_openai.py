@@ -43,7 +43,7 @@ def local_postprocessing(response, hide_logs=False):
     openai.api_key = os.environ.get("OPENAI_API_KEY")
     embedding_func = OpenAIEmbeddings()
 
-    for good_dct in dct[NAMES.goods]:
+    for i_, good_dct in enumerate(dct[NAMES.goods]):
         # 1. Замена кириллицы в Наименовании, создание Контейнеры(наименование)
         name = good_dct[NAMES.name]
         # Заменить в Наименовании кириллицу в контейнерах
@@ -83,6 +83,9 @@ def local_postprocessing(response, hide_logs=False):
         if idx_comment_tuples:
             # берем id и comment первого (наиболее вероятного) элемента из списка кортежей
             idx, comment = idx_comment_tuples[0]
+            logger.print(f"--- DB response {i_+1} ---:")
+            logger.print(f"query:\n{name_without_containers}")
+            logger.print(f"response:\n{config['unique_comments_dict'][idx - 1]}")
             # берем первый "service" в ключе "service_list" элемента словаря с индексом idx-1
             good1C = config['unique_comments_dict'][idx - 1]['service_list'][0]
             # перезаписываем поле "Услуга1С"
