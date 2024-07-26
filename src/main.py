@@ -30,13 +30,14 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
     """
     # _____  FILL IN_FOLDER_EDIT  _____
     if not use_existing:
-        delete_all_files(config['IN_FOLDER_EDIT'])
+        delete_all_files(config['EDITED'])
         main_edit(hide_logs=hide_logs, stop_when=stop_when)
 
-    files = os_sorted(glob(f"{config['IN_FOLDER_EDIT']}/*.*"))
+    files = os_sorted(glob(f"{config['EDITED']}/*.*"))
     files = [file for file in files if os.path.splitext(file)[-1] in ['.pdf', '.jpeg', '.jpg', '.png']]
 
     grouped_files = group_files_by_name(files)
+    # TODO: вместо группирования по наименованию, сделать в main_edit группировку в папки
     c = count(1)
     for base, files in grouped_files.items():
         try:

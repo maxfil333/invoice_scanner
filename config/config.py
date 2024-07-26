@@ -33,7 +33,7 @@ else:
 
 config['CONFIG'] = os.path.join(config['BASE_DIR'], 'config')
 config['IN_FOLDER'] = os.path.join(config['BASE_DIR'], 'IN')
-config['IN_FOLDER_EDIT'] = os.path.join(config['IN_FOLDER'], 'edited')
+config['EDITED'] = os.path.join(config['BASE_DIR'], 'EDITED')
 config['CHECK_FOLDER'] = os.path.join(config['BASE_DIR'], 'CHECK')
 config['CSS_PATH'] = os.path.join(config['CONFIG'], 'styles.css')
 config['JS_PATH'] = os.path.join(config['CONFIG'], 'scripts.js')

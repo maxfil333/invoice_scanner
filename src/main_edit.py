@@ -37,7 +37,7 @@ def main(hide_logs=False, stop_when=-1):
             if count_pages(file) > 6:
                 logger.print(f'page limit exceeded in {file}')
                 continue
-            save_path = os.path.join(config['IN_FOLDER_EDIT'], file_name + f'_{file_type.replace(".", "")}' + '.pdf')
+            save_path = os.path.join(config['EDITED'], file_name + f'_{file_type.replace(".", "")}' + '.pdf')
             align_pdf_orientation(file, save_path)
 
         # if file is image, or file is scanned pdf
@@ -55,7 +55,7 @@ def main(hide_logs=False, stop_when=-1):
                 continue
             upstanding = image_upstanding(image)  # 0-90-180-270 rotate
             rotated = Image.fromarray(rotate(upstanding))  # accurate rotate
-            save_path = os.path.join(config['IN_FOLDER_EDIT'], file_name + f'_{file_type.replace(".", "")}' + '.jpg')
+            save_path = os.path.join(config['EDITED'], file_name + f'_{file_type.replace(".", "")}' + '.jpg')
             if rotated.mode == "RGBA":
                 rotated = rotated.convert('RGB')
             rotated.save(save_path, quality=100)
@@ -86,7 +86,7 @@ def main(hide_logs=False, stop_when=-1):
             if stop == stop_when:
                 break
 
-    logger.print(f"\nФайлы сохранены в {config['IN_FOLDER_EDIT']}\n")
+    logger.print(f"\nФайлы сохранены в {config['EDITED']}\n")
 
 
 if __name__ == '__main__':
