@@ -10,6 +10,7 @@ crypto.key
 config/parameters.json
 unique_comments.json
 config/chroma
+data
 
 
 # Игнорировать каталоги и файлы конфигурации PyCharm
