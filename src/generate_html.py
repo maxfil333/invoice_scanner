@@ -28,8 +28,7 @@ def generate_input_html(key, val):
         html_content += f'<input type="{input_type}" name="{escape(key)}" {checked}></div>\n'
     elif isinstance(val, str) and (key in [NAMES.name, NAMES.cont, NAMES.cont_names, NAMES.good1C] or len(val) > 30):
         html_content += (f'<textarea name="{escape(key)}" class="{escape(key)}" rows="1" style="resize:none;" '
-                         f'oninput="this.style.height=\'auto\'; '
-                         f'this.style.height=(this.scrollHeight)+\'px\';">{escape(val)}</textarea>')
+                         f'oninput="autoResize(this)">{escape(val)}</textarea>')
         if key == NAMES.good1C:
             html_content += '<div class="dropdown"></div>\n'
         html_content += '</div>\n'
