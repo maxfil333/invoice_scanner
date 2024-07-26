@@ -123,7 +123,7 @@ legend {
     padding: 0 10px;
     font-weight: bold;
     margin-bottom: 0.5em; /* Уменьшаем нижний отступ */
-    color: #4E995B; /* Синий цвет для заголовков */
+    color: #4E995B; /* Цвет для заголовков */
 }
 
 /* Стили для label */
@@ -144,7 +144,7 @@ label {
     display: flex;
     align-items: center;
     margin-bottom: 0.5em; /* Уменьшаем отступ между группами */
-    color: blue; /* Синий цвет для текста */
+    color: blue; /* Цвет для текста */
     font-size: 16px; /* Увеличиваем размер шрифта */
 }
 
