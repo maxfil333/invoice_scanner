@@ -2,6 +2,7 @@ import os
 import re
 import shutil
 from glob import glob
+from tqdm import tqdm
 
 from config.config import config
 
@@ -17,7 +18,7 @@ def parse(pdf_path, n_folders, shift_folders, max_pdf_amount):
     folders = folders[0 + shift_folders: n_folders + shift_folders]  # <-- новые : старые -->
     result = []
     try:
-        for f in folders:
+        for f in tqdm(folders):
             pdfs = glob(os.path.join(os.path.abspath(f), '**', '*.pdf'), recursive=True)
             for pdf in pdfs:
                 if re.findall(r'.*PATTERN.*', pdf, re.IGNORECASE):
@@ -33,7 +34,7 @@ def parse(pdf_path, n_folders, shift_folders, max_pdf_amount):
 if __name__ == '__main__':
     base_path = r'\\10.10.0.3\docs\Baltimpex\Invoice\Import\*'
     save_folder = os.path.join(config['IN_FOLDER'], '__new_data2')
-    res = parse(base_path, 1000, 1000, max_pdf_amount=200)
+    res = parse(base_path, 10000, 10000, max_pdf_amount=-1)
 
     # for i, r in enumerate(res):
     #     print(i, r)
