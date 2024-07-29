@@ -152,25 +152,28 @@ def replace_container_with_none(text, container_regex):
 # _________ FOLDERS _________
 
 def rename_files_in_directory(directory_path, hide_logs=False):
-    files = os.listdir(directory_path)  # список файлов в указанной папке
+    def get_unique_filename(filepath):
+        base, ext = os.path.splitext(filepath)
+        counter = 1
+        while os.path.exists(f"{base}({counter}){ext}"):
+            counter += 1
+        return f"{base}({counter}){ext}"
 
-    for filename in files:
-        if not os.path.isdir(os.path.join(directory_path, filename)):  # Исключаем директории из списка файлов
+    for filename in os.listdir(directory_path):
+        # если путь - директория
+        if os.path.isdir(os.path.join(directory_path, filename)):
+            rename_files_in_directory(os.path.join(directory_path, filename))
+        # если путь - файл
+        else:
             new_filename = re.sub(r'\s+', '_', filename)
             old_filepath = os.path.join(directory_path, filename)
             new_filepath = os.path.join(directory_path, new_filename)
             try:
                 os.rename(old_filepath, new_filepath)
             except FileExistsError:
-                c = 1
-                flag = True
-                while flag:
-                    newname = f'{os.path.splitext(new_filepath)[0]}({c}){os.path.splitext(new_filepath)[1]}'
-                    try:
-                        os.rename(old_filepath, newname)
-                        flag = False
-                    except FileExistsError:
-                        c += 1
+                new_filepath = get_unique_filename(new_filepath)
+                os.rename(old_filepath, new_filepath)
+
             if not hide_logs:
                 logger.print(f"Файл '{filename}' переименован в '{new_filename}'")
 
