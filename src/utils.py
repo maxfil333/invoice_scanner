@@ -1,5 +1,6 @@
 import os
 import re
+import io
 import sys
 import json
 import fitz
@@ -163,19 +164,18 @@ def rename_files_in_directory(directory_path, hide_logs=False):
         # если путь - директория
         if os.path.isdir(os.path.join(directory_path, filename)):
             rename_files_in_directory(os.path.join(directory_path, filename))
-        # если путь - файл
-        else:
-            new_filename = re.sub(r'\s+', '_', filename)
-            old_filepath = os.path.join(directory_path, filename)
-            new_filepath = os.path.join(directory_path, new_filename)
-            try:
-                os.rename(old_filepath, new_filepath)
-            except FileExistsError:
-                new_filepath = get_unique_filename(new_filepath)
-                os.rename(old_filepath, new_filepath)
 
-            if not hide_logs:
-                logger.print(f"Файл '{filename}' переименован в '{new_filename}'")
+        new_filename = re.sub(r'\s+', '_', filename)
+        old_filepath = os.path.join(directory_path, filename)
+        new_filepath = os.path.join(directory_path, new_filename)
+        try:
+            os.rename(old_filepath, new_filepath)
+        except FileExistsError:
+            new_filepath = get_unique_filename(new_filepath)
+            os.rename(old_filepath, new_filepath)
+
+        if not hide_logs and old_filepath != new_filepath:
+            logger.print(f"Файл '{filename}'переименован в '{new_filename}'")
 
 
 def delete_all_files(directory):
@@ -250,7 +250,7 @@ def image_upstanding(img: np.ndarray) -> np.ndarray:
     osd = pytesseract.image_to_osd(pil_img)
     rotation = int(osd.split("\n")[2].split(":")[1].strip())
     confidence = float(osd.split("\n")[3].split(":")[1].strip())
-    logger.print('rotation:', rotation, 'confidence:', confidence)
+    # logger.print('rotation:', rotation, 'confidence:', confidence)
     if confidence > 3:
         return np.array(pil_img.rotate(-rotation, expand=True))
     return img
@@ -299,11 +299,17 @@ def extract_text_with_fitz(pdf_path):
     return text
 
 
-def align_pdf_orientation(input_pdf_path, output_pdf_path):
+def align_pdf_orientation(input_file: str | bytes, output_pdf_path):
     """ get input_pdf_path - save to output_pdf_path - returns None """
 
-    # Открываем PDF-документ
-    pdf_document = fitz.open(input_pdf_path)
+    if isinstance(input_file, bytes):
+        pdf_document = fitz.open("pdf", input_file)
+    elif isinstance(input_file, str):
+        pdf_document = fitz.open(input_file)
+    else:
+        print(f'!! align_pdf_orientation input: {input_file} is not valid !!')
+        return
+
     for page_number in range(len(pdf_document)):
         page = pdf_document[page_number]
         # Извлекаем текст со страницы
@@ -316,21 +322,40 @@ def align_pdf_orientation(input_pdf_path, output_pdf_path):
             if blocks:
                 _, _, width, height, _, _, _ = blocks[0]
                 if width > height:
-                    if width > height:
-                        # Текст ориентирован горизонтально
-                        page.set_rotation(0)
-                    else:
-                        # Текст ориентирован вертикально (90 градусов)
-                        page.set_rotation(90)
+                    # Текст ориентирован горизонтально
+                    page.set_rotation(0)
                 else:
-                    if height > width:
-                        # Текст ориентирован вертикально (90 или 270 градусов)
-                        page.set_rotation(90)
-                    else:
-                        # Текст ориентирован горизонтально (0 или 180 градусов)
-                        page.set_rotation(0)
+                    # Текст ориентирован вертикально (90 градусов)
+                    page.set_rotation(90)
     # Сохраняем PDF-документ с поворотами
     pdf_document.save(output_pdf_path)
+    pdf_document.close()
+
+
+def extract_pages(input_pdf_path, pages_to_keep, output_pdf_path=None):
+    """ Извлечение страниц из pdf. Если output_pdf_path не задан, возвращает байты """
+
+    # Открываем исходный PDF файл
+    with open(input_pdf_path, "rb") as input_pdf_file:
+        reader = PyPDF2.PdfReader(input_pdf_file)
+        writer = PyPDF2.PdfWriter()
+
+        # Извлекаем указанные страницы
+        for page_num in pages_to_keep:
+            # Нумерация страниц в PyPDF2 начинается с 0
+            writer.add_page(reader.pages[page_num - 1])
+
+        if output_pdf_path:
+            # Записываем результат в новый PDF файл
+            with open(output_pdf_path, "wb") as output_pdf_file:
+                writer.write(output_pdf_file)
+        else:
+            # Создаем байтовый буфер для хранения результата
+            output_buffer = io.BytesIO()
+            writer.write(output_buffer)
+
+            # Возвращаем байты PDF-файла
+            return output_buffer.getvalue()
 
 
 # _________ OPENAI _________
@@ -523,6 +548,61 @@ def chroma_get_relevant(query, chroma_path, embedding_func, k=1, query_truncate=
         return
 
     return get_idx_and_comment(list(map(lambda x: x.page_content, results)))
+
+
+# _________ MAIN_EDIT _________
+
+def pack_folders(dir_path: str = config['IN_FOLDER']):
+    """ Упаковка одиночных файлов в папки """
+    for entry in os.scandir(dir_path):
+        path = os.path.abspath(entry.path)
+        if not os.path.isdir(path):  # папки не обрабатываются
+            base, ext = tuple(os.path.basename(path).rsplit('.', 1))
+            counter = 1
+            folder_name = f'{base}({ext})'
+            folder_path = os.path.join(dir_path, folder_name)
+            while os.path.exists(folder_path):
+                folder_name = f'{base}({ext})({counter})'
+                folder_path = os.path.join(dir_path, folder_name)
+                counter += 1
+            os.makedirs(folder_path, exist_ok=False)
+            shutil.move(path, folder_path)
+
+
+def mark_get_required_pages(pdf_path: str) -> list[int] | None:
+    """ gets [2, 3] from '...EDITED\img@2@3.pdf' """
+
+    if os.path.splitext(pdf_path)[-1] != '.pdf':
+        return
+
+    num_pages = count_pages(pdf_path)
+    if not num_pages:
+        logger.print(f'mark_get_required_pages. error reading {pdf_path}')
+        return
+    valid_pages = list(range(1, num_pages + 1))
+    # print('valid_pages', valid_pages)
+    regex = r'(.*?)((?:@\d+)+)$'
+    basename = os.path.basename(pdf_path)
+    name, ext = os.path.splitext(basename)
+    pages = re.findall(regex, name)
+    if pages:
+        pages = [int(x) for x in pages[0][1].split('@') if (x != '' and int(x) in valid_pages)]
+    return pages
+
+
+def mark_get_main_file(folder_path: str) -> str:
+    regex = r'(.*?)((?:@\d+)+)$'
+    files = os.listdir(folder_path)
+    if not files:
+        return
+    extensions = ['.pdf', '.jpeg', '.jpg', '.png']
+    filter_files = [f for f in files if os.path.splitext(f)[-1] in extensions]
+    result = [f for f in filter_files if re.fullmatch(regex, os.path.splitext(f)[0])]
+    # logger.print(f'mark_get_main_file. detected files: {result}')
+    if result:
+        return result[0]
+    else:
+        return files[0]
 
 
 # _________ TEST _________
