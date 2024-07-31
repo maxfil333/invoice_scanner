@@ -28,25 +28,27 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
     :param stop_when: stop script after N files
     :return:
     """
+
     # _____  FILL IN_FOLDER_EDIT  _____
     if not use_existing:
         delete_all_files(config['EDITED'])
         main_edit(hide_logs=hide_logs, stop_when=stop_when)
 
-    files = os_sorted(glob(f"{config['EDITED']}/*.*"))
-    files = [file for file in files if os.path.splitext(file)[-1] in ['.pdf', '.jpeg', '.jpg', '.png']]
+    for folder_ in os.scandir(config['EDITED']):
+        folder, folder_name = folder_.path, folder_.name
 
-    grouped_files = group_files_by_name(files)
-    # TODO: вместо группирования по наименованию, сделать в main_edit группировку в папки
-    c = count(1)
-    for base, files in grouped_files.items():
+        files = os_sorted(glob(f"{folder}/*.*"))
+        files = [file for file in files if os.path.splitext(file)[-1] in ['.pdf', '.jpeg', '.jpg', '.png']]
+
+        c = count(1)
+
         try:
             # _____  CREATE JSON  _____
             logger.print('-' * 20)
-            logger.print('\nbase:', base, sep='\n')
-            logger.print('files:', *files, sep='\n')
-            json_name = os.path.basename(base[0]) + '_' + '0' * 11 + '.json'
-            if base[-1] == 'pdf':
+            logger.print('\nedited.folder:', folder, sep='\n')
+            logger.print('edited.files:', *files, sep='\n')
+            json_name = folder_name + '_' + '0' * 11 + '.json'
+            if os.path.splitext(files[0])[-1] == '.pdf':  # достаточно проверить 1-й файл в папке, чтобы определить .ext
                 text_or_scanned_folder = config['NAME_text']
                 # ___ RUN ASSISTANT (or CHAT in text_to_assistant is False) ___
                 if test_mode:
@@ -70,46 +72,34 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
             if result is None:
                 continue
 
-            json_path = os.path.join(date_folder, text_or_scanned_folder, json_name)
+            local_check_folder = os.path.join(date_folder, text_or_scanned_folder, folder_name)
+            os.makedirs(local_check_folder, exist_ok=False)
+            json_path = os.path.join(local_check_folder, json_name)
             with open(json_path, 'w', encoding='utf-8') as file:
                 file.write(result)
 
             # _____  COPY ORIGINAL FILE  _____
-            main_file = files[-1]
-            # изначальный тип файла (записанное в конце после _ )
-            original_file_type = os.path.basename(main_file).rsplit(".", 1)[0].rsplit("_", 1)[-1]
-            # изначальное имя файла без _pdf.pdf
-            original_file_name = os.path.basename(main_file).rsplit(".", 1)[0].rsplit("_", 1)[0]
-
-            original_file_full = original_file_name + '.' + original_file_type
-            original_file_path = os.path.join(config['IN_FOLDER'], original_file_full)
-            original_save_path = os.path.basename((os.path.splitext(original_file_path)[0]
-                                                   + f'_{original_file_type}'
-                                                   + os.path.splitext(original_file_path)[1]))
-            original_save_path = os.path.join(date_folder, text_or_scanned_folder, original_save_path)
-            shutil.copy(original_file_path, original_save_path)
+            with open(os.path.join(folder, 'main_file.txt'), 'r', encoding='utf-8') as f:
+                original_file = f.read().strip()
+            shutil.copy(original_file, os.path.join(local_check_folder, os.path.basename(original_file)))
 
             # _____  CREATE HTML  _____
-            html_name = os.path.basename(base[0]) + '.html'
-            html_path = os.path.join(date_folder, text_or_scanned_folder, html_name)
-
-            create_html_form(json_path, html_path, original_save_path)
+            html_name = os.path.basename(local_check_folder) + '.html'
+            html_path = os.path.join(local_check_folder, html_name)
+            create_html_form(json_path, html_path, original_file)
 
             # _____  STOP ITERATION  _____
             if stop_when > 0:
                 stop = next(c)
                 if stop == stop_when:
                     break
+
         except PermissionDeniedError:
             raise
         except Exception as error:
             logger.print('ERROR!:', error)
             logger.print(traceback.format_exc())
             continue
-
-    # _____  RESULT MESSAGE  _____
-    return (f'Сохранено {len(grouped_files.items())} x 3 = {len(grouped_files.items()) * 3} '
-            f'файлов в: \n{date_folder}')
 
 
 if __name__ == "__main__":
@@ -123,7 +113,7 @@ if __name__ == "__main__":
     parser.add_argument('--hide_logs', action='store_true', help='Скрыть логи')
     parser.add_argument('--test_mode', action='store_true', help='Режим тестирования')
     parser.add_argument('--use_existing', action='store_true', help='Использовать существующие файлы')
-    parser.add_argument('--text_to_assistant', action='store_true', help='Извлечь текст из pdf')
+    parser.add_argument('--text_to_assistant', action='store_true', help='Обрабатывать цифровые pdf ассистентом')
     parser.add_argument('--no_exit', action='store_true', help='Не закрывать окно')
     parser.add_argument('--stop_when', type=int, default=-1, help='Максимальное количество файлов')
     args = parser.parse_args()
