@@ -178,14 +178,12 @@ def rename_files_in_directory(directory_path, hide_logs=False):
             logger.print(f"Файл '{filename}'переименован в '{new_filename}'")
 
 
-def delete_all_files(directory):
-    for filename in os.listdir(directory):
-        file_path = os.path.join(directory, filename)
-        try:
-            if os.path.isfile(file_path):
-                os.unlink(file_path)
-        except Exception as e:
-            logger.print(f"Error deleting file {file_path}: {e}")
+def delete_all_files(dir_path: str):
+    for folder_ in os.scandir(dir_path):
+        if folder_.is_dir():
+            shutil.rmtree(folder_.path)
+        else:
+            os.remove(folder_.path)
 
 
 def create_date_folder_in_check(root_dir):
