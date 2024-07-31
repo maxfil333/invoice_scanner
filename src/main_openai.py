@@ -32,7 +32,7 @@ def local_postprocessing(response, hide_logs=False):
         return None
     if not hide_logs:
         logger.print(f'function "{inspect.stack()[1].function}":')
-        logger.print('re_response:\n',repr(re_response))
+        logger.print('re_response:\n', repr(re_response))
     dct = json.loads(re_response)
     dct = convert_json_values_to_strings(dct)
 
@@ -83,7 +83,7 @@ def local_postprocessing(response, hide_logs=False):
         if idx_comment_tuples:
             # берем id и comment первого (наиболее вероятного) элемента из списка кортежей
             idx, comment = idx_comment_tuples[0]
-            logger.print(f"--- DB response {i_+1} ---:")
+            logger.print(f"--- DB response {i_ + 1} ---:")
             logger.print(f"query:\n{name_without_containers}")
             logger.print(f"response:\n{config['unique_comments_dict'][idx - 1]}")
             # берем первый "service" в ключе "service_list" элемента словаря с индексом idx-1
@@ -92,7 +92,20 @@ def local_postprocessing(response, hide_logs=False):
             good_dct['Услуга1С'] = good1C
 
     # 6. check_sums
-    dct = check_sums(dct)
+    try:
+        dct = check_sums(dct)
+    except Exception as error:
+        dct['nds (%)'] = 0
+        for good in dct[NAMES.goods]:
+            del good[NAMES.price]
+            del good[NAMES.sum_with]
+            del good[NAMES.sum_nds]
+            good["Цена (без НДС)"] = ""
+            good["Сумма (без НДС)"] = ""
+            good["Цена (с НДС)"] = ""
+            good["Сумма (с НДС)"] = ""
+            good["price_type"] = ""
+        logger.print(f'!! ОШИБКА В CHECK_SUMS: {error} !!')
 
     string_dictionary = convert_json_values_to_strings(dct)
     return json.dumps(string_dictionary, ensure_ascii=False, indent=4)
@@ -127,7 +140,6 @@ def run_chat(*img_paths: str, detail='high', hide_logs=False, text_mode=False) -
         max_tokens=3000,
     )
     logger.print('chat model:', response.model)
-    logger.print(f'img_paths: {img_paths}')
     logger.print(f'time: {perf_counter() - start:.2f}')
     logger.print(f'completion_tokens: {response.usage.completion_tokens}')
     logger.print(f'prompt_tokens: {response.usage.prompt_tokens}')
