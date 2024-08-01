@@ -481,7 +481,14 @@ def check_sums(dct: dict) -> dict:
                 good_dct['price_type'] = nds_type
             good_dct['price_type'] = nds_type
 
-    # _____ сортировка ключей Услуг _____
+    logger.print('--- end check_sums ---')
+
+    return dct
+
+
+def order_goods(dct: dict) -> dict | None:
+    """ Сортировка ключей Услуг """
+
     new_order = config['services_order']
     for i in dct[NAMES.goods]:  # цикл на случай если dct['Услуги'] == []
         if len(new_order) != len(i):
@@ -495,9 +502,6 @@ def check_sums(dct: dict) -> dict:
                 ordered_goods.append(one_reordered_goods_dct)
             dct[NAMES.goods] = ordered_goods
         break
-
-    logger.print('--- end check_sums ---')
-
     return dct
 
 
