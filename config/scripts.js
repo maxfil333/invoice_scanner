@@ -1,3 +1,4 @@
+// --------------------------------------------------------------------------------------------------------------------
 // Размер textarea
 
 function autoResize(textarea) {
@@ -12,7 +13,9 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Зумирование jpg в правой части страницы
+
+// --------------------------------------------------------------------------------------------------------------------
+// zoom jpg в правой части страницы
 
 document.addEventListener('DOMContentLoaded', function () {
     // Автоматическая настройка высоты textarea
@@ -111,75 +114,6 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 
-// --------------------------------------------------------------------------------------------------------------------
-// Сохранение json файла с внесенными изменениями
-/*
-document.getElementById('save-button').addEventListener('click', generateJSON);
-
-function generateJSON() {
-    // Получаем строку JSON из скрытого div
-    var originalJsonString = document.getElementById('jsonfiledataid').textContent;
-
-    try {
-        // Преобразуем строку JSON в объект JavaScript
-        var originalJsonObject = JSON.parse(originalJsonString);
-
-        // Получаем значения всех редактируемых полей
-        var form = document.querySelector('form');
-        var formData = new FormData(form);
-        var values = [];
-        formData.forEach(value => values.push(value));
-
-        // Функция для рекурсивного создания объекта с нулевыми значениями
-        function setValuesFromArray(obj, values) {
-            let index = 0;
-            function recurse(obj) {
-                if (Array.isArray(obj)) {
-                    return obj.map(recurse);
-                } else if (typeof obj === 'object' && obj !== null) {
-                    const newObj = {};
-                    for (const key in obj) {
-                        newObj[key] = recurse(obj[key]);
-                    }
-                    return newObj;
-                } else {
-                    return values[index++];
-                }
-            }
-            return recurse(obj);
-        }
-
-		function getCurrentTime() {
-            // Получаем текущее время в миллисекундах с начала эпохи
-            const milliseconds = Date.now().toString().slice(-11);
-            return milliseconds;
-        }
-
-        // Создаем новый объект с значениями из редактируемых полей
-        var generatedJsonObject = setValuesFromArray(originalJsonObject, values);
-
-        // Преобразуем объект обратно в строку JSON
-        var generatedJsonString = JSON.stringify(generatedJsonObject, null, 4);
-
-        // Сохраняем JSON строку как текстовый файл
-        var blob = new Blob([generatedJsonString], { type: 'application/json' });
-        var link = document.createElement('a');
-
-		var currentTime = getCurrentTime();
-		var originalFilename = document.getElementById('jsonfilenameid').getAttribute('jsonfilename');
-
-		// 11 знаков (временная отметка)  + 1 "_" + 5 ".json" = 17 знаков
-		var newFilename = originalFilename.slice(0, -17) + `_${currentTime}.json`;
-
-        link.href = URL.createObjectURL(blob);
-        link.download = newFilename;
-        link.click();
-    } catch (error) {
-        // В случае ошибки выводим сообщение об ошибке
-        alert("Произошла ошибка: " + error.message);
-    }
-}
-*/
 // --------------------------------------------------------------------------------------------------------------------
 // Добавить новую услугу
 
