@@ -34,13 +34,12 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
         delete_all_files(config['EDITED'])
         main_edit(hide_logs=hide_logs, stop_when=stop_when)
 
+    c, stop = count(1), 0
     for folder_ in os.scandir(config['EDITED']):
         folder, folder_name = folder_.path, folder_.name
 
         files = os_sorted(glob(f"{folder}/*.*"))
         files = [file for file in files if os.path.splitext(file)[-1] in ['.pdf', '.jpeg', '.jpg', '.png']]
-
-        c = count(1)
 
         try:
             # _____  CREATE JSON  _____
@@ -89,8 +88,8 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
             create_html_form(json_path, html_path, original_file)
 
             # _____  STOP ITERATION  _____
+            stop = next(c)
             if stop_when > 0:
-                stop = next(c)
                 if stop == stop_when:
                     break
 
@@ -100,6 +99,10 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
             logger.print('ERROR!:', error)
             logger.print(traceback.format_exc())
             continue
+
+    # _____  RESULT MESSAGE  _____
+    return (f'Сохранено {stop} x 3 = {stop * 3} '
+            f'файлов в: \n{date_folder}')
 
 
 if __name__ == "__main__":
