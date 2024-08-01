@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 from logger import logger
 from config.config import config, NAMES
 from utils import chroma_get_relevant
-from utils import extract_text_with_fitz, check_sums
+from utils import extract_text_with_fitz, check_sums, order_goods
 from utils import replace_container_with_latin, replace_container_with_none
 from utils import base64_encode_pil, convert_json_values_to_strings, get_stream_dotenv, postprocessing_openai_response
 
@@ -106,6 +106,9 @@ def local_postprocessing(response, hide_logs=False):
             good["Сумма (с НДС)"] = ""
             good["price_type"] = ""
         logger.print(f'!! ОШИБКА В CHECK_SUMS: {error} !!')
+
+    # 7. order dct['Услуги']
+    dct = order_goods(dct)
 
     string_dictionary = convert_json_values_to_strings(dct)
     return json.dumps(string_dictionary, ensure_ascii=False, indent=4)
