@@ -317,8 +317,14 @@ def align_pdf_orientation(input_file: str | bytes, output_pdf_path):
             # Определяем ориентацию страницы (0, 90, 180, 270 градусов)
             # Основываемся на высоте и ширине bounding box для текста
             blocks = page.get_text("blocks")
+            middle = len(blocks) // 2
             if blocks:
-                _, _, width, height, _, _, _ = blocks[0]
+                # берем среднее по трем блокам
+                _, _, width1, height1, _, _, _ = blocks[0]
+                _, _, width2, height2, _, _, _ = blocks[middle]
+                _, _, width3, height3, _, _, _ = blocks[-1]
+                width = (width1 + width2 + width3) / 3
+                height = (height1 + height2 + height3) / 3
                 if width > height:
                     # Текст ориентирован горизонтально
                     page.set_rotation(0)
@@ -589,7 +595,7 @@ def mark_get_required_pages(pdf_path: str) -> list[int] | None:
     pages = re.findall(regex, name)
     if pages:
         pages = [int(x) for x in pages[0][1].split('@') if (x != '' and int(x) in valid_pages)]
-    return pages
+    return sorted(list(set(pages)))
 
 
 def mark_get_main_file(folder_path: str) -> str:
