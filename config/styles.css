@@ -148,6 +148,10 @@ label {
     font-size: 16px; /* Увеличиваем размер шрифта */
 }
 
+.input-group.opacity-50 {
+    opacity: 0.5;
+}
+
 /* Стили для input и textarea */
 input[type="text"],
 input[type="number"],

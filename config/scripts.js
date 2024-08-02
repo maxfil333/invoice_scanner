@@ -1,6 +1,48 @@
 // --------------------------------------------------------------------------------------------------------------------
 // Очистка одного из полей класса .Услуга1С - .Услуга1Сновая
 
+document.addEventListener('DOMContentLoaded', price_type_opacity);
+
+function price_type_opacity() {
+    // Function to update the opacity based on price type
+    function updateOpacity(fieldset) {
+        const priceTypeSelect = fieldset.querySelector('.price_type');
+        const priceType = priceTypeSelect.value;
+        const inputGroups = fieldset.querySelectorAll('.input-group');
+
+        // Remove .opacity-50 from all input groups in the current fieldset
+        inputGroups.forEach(group => group.classList.remove('opacity-50'));
+
+        if (priceType === 'Сверху') {
+            fieldset.querySelector('.ЦенасНДС').parentElement.classList.add('opacity-50');
+            fieldset.querySelector('.СуммасНДС').parentElement.classList.add('opacity-50');
+        } else {
+            fieldset.querySelector('.ЦенабезНДС').parentElement.classList.add('opacity-50');
+            fieldset.querySelector('.СуммабезНДС').parentElement.classList.add('opacity-50');
+        }
+    }
+
+    // Select all fieldsets containing the service blocks
+    const fieldsets = document.querySelectorAll('fieldset.service');
+
+    // Iterate over each fieldset and add event listeners to its select element
+    fieldsets.forEach(fieldset => {
+        const priceTypeSelect = fieldset.querySelector('.price_type');
+
+        // Add event listener for when the select changes
+        priceTypeSelect.addEventListener('change', function() {
+            updateOpacity(fieldset);
+        });
+
+        // Run the function once on page load for each fieldset
+        updateOpacity(fieldset);
+    });
+}
+
+
+// --------------------------------------------------------------------------------------------------------------------
+// Очистка одного из полей класса .Услуга1С - .Услуга1Сновая
+
 document.addEventListener('DOMContentLoaded', good_input_cleaner);
 
 function good_input_cleaner() {
@@ -187,6 +229,8 @@ function addService(button) {
     dropdownService1C();
     // Вызов good_input_cleaner после добавления нового service для обновления элементов класса Услуга1С, Услуга1Сновая
     good_input_cleaner();
+    // Вызов price_type_opacity после добавления нового service для обновления элементов .price_type
+    price_type_opacity();
 }
 
 
