@@ -20,15 +20,17 @@ def generate_input_html(key, val):
             "Сверху": "Сверху",
             "В т.ч.": "В т.ч."
         }
-        html_content += '<select name="{0}">'.format(escape(key))
+        html_content += f'<select name="{escape(key)}" class="{escape(char_key)}">'
         for option_value, option_label in select_options.items():
             selected = 'selected' if val == option_value else ''
-            html_content += '<option value="{0}" {1}>{2}</option>'.format(escape(option_value), selected, escape(option_label))
+            html_content += f'<option value="{escape(option_value)}" {selected}>{escape(option_label)}</option>'
         html_content += '</select></div>\n'
+
     elif isinstance(val, bool):
         input_type = "checkbox"
         checked = 'checked' if val else ''
         html_content += f'<input type="{input_type}" name="{escape(key)}" {checked}></div>\n'
+
     elif isinstance(val, str) and (key in [NAMES.name, NAMES.cont, NAMES.cont_names, NAMES.good1C, NAMES.good1C_new]
                                    or len(val) > 30):
         html_content += (f'<textarea name="{escape(key)}" class="{escape(char_key)}" rows="1" style="resize:none;" '
@@ -36,8 +38,10 @@ def generate_input_html(key, val):
         if key == NAMES.good1C:
             html_content += '<div class="dropdown"></div>\n'
         html_content += '</div>\n'
+
     else:
-        html_content += f'<input type="{input_type}" name="{escape(key)}" value="{escape(str(val))}"></div>\n'
+        html_content += (f'<input type="{input_type}" name="{escape(key)}" '
+                         f'class="{escape(char_key)}" value="{escape(str(val))}"></div>\n')
 
     return html_content
 
