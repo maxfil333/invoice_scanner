@@ -1,4 +1,43 @@
 // --------------------------------------------------------------------------------------------------------------------
+// Очистка одного из полей класса .Услуга1С - .Услуга1Сновая
+
+document.addEventListener('DOMContentLoaded', good_input_cleaner);
+
+function good_input_cleaner() {
+    // Получаем все fieldset с классом 'service'
+    const fieldsets = document.querySelectorAll('fieldset.service');
+
+    fieldsets.forEach(fieldset => {
+        // Находим соответствующие пары textarea в каждом fieldset
+        const good1C = fieldset.querySelector('.Услуга1С');
+        const good1CNew = fieldset.querySelector('.Услуга1Сновая');
+
+        // Функция для очистки good1C, если в good1CNew есть текст
+        function handleInput2() {
+            if (good1CNew.value.trim() !== '') {
+                good1C.value = '';
+            }
+        }
+
+        // Функция для очистки good1CNew, если в good1C есть текст
+        function handleInput1() {
+            if (good1C.value.trim() !== '') {
+                good1CNew.value = '';
+            }
+        }
+
+        // Добавляем слушатели событий на textarea
+        if (good1C && good1CNew) {
+            good1CNew.addEventListener('input', handleInput2);
+            good1C.addEventListener('input', handleInput1);
+            good1CNew.addEventListener('change', handleInput2);
+            good1C.addEventListener('change', handleInput1);
+        }
+    });
+}
+
+
+// --------------------------------------------------------------------------------------------------------------------
 // Размер textarea
 
 function autoResize(textarea) {
@@ -146,6 +185,8 @@ function addService(button) {
 
     // Вызов функции dropdownService1C после добавления нового service
     dropdownService1C();
+    // Вызов good_input_cleaner после добавления нового service для обновления элементов класса Услуга1С, Услуга1Сновая
+    good_input_cleaner();
 }
 
 
@@ -313,6 +354,11 @@ function dropdownService1C() {
                                 dropdown.innerHTML = '';
                                 dropdown.style.display = 'none';
                                 autoResize(element);
+
+                                // Вызов события change вручную
+                                const event = new Event('change');
+                                element.dispatchEvent(event);
+
                             }, 150);
                         });
                         dropdown.appendChild(div);
