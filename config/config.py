@@ -67,6 +67,7 @@ class ConfigNames:
     goods = 'Услуги'
     name = 'Наименование'
     good1C = 'Услуга1С'
+    good1C_new = 'Услуга1С (новая)'
     cont = 'Контейнеры'
     cont_names = 'Контейнеры (наименование)'
     unit = 'Единица'
@@ -83,7 +84,8 @@ NAMES = ConfigNames()
 
 # 11 = 7(оригинальных) - (price - sum_with - sum_nds)(3) + (2*Сумма + 2*Цена)(4) + price_type + good1C + cont_names
 # 11 = 7 - 3 + 4 + 3
-config['services_order'] = [NAMES.name, NAMES.good1C, NAMES.cont, NAMES.cont_names, NAMES.unit, NAMES.amount,
+config['services_order'] = [NAMES.name, NAMES.good1C, NAMES.good1C_new,
+                            NAMES.cont, NAMES.cont_names, NAMES.unit, NAMES.amount,
                             'Цена (без НДС)', 'Сумма (без НДС)', 'Цена (с НДС)', 'Сумма (с НДС)',
                             'price_type']
 
