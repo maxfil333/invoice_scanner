@@ -72,7 +72,8 @@ def local_postprocessing(response, hide_logs=False):
         good_dct[NAMES.unit] = re.sub(r'[^a-zA-Zа-яА-Я]', '', unit)
 
         # 4. добавление 'Услуга1С'
-        good_dct['Услуга1С'] = ''
+        good_dct[NAMES.good1C] = ''
+        good_dct[NAMES.good1C_new] = ''
 
         # 5. заполнение 'Услуга1С'
         name_without_containers = replace_container_with_none(good_dct[NAMES.name], container_regex)
@@ -135,8 +136,7 @@ def run_chat(*img_paths: str, detail='high', hide_logs=False, text_mode=False) -
         model=config['GPTMODEL'],
         response_format={"type": "json_object"},
         temperature=0.1,
-        messages=
-        [
+        messages=[
             {"role": "system", "content": config['system_prompt']},
             {"role": "user", "content": content}
         ],
