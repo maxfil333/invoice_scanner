@@ -481,10 +481,8 @@ def check_sums(dct: dict) -> dict:
             good_dct['Цена (с НДС)'] = round(good_dct['Сумма (с НДС)'] / amount, 2)
             if nds != 0:
                 nds_type = 'В т.ч.'
-                good_dct['price_type'] = nds_type
             else:
                 nds_type = 'Сверху'
-                good_dct['price_type'] = nds_type
             good_dct['price_type'] = nds_type
 
     logger.print('--- end check_sums ---')
