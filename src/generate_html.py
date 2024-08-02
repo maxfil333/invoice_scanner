@@ -1,4 +1,5 @@
 import os
+import re
 import json
 from html import escape
 from bs4 import BeautifulSoup as bs
@@ -8,6 +9,8 @@ from config.config import config, NAMES
 
 
 def generate_input_html(key, val):
+    char_key = re.sub(r'\W','',str(key))
+
     input_type = "text"
     html_content = (f'<div class="input-group">\n'
                     f'<label>{escape(key)}</label>\n')
@@ -26,8 +29,9 @@ def generate_input_html(key, val):
         input_type = "checkbox"
         checked = 'checked' if val else ''
         html_content += f'<input type="{input_type}" name="{escape(key)}" {checked}></div>\n'
-    elif isinstance(val, str) and (key in [NAMES.name, NAMES.cont, NAMES.cont_names, NAMES.good1C] or len(val) > 30):
-        html_content += (f'<textarea name="{escape(key)}" class="{escape(key)}" rows="1" style="resize:none;" '
+    elif isinstance(val, str) and (key in [NAMES.name, NAMES.cont, NAMES.cont_names, NAMES.good1C, NAMES.good1C_new]
+                                   or len(val) > 30):
+        html_content += (f'<textarea name="{escape(key)}" class="{escape(char_key)}" rows="1" style="resize:none;" '
                          f'oninput="autoResize(this)">{escape(val)}</textarea>')
         if key == NAMES.good1C:
             html_content += '<div class="dropdown"></div>\n'
