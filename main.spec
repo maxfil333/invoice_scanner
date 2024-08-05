@@ -1,18 +1,27 @@
 # -*- mode: python ; coding: utf-8 -*-
 
 
+from PyInstaller.utils.hooks import collect_all
+
+datas=[
+	('C:\\Program Files\\poppler-22.01.0\\Library\\bin', 'poppler'),
+	('src', 'src'),
+	('config', 'config'),
+	('C:\\Program Files\\Tesseract-OCR', 'Tesseract-OCR'),
+	('C:\\Program Files\\ImageMagick-7.1.1-Q16-HDRI', 'magick')
+]
+binaries = []
+hiddenimports = ['tiktoken_ext.openai_public', 'tiktoken_ext']
+tmp_ret = collect_all('chromadb')
+datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
+
+
 a = Analysis(
     ['src\\main.py'],
     pathex=[],
-    binaries=[],
-	datas=[
-		('C:\\Program Files\\poppler-22.01.0\\Library\\bin', 'poppler'),
-		('src', 'src'),
-		('config', 'config'),
-		('C:\\Program Files\\Tesseract-OCR', 'Tesseract-OCR'),
-		('C:\\Program Files\\ImageMagick-7.1.1-Q16-HDRI', 'magick')
-	],
-    hiddenimports=[],
+    binaries=binaries,
+    datas=datas,
+    hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
