@@ -41,16 +41,20 @@ config['crypto_env'] = os.path.join(config['CONFIG'], 'encrypted.env')
 config['TESTFILE'] = os.path.join(config['CONFIG'], '__test.json')
 config['GPTMODEL'] = 'gpt-4o'
 # config['GPTMODEL'] = 'gpt-4o-mini'
-
 config['chroma_path'] = os.path.join(config['CONFIG'], 'chroma')
-config['services_excel_file'] = os.path.join(config['CONFIG'], glob(os.path.join(config['CONFIG'], '*.xls*'))[0])
+
+if not getattr(sys, 'frozen', False):  # в сборке
+    config['services_excel_file'] = os.path.join(config['CONFIG'], glob(os.path.join(config['CONFIG'], '*.xls*'))[0])
+
 config['unique_comments_file'] = os.path.join(config['CONFIG'], 'unique_comments.json')
 config['unique_comments_dict'] = None  # to html <div id="services_dict..."
 try:
     with open(config['unique_comments_file'], 'r', encoding='utf-8') as f:
         config['unique_comments_dict'] = json.load(f)
 except FileNotFoundError:
-    logger.print(f"ERROR: FILE {config['unique_comments_file']} NOT FOUND!")
+    logger.print(f"!!! FILE {config['unique_comments_file']} NOT FOUND !!!")
+    logger.save(config['CHECK_FOLDER'])
+    raise
 
 try:
     with open(os.path.join(config['CONFIG'], 'crypto.key'), 'r') as f:
@@ -116,17 +120,18 @@ config['system_prompt'] = f"""
 - Запиши результат в одну строку.
 """.strip()
 
-params_path = os.path.join(config['BASE_DIR'], 'config', 'parameters.json')
-with open(params_path, 'w', encoding='utf-8') as f:
-    json.dump(config, f, ensure_ascii=False, indent=4)
+if not getattr(sys, 'frozen', False):  # не в сборке
+    params_path = os.path.join(config['BASE_DIR'], 'config', 'parameters.json')
+    with open(params_path, 'w', encoding='utf-8') as f:
+        json.dump(config, f, ensure_ascii=False, indent=4)
 
 if __name__ == '__main__':
-    print(getattr(sys, 'frozen', False))
+    print('sys.frozen:', getattr(sys, 'frozen', False))
     for k, v in config.items():
         if k not in ['unique_comments_dict']:
+            print('-' * 50)
             print(k)
             print(v)
-            print('-' * 50)
             if k == 'json_struct':
                 try:
                     json.loads(v)
