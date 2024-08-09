@@ -134,13 +134,13 @@ def run_chat(*img_paths: str, detail='high', hide_logs=False, text_mode=False) -
 
     response = client.chat.completions.create(
         model=config['GPTMODEL'],
-        response_format={"type": "json_object"},
         temperature=0.1,
         messages=[
             {"role": "system", "content": config['system_prompt']},
             {"role": "user", "content": content}
         ],
         max_tokens=3000,
+        response_format={"type": "json_object"},
     )
     logger.print('chat model:', response.model)
     logger.print(f'time: {perf_counter() - start:.2f}')
