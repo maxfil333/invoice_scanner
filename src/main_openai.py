@@ -14,7 +14,7 @@ from logger import logger
 from config.config import config, NAMES
 from utils import chroma_get_relevant
 from utils import extract_text_with_fitz, check_sums, order_goods
-from utils import replace_container_with_latin, replace_container_with_none
+from utils import replace_container_with_latin, replace_container_with_none, switch_to_latin
 from utils import base64_encode_pil, convert_json_values_to_strings, get_stream_dotenv, postprocessing_openai_response
 
 # ___________________________ general ___________________________
@@ -38,14 +38,20 @@ def local_postprocessing(response, hide_logs=False):
 
     container_regex = r'[A-ZА-Я]{3}U\s?[0-9]{7}'
     container_regex_lt = r'[A-Z]{3}U\s?[0-9]{7}'
+    am_plate_regex = r'[АВЕКМНОРСТУХABEKMHOPCTYX]{1}\s*\d{3}\s*[АВЕКМНОРСТУХABEKMHOPCTYX]{2}\s*\d{2,3}'
+    am_plates_ru = []
 
     load_dotenv(stream=get_stream_dotenv())
     openai.api_key = os.environ.get("OPENAI_API_KEY")
     embedding_func = OpenAIEmbeddings()
 
     for i_, good_dct in enumerate(dct[NAMES.goods]):
-        # 1. Замена кириллицы в Наименовании, создание Контейнеры(наименование)
+        # Наименование
         name = good_dct[NAMES.name]
+        # 1.1 Сбор номеров авто
+        am_plates_ru.extend(
+            list(map(lambda x: switch_to_latin(x, reverse=True).replace(' ', ''), re.findall(am_plate_regex, name))))
+        # 1.2 Замена кириллицы в Наименовании, создание Контейнеры(наименование)
         # Заменить в Наименовании кириллицу в контейнерах
         good_dct[NAMES.name] = replace_container_with_latin(name, container_regex)  # re.sub(pattern, repl, text)
         name = good_dct[NAMES.name]
@@ -110,6 +116,7 @@ def local_postprocessing(response, hide_logs=False):
 
     # 7. order dct['Услуги']
     dct = order_goods(dct)
+    dct['Номера_Авто'] = ' '.join(am_plates_ru)
 
     string_dictionary = convert_json_values_to_strings(dct)
     return json.dumps(string_dictionary, ensure_ascii=False, indent=4)
