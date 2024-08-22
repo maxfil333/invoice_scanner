@@ -147,7 +147,7 @@ def run_chat(*img_paths: str, detail='high', hide_logs=False, text_mode=False) -
             {"role": "user", "content": content}
         ],
         max_tokens=3000,
-        response_format={"type": "json_object"},
+        response_format=config['response_format'],
     )
     logger.print('chat model:', response.model)
     logger.print(f'time: {perf_counter() - start:.2f}')
