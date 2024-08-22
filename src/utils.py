@@ -150,6 +150,27 @@ def replace_container_with_none(text, container_regex):
                   string=text)
 
 
+def switch_to_latin(s: str, reverse: bool = False) -> str:
+    cyrillic_to_latin = {'А': 'A', 'В': 'B', 'Е': 'E', 'К': 'K', 'М': 'M', 'Н': 'H', 'О': 'O', 'Р': 'P', 'С': 'C',
+                         'Т': 'T', 'У': 'Y', 'Х': 'X'}
+    latin_to_cyrillic = {'A': 'А', 'B': 'В', 'E': 'Е', 'K': 'К', 'M': 'М', 'H': 'Н', 'O': 'О', 'P': 'Р', 'C': 'С',
+                         'T': 'Т', 'Y': 'У', 'X': 'Х'}
+    new = ''
+    if not reverse:
+        for letter in s:
+            if letter in cyrillic_to_latin:
+                new += cyrillic_to_latin[letter]
+            else:
+                new += letter
+    else:
+        for letter in s:
+            if letter in latin_to_cyrillic:
+                new += latin_to_cyrillic[letter]
+            else:
+                new += letter
+    return new
+
+
 # _________ FOLDERS _________
 
 def rename_files_in_directory(directory_path, hide_logs=False):
