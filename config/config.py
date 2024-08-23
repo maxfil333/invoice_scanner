@@ -94,7 +94,6 @@ config['services_order'] = [NAMES.name, NAMES.good1C, NAMES.good1C_new,
                             'Цена (без НДС)', 'Сумма (без НДС)', 'Цена (с НДС)', 'Сумма (с НДС)',
                             'price_type']
 
-
 JSON_SCHEMA = {
     "name": "document",
     "strict": True,
@@ -142,6 +141,16 @@ JSON_SCHEMA = {
                     "additionalProperties": False
                 }
             },
+            "additional_info": {
+                "type": "object",
+                "properties": {
+                    "Коносаменты": {"type": "array", "items": {"type": "string"}, "description": "коносамент, к/с, кс"},
+                    "Судно": {"type": "string", "description": "наименование судна, т/х"},
+                    "ДТ": {"type": "string", "description": "в формате \d{8}/\d{6}/\d{7}"}
+                },
+                "required": ["Коносаменты", "Судно", "ДТ"],
+                "additionalProperties": False
+            },
             "Всего к оплате включая НДС": {"type": "number"},
             "Всего НДС": {"type": "number"}
         },
@@ -151,6 +160,7 @@ JSON_SCHEMA = {
             "Номер счета",
             "Дата счета",
             "Услуги",
+            "additional_info",
             "Всего к оплате включая НДС",
             "Всего НДС"
         ],
