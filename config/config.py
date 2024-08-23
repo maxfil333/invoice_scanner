@@ -45,7 +45,7 @@ config['GPTMODEL'] = 'gpt-4o-2024-08-06'
 config['chroma_path'] = os.path.join(config['CONFIG'], 'chroma')
 
 if not getattr(sys, 'frozen', False):  # в сборке
-    config['services_excel_file'] = os.path.join(config['CONFIG'], glob(os.path.join(config['CONFIG'], '*.xls*'))[0])
+    config['services_excel_file'] = os.path.join(config['CONFIG'], 'Услуги_поставщиков.xls')
 
 config['unique_comments_file'] = os.path.join(config['CONFIG'], 'unique_comments.json')
 config['unique_comments_dict'] = None  # to html <div id="services_dict..."
