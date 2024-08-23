@@ -116,7 +116,19 @@ def local_postprocessing(response, hide_logs=False):
 
     # 7. order dct['Услуги']
     dct = order_goods(dct)
-    dct['Номера_Авто'] = ' '.join(am_plates_ru)
+    dct['additional_info']['Номера_Авто'] = " ".join(am_plates_ru)
+
+    # 8. Коносаменты from list to string
+    list_of_conos = list(set(map(lambda x: x.replace(' ', ''), dct['additional_info']['Коносаменты'])))
+    dct['additional_info']['Коносаменты'] = " ".join(list_of_conos)
+
+    # 9. ДТ check regex
+    dt_regex = r'\d{8}/\d{6}/\d{7}'
+    if not re.fullmatch(dt_regex, dct['additional_info']['ДТ']):
+        dct['additional_info']['ДТ'] = ''
+    else:
+        if dct['additional_info']['ДТ'] == dct['additional_info']['Коносаменты']:
+            dct['additional_info']['Коносаменты'] = ''
 
     string_dictionary = convert_json_values_to_strings(dct)
     return json.dumps(string_dictionary, ensure_ascii=False, indent=4)
