@@ -25,6 +25,8 @@ def main(dir_path: str = config['IN_FOLDER'], hide_logs=False, stop_when=-1):
     c = count(1)
 
     for folder_ in os.scandir(dir_path):
+        if not os.listdir(folder_):
+            continue
         folder, folder_name = folder_.path, folder_.name
         main_file = os.path.abspath(os.path.join(folder, mark_get_main_file(folder)))
         main_base = os.path.basename(main_file)
@@ -45,7 +47,8 @@ def main(dir_path: str = config['IN_FOLDER'], hide_logs=False, stop_when=-1):
             f.write(main_file)
 
         # if digital pdf
-        if (main_type.lower() == '.pdf') and (is_scanned_pdf(main_file) is False):
+        if (main_type.lower() == '.pdf') and (is_scanned_pdf(main_file, required_pages) is False):
+            print('! digital !')
             if required_pages:
                 pdf_bytes = extract_pages(main_file, pages_to_keep=required_pages)
                 align_pdf_orientation(pdf_bytes, main_save_path)
@@ -57,6 +60,7 @@ def main(dir_path: str = config['IN_FOLDER'], hide_logs=False, stop_when=-1):
 
         # if file is (image | scanned pdf)
         else:
+            print('! scanned !')
             # scanned pdf
             if main_type.lower() == '.pdf':
                 images = []
@@ -106,8 +110,6 @@ def main(dir_path: str = config['IN_FOLDER'], hide_logs=False, stop_when=-1):
 
                 command = [config["magick_exe"], "convert", idx_save_path, *config["magick_opt"], idx_save_path]
                 subprocess.run(command)
-
-                logger.print(idx_save_path)
 
         # _____  STOP ITERATION  _____
         if stop_when > 0:

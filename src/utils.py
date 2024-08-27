@@ -277,20 +277,34 @@ def image_upstanding(img: np.ndarray) -> np.ndarray:
 
 # _________ PDF _________
 
-def is_scanned_pdf(file_path):
+def is_scanned_pdf(file_path, pages_to_analyse=None):
     try:
         # Открытие PDF файла
         with open(file_path, 'rb') as file:
             reader = PyPDF2.PdfReader(file)
             num_pages = len(reader.pages)
+            if pages_to_analyse:
+                pages = list(map(lambda x: x - 1, pages_to_analyse))
+            else:
+                pages = list(range(num_pages))
+
             # Проверка текста на каждой странице
-            for page_num in range(num_pages):
+            scan_list, digit_list = [], []
+            for page_num in pages:
                 page = reader.pages[page_num]
                 text = page.extract_text()
-                if text.strip():  # Если текст найден
-                    return False
+                if text.strip():
+                    digit_list.append(page_num)  # Если текст найден
+                else:
+                    scan_list.append(page_num)  # Если текст не найден
 
-            return True  # Если текст не найден на всех страницах
+            if not scan_list:
+                return False
+            elif not digit_list:
+                return True
+            else:
+                logger.print(f'! utils.is_scanned_pdf: mixed pages types in {file_path} !')
+                return 0 in scan_list  # определяем по первой странице
 
     except Exception as e:
         logger.print(f"Error reading PDF file: {e}")
@@ -607,7 +621,6 @@ def mark_get_required_pages(pdf_path: str) -> list[int] | None:
         logger.print(f'mark_get_required_pages. error reading {pdf_path}')
         return
     valid_pages = list(range(1, num_pages + 1))
-    # print('valid_pages', valid_pages)
     regex = r'(.*?)((?:@\d+)+)$'
     basename = os.path.basename(pdf_path)
     name, ext = os.path.splitext(basename)
