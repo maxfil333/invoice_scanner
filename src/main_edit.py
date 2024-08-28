@@ -38,7 +38,6 @@ def main(dir_path: str = config['IN_FOLDER'], hide_logs=False, stop_when=-1):
         print('main_file:', main_file)
         print('required_pages:', required_pages)
         print('extra_files:', extra_files)
-        print('--------------------------------')
 
         edited_folder = os.path.join(config['EDITED'], folder_name)
         main_save_path = os.path.join(edited_folder, main_base)
@@ -48,7 +47,7 @@ def main(dir_path: str = config['IN_FOLDER'], hide_logs=False, stop_when=-1):
 
         # if digital pdf
         if (main_type.lower() == '.pdf') and (is_scanned_pdf(main_file, required_pages) is False):
-            print('! digital !')
+            print('file type: digital')
             if required_pages:
                 pdf_bytes = extract_pages(main_file, pages_to_keep=required_pages)
                 align_pdf_orientation(pdf_bytes, main_save_path)
@@ -60,7 +59,7 @@ def main(dir_path: str = config['IN_FOLDER'], hide_logs=False, stop_when=-1):
 
         # if file is (image | scanned pdf)
         else:
-            print('! scanned !')
+            print('file type: scanned')
             # scanned pdf
             if main_type.lower() == '.pdf':
                 images = []
@@ -110,7 +109,7 @@ def main(dir_path: str = config['IN_FOLDER'], hide_logs=False, stop_when=-1):
 
                 command = [config["magick_exe"], "convert", idx_save_path, *config["magick_opt"], idx_save_path]
                 subprocess.run(command)
-
+        print('------------------------------')
         # _____  STOP ITERATION  _____
         if stop_when > 0:
             stop = next(c)
