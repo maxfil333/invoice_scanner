@@ -38,39 +38,50 @@ def local_postprocessing(response, hide_logs=False):
 
     container_regex = r'[A-ZА-Я]{3}U\s?[0-9]{7}'
     container_regex_lt = r'[A-Z]{3}U\s?[0-9]{7}'
-    am_plate_regex = r'[АВЕКМНОРСТУХABEKMHOPCTYX]{1}\s*\d{3}\s*[АВЕКМНОРСТУХABEKMHOPCTYX]{2}\s*\d{2,3}'
+    am_plate_regex = r'[АВЕКМНОРСТУХABEKMHOPCTYX]{1}\s{0,3}\d{3}\s*[АВЕКМНОРСТУХABEKMHOPCTYX]{2}\s{0,3}\d{2,3}'
     am_plates_ru = []
+    am_trailer_regex = r'\b[АВЕКМНОРСТУХABEKMHOPCTYX]{2}\s{0,3}\d{4}\s{0,3}\d{2,3}\b'
+    am_trailer_plates_ru = []
+    containers = []
 
     load_dotenv(stream=get_stream_dotenv())
     openai.api_key = os.environ.get("OPENAI_API_KEY")
     embedding_func = OpenAIEmbeddings()
 
     for i_, good_dct in enumerate(dct[NAMES.goods]):
-        # Наименование
-        name = good_dct[NAMES.name]
-        # 1.1 Сбор номеров авто
+
+        name = good_dct[NAMES.name]  # Наименование
+
+        # 1 Сбор номеров авто и прицепов
         am_plates_ru.extend(
-            list(map(lambda x: switch_to_latin(x, reverse=True).replace(' ', ''), re.findall(am_plate_regex, name))))
-        # 1.2 Замена кириллицы в Наименовании, создание Контейнеры(наименование)
-        # Заменить в Наименовании кириллицу в контейнерах
+            list(map(lambda x: switch_to_latin(x, reverse=True).replace(' ', ''), re.findall(am_plate_regex, name)))
+        )
+        am_trailer_plates_ru.extend(
+            list(map(lambda x: switch_to_latin(x, reverse=True).replace(' ', ''), re.findall(am_trailer_regex, name)))
+        )
+
+        # 2 Контейнеры
+        # 2.1 Замена кириллицы в Наименование
         good_dct[NAMES.name] = replace_container_with_latin(name, container_regex)  # re.sub(pattern, repl, text)
         name = good_dct[NAMES.name]
         # Найти контейнеры, оставить уникальные
-        containers = list(map(lambda x: re.sub(r'\s', '', x), re.findall(container_regex_lt, name)))
-        uniq_containers = list(dict.fromkeys(containers))
-        # Заполнить "Номера контейнеров"
-        good_dct[NAMES.cont_names] = ' '.join(uniq_containers)
+        containers_name = list(map(lambda x: re.sub(r'\s', '', x), re.findall(container_regex_lt, name)))
+        uniq_containers_from_name = list(dict.fromkeys(containers_name))
 
-        # 2. Замена кириллицы в Контейнеры
+        # 2.2 Замена кириллицы в Контейнеры
         cont = good_dct[NAMES.cont]
         good_dct[NAMES.cont] = replace_container_with_latin(cont, container_regex)
         cont = good_dct[NAMES.cont]
-        good_dct[NAMES.cont] = ' '.join(list(map(lambda x:
-                                                 re.sub(r'\s', '', x),
-                                                 re.findall(container_regex_lt, cont)
-                                                 )
-                                             )
-                                        )
+        containers_cont = list(map(lambda x: re.sub(r'\s', '', x), re.findall(container_regex_lt, cont)))
+        uniq_containers_from_cont = list(dict.fromkeys(containers_cont))
+
+        # 2.3 Объединить
+        for con in uniq_containers_from_name:
+            if con not in uniq_containers_from_cont:
+                uniq_containers_from_cont.append(con)
+        good_dct[NAMES.cont] = ' '.join(uniq_containers_from_cont)
+        containers.extend(uniq_containers_from_cont)
+
         # 3. Количество, Единица измерения (очистка от лишних символов)
         amount = good_dct[NAMES.amount]
         good_dct[NAMES.amount] = re.sub(r'[^\d.]', '', amount).strip('.')
@@ -117,10 +128,11 @@ def local_postprocessing(response, hide_logs=False):
     # 7. order dct['Услуги']
     dct = order_goods(dct)
     dct['additional_info']['Номера_Авто'] = " ".join(am_plates_ru)
+    dct['additional_info']['Номера_Прицепов'] = " ".join(am_trailer_plates_ru)
 
     # 8. Коносаменты from list to string
     list_of_conos = list(set(map(lambda x: x.replace(' ', ''), dct['additional_info']['Коносаменты'])))
-    dct['additional_info']['Коносаменты'] = " ".join(list_of_conos)
+    dct['additional_info']['Коносаменты'] = " ".join(list(filter(lambda x: x not in containers, list_of_conos)))
 
     # 9. ДТ check regex
     dt_regex = r'\d{8}/\d{6}/\d{7}'

@@ -43,7 +43,7 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
 
         try:
             # _____  CREATE JSON  _____
-            logger.print('-' * 20)
+            logger.print('-' * 30)
             logger.print('\nedited.folder:', folder, sep='\n')
             logger.print('edited.files:', *files, sep='\n')
             json_name = folder_name + '_' + '0' * 11 + '.json'
