@@ -6,6 +6,7 @@ import os
 import re
 import json
 import inspect
+import difflib
 from PIL import Image
 from time import perf_counter
 from dotenv import load_dotenv
@@ -141,6 +142,13 @@ def local_postprocessing(response, hide_logs=False):
     else:
         if dct['additional_info']['ДТ'] == dct['additional_info']['Коносаменты']:
             dct['additional_info']['Коносаменты'] = ''
+
+    # 10. Судно
+    ship = dct['additional_info']['Судно']
+    closest_match = difflib.get_close_matches(ship.upper(), config['ships'], n=1, cutoff=0.7)
+    if closest_match:
+        dct['additional_info']['Судно'] = closest_match[0]
+        logger.print(f'find ship: {ship} --> {closest_match[0]}')
 
     string_dictionary = convert_json_values_to_strings(dct)
     return json.dumps(string_dictionary, ensure_ascii=False, indent=4)
