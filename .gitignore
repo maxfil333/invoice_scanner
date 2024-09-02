@@ -8,6 +8,7 @@ crypto.key
 *.xls
 *.xlsx
 config/parameters.json
+config/ships.json
 unique_comments.json
 config/chroma
 data

@@ -44,8 +44,19 @@ config['GPTMODEL'] = 'gpt-4o-2024-08-06'
 # config['GPTMODEL'] = 'gpt-4o-mini'
 config['chroma_path'] = os.path.join(config['CONFIG'], 'chroma')
 
-if not getattr(sys, 'frozen', False):  # в сборке
+if not getattr(sys, 'frozen', False):  # не в сборке
     config['services_excel_file'] = os.path.join(config['CONFIG'], 'Услуги_поставщиков.xls')
+    config['ships_excel_file'] = os.path.join(config['CONFIG'], 'Список_судов.xls')
+
+config['ships_json'] = os.path.join(config['CONFIG'], 'ships.json')
+
+try:
+    with open(config['ships_json'], 'r', encoding='utf-8') as f:
+        config['ships'] = tuple(set(json.load(f).values()))
+except Exception as e:
+    logger.print('Ошибка чтения ships.json:', e)
+    logger.save(config['CHECK_FOLDER'])
+    raise
 
 config['unique_comments_file'] = os.path.join(config['CONFIG'], 'unique_comments.json')
 config['unique_comments_dict'] = None  # to html <div id="services_dict..."
@@ -174,15 +185,15 @@ config['system_prompt'] = f"""
 Если какой-то из параметров не найден, впиши значение ''.
 """.strip()
 
-if not getattr(sys, 'frozen', False):  # не в сборке
-    params_path = os.path.join(config['BASE_DIR'], 'config', 'parameters.json')
-    with open(params_path, 'w', encoding='utf-8') as f:
-        json.dump(config, f, ensure_ascii=False, indent=4)
+# if not getattr(sys, 'frozen', False):  # не в сборке
+#     params_path = os.path.join(config['BASE_DIR'], 'config', 'parameters.json')
+#     with open(params_path, 'w', encoding='utf-8') as f:
+#         json.dump(config, f, ensure_ascii=False, indent=4)
 
 if __name__ == '__main__':
     print('sys.frozen:', getattr(sys, 'frozen', False))
     for k, v in config.items():
-        if k not in ['unique_comments_dict']:
+        if k not in ['unique_comments_dict', 'ships']:
             print('-' * 50)
             print(k)
             print(v)
