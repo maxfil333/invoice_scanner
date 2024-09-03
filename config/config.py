@@ -5,6 +5,8 @@ import msvcrt
 from glob import glob
 from logger import logger
 
+from dotenv import load_dotenv
+
 # main.spec
 r"""
 datas=[
@@ -30,6 +32,11 @@ else:
     config['BASE_DIR'] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     config['POPPLER_PATH'] = r'C:\Program Files\poppler-22.01.0\Library\bin'
     config['magick_exe'] = 'magick'  # или полный путь до ...magick.exe файла, если не добавлено в Path
+
+load_dotenv(os.path.join(config['BASE_DIR'], 'cup.env'))
+config['user_1C'] = os.getenv('user_1C')
+config['password_1C'] = os.getenv('password_1C')
+config['V83_CONN_STRING'] = f"Srvr=kappa; Ref=CUP; Usr={config['user_1C']}; Pwd={config['password_1C']}"
 
 config['CONFIG'] = os.path.join(config['BASE_DIR'], 'config')
 config['IN_FOLDER'] = os.path.join(config['BASE_DIR'], 'IN')
