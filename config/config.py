@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 # main.spec
 r"""
 datas=[
-    ('C:\\Program Files\\poppler-22.01.0\\Library\\bin', 'poppler'),
+    ('C:\\Program Files\\poppler-24.07.0\\Library\\bin', 'poppler'),
     ('src', 'src'),
     ('config', 'config'),
     ('C:\\Program Files\\Tesseract-OCR', 'Tesseract-OCR'),
@@ -30,7 +30,7 @@ if getattr(sys, 'frozen', False):  # в сборке
     config['magick_exe'] = os.path.join(sys._MEIPASS, 'magick', 'magick.exe')
 else:
     config['BASE_DIR'] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    config['POPPLER_PATH'] = r'C:\Program Files\poppler-22.01.0\Library\bin'
+    config['POPPLER_PATH'] = r'C:\Program Files\poppler-24.07.0\Library\bin'
     config['magick_exe'] = 'magick'  # или полный путь до ...magick.exe файла, если не добавлено в Path
 
 load_dotenv(os.path.join(config['BASE_DIR'], 'cup.env'))

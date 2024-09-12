@@ -4,7 +4,7 @@
 from PyInstaller.utils.hooks import collect_all
 
 datas=[
-	('C:\\Program Files\\poppler-22.01.0\\Library\\bin', 'poppler'),
+	('C:\\Program Files\\poppler-24.07.0\\Library\\bin', 'poppler'),
 	('src', 'src'),
 	('config', 'config'),
 	('C:\\Program Files\\Tesseract-OCR', 'Tesseract-OCR'),
