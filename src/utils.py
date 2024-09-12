@@ -88,7 +88,7 @@ def get_stream_dotenv():
     return string_stream
 
 
-def postprocessing_openai_response(response: str, hide_logs=False) -> str:
+def postprocessing_openai_response(response: str, hide_logs=False) -> str | None:
     # удаление двойных пробелов и переносов строк
     re_response = re.sub(r'(\s{2,}|\n)', ' ', response)
 
@@ -546,14 +546,14 @@ def order_goods(dct: dict) -> dict | None:
 
 # _________ CHROMA DATABASE (CREATE CHUNKS AND DB) _________
 
-def create_chunks_from_json(json_path, truncation=200):
+def create_chunks_from_json(json_path: str, truncation=200) -> list[str]:
     with open(json_path, encoding='utf-8') as f:
         json_ = json.load(f)
         chunks = [f"[{d['id']}] {d['comment'][0:truncation]}" for d in json_]
         return chunks
 
 
-def chroma_create_db_from_chunks(chroma_path, chunks: list[str]):
+def chroma_create_db_from_chunks(chroma_path: str, chunks: list[str]) -> None:
     load_dotenv(stream=get_stream_dotenv())
     openai.api_key = os.environ.get("OPENAI_API_KEY")
     embedding_func = OpenAIEmbeddings()
@@ -565,20 +565,22 @@ def chroma_create_db_from_chunks(chroma_path, chunks: list[str]):
     Chroma.from_texts(chunks, embedding_func, persist_directory=chroma_path)
 
 
-def create_vector_database():
+def create_vector_database() -> None:
+    """ create_chunks_from_json + chroma_create_db_from_chunks """
+
     chunks = create_chunks_from_json(json_path=config['unique_comments_file'])
     chroma_create_db_from_chunks(chroma_path=config['chroma_path'], chunks=chunks)
     print('БАЗА ДАННЫХ СОЗДАНА.')
 
 
 def chroma_get_relevant(query, chroma_path, embedding_func, k=1, query_truncate=600):
-    def get_idx_and_comment(lst):
+    def get_idx_and_comment(lst):  # lst = ['[341] Растарка контейнера ... ']
         idx_comment_tuples = []
-        regex = r'\[(\d{1,10})\] (.*)'
+        regex = r'\[(\d{1,10})\] (.*)'  # lst -> '341', 'Растарка контейнера ...'
         for s in lst:
             match = re.fullmatch(regex, s)
             idx, text = int(match[1]), match[2]
-            idx_comment_tuples.append((idx, text))
+            idx_comment_tuples.append((idx, text))  # [('341', 'Растарка контейнера ...'), (..., ...)]
         return idx_comment_tuples
 
     db = Chroma(persist_directory=chroma_path, embedding_function=embedding_func)
@@ -630,7 +632,7 @@ def mark_get_required_pages(pdf_path: str) -> list[int] | None:
     return sorted(list(set(pages)))
 
 
-def mark_get_main_file(folder_path: str) -> str:
+def mark_get_main_file(folder_path: str) -> str | None:
     regex = r'(.*?)((?:@\d+)+)$'
     files = os.listdir(folder_path)
     if not files:
