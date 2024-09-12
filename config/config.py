@@ -88,15 +88,15 @@ except FileNotFoundError as e:
 
 class ConfigNames:
     goods = 'Услуги'
-    name = 'Наименование'
-    good1C = 'Услуга1С'
-    good1C_new = 'Услуга1С (новая)'
-    cont = 'Контейнеры'
-    unit = 'Единица'
-    amount = 'Количество'
-    price = 'Цена'
-    sum_with = 'Сумма включая НДС'
-    sum_nds = 'Сумма НДС'
+    name = 'Наименование'  # 1
+    good1C = 'Услуга1С'    # -
+    good1C_new = 'Услуга1С (новая)'  # -
+    cont = 'Контейнеры'    # 2
+    unit = 'Единица'       # 3
+    amount = 'Количество'  # 4
+    price = 'Цена'         # 5
+    sum_with = 'Сумма включая НДС'  # 6
+    sum_nds = 'Сумма НДС'  # 7
     total_with = 'Всего к оплате включая НДС'
     total_nds = 'Всего НДС'
     price_type = 'price_type'
@@ -104,8 +104,8 @@ class ConfigNames:
 
 NAMES = ConfigNames()
 
-# 10 = 7(оригинальных) - (price - sum_with - sum_nds)(3) + (2*Сумма + 2*Цена)(4) + price_type + good1C
-# 10 = 7 - 3 + 4 + 2
+# 11 = 7(оригинальных) - (price - sum_with - sum_nds)(3) + (2*Сумма + 2*Цена)(4) + (price_type + good1C + good1C_new)(3)
+# 11 = 7 - 3 + 4 + 3
 config['services_order'] = [NAMES.name, NAMES.good1C, NAMES.good1C_new,
                             NAMES.cont, NAMES.unit, NAMES.amount,
                             'Цена (без НДС)', 'Сумма (без НДС)', 'Цена (с НДС)', 'Сумма (с НДС)',

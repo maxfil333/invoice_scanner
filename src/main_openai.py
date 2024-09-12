@@ -27,7 +27,7 @@ ASSISTANT_ID = os.environ.get("ASSISTANT_ID")
 client = OpenAI()
 
 
-def local_postprocessing(response, hide_logs=False):
+def local_postprocessing(response, hide_logs=False) -> str | None:
     re_response = postprocessing_openai_response(response, hide_logs)
     if re_response is None:
         return None
