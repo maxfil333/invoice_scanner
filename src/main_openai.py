@@ -128,10 +128,12 @@ def local_postprocessing(response, hide_logs=False) -> str | None:
 
     # 7. order dct['Услуги']
     dct = order_goods(dct)
+
+    # 8. AUTO | TRAILER
     dct['additional_info']['Номера_Авто'] = " ".join(am_plates_ru)
     dct['additional_info']['Номера_Прицепов'] = " ".join(am_trailer_plates_ru)
 
-    # 8. Коносаменты from list to string
+    # 9. Коносаменты from list to string: ["RU0163 075", "CO-NC94999", "CONOS 88"] -> "CO-NC94999 CONOS88 RU0163075"
     list_of_conos = list(set(map(lambda x: x.replace(' ', ''), dct['additional_info']['Коносаменты'])))
     dct['additional_info']['Коносаменты'] = " ".join(list(filter(lambda x: x not in containers, list_of_conos)))
 

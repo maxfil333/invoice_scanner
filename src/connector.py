@@ -106,9 +106,8 @@ def get_transaction_number(json_formatted_str: str, connection) -> str:
             dct['Тип поиска сделки'] = 'TRAILER'
 
     if deals:
-        regex = r'(.*) (от) (.*)'
-        deals.sort(key=lambda x: datetime.strptime(re.fullmatch(regex, x).group(3), '%d.%m.%Y').date()
-                   if re.fullmatch(regex, x)
+        deals.sort(key=lambda x: datetime.strptime(re.fullmatch(r'(.*) (от) (.*)', x).group(3), '%d.%m.%Y').date()
+                   if re.fullmatch(r'(.*) (от) (.*)', x)
                    else datetime.fromtimestamp(0).date(), reverse=True)
 
         dct['Номера сделок'] = deals

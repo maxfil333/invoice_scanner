@@ -15,7 +15,7 @@ from config.config import config
 from main_edit import main as main_edit
 from generate_html import create_html_form
 from main_openai import run_chat, run_assistant
-from utils import group_files_by_name, delete_all_files, create_date_folder_in_check
+from utils import delete_all_files, create_date_folder_in_check
 
 
 def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text_to_assistant=False, stop_when=0):
@@ -47,6 +47,8 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
             logger.print('\nedited.folder:', folder, sep='\n')
             logger.print('edited.files:', *files, sep='\n')
             json_name = folder_name + '_' + '0' * 11 + '.json'
+
+            # _____________ RUN MAIN_OPENAI.PY _____________
             if os.path.splitext(files[0])[-1] == '.pdf':  # достаточно проверить 1-й файл в папке, чтобы определить .ext
                 text_or_scanned_folder = config['NAME_text']
                 # ___ RUN ASSISTANT (or CHAT in text_to_assistant is False) ___
