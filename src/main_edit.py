@@ -5,12 +5,12 @@ from PIL import Image
 from itertools import count
 from pdf2image import convert_from_path
 
-from rotator import main as rotate
 from utils import is_scanned_pdf, count_pages, align_pdf_orientation, extract_pages
 from utils import pack_folders, mark_get_required_pages, mark_get_main_file
 from utils import add_text_bar, image_upstanding, rename_files_in_directory
 from crop_tables import define_and_return
 from config.config import config, NAMES
+from rotator import main as rotate
 from logger import logger
 
 
@@ -30,7 +30,6 @@ def main(dir_path: str = config['IN_FOLDER'], hide_logs=False, stop_when=-1):
         folder, folder_name = folder_.path, folder_.name
         main_file = os.path.abspath(os.path.join(folder, mark_get_main_file(folder)))
         main_base = os.path.basename(main_file)
-        main_name = os.path.basename(os.path.splitext(main_file)[0])
         main_type = os.path.splitext(main_file)[-1]
         extra_files = [os.path.abspath(x.path) for x in os.scandir(folder) if x.is_dir() is False]
         extra_files.remove(main_file)
@@ -84,8 +83,14 @@ def main(dir_path: str = config['IN_FOLDER'], hide_logs=False, stop_when=-1):
                 continue
 
             for i, image in enumerate(images):
-                upstanding = image_upstanding(image)  # 0-90-180-270 rotate
-                rotated = Image.fromarray(rotate(upstanding))  # accurate rotate
+                try:
+                    upstanding = image_upstanding(image)  # 0-90-180-270 rotate
+                except:
+                    upstanding = image
+                try:
+                    rotated = Image.fromarray(rotate(upstanding))  # accurate rotate
+                except:
+                    rotated = upstanding
                 name, ext = os.path.splitext(main_save_path)
                 idx_save_path = f'{name}({i}).jpg'
                 if rotated.mode == "RGBA":
@@ -99,12 +104,14 @@ def main(dir_path: str = config['IN_FOLDER'], hide_logs=False, stop_when=-1):
                 if table_title:
                     table_title = add_text_bar(table_title, 'Банковские реквизиты поставщика')
                     table_title.save(cropped_save_pth1)
-                    command = [config["magick_exe"], "convert", cropped_save_pth1, *config["magick_opt"], cropped_save_pth1]
+                    command = [config["magick_exe"], "convert", cropped_save_pth1, *config["magick_opt"],
+                               cropped_save_pth1]
                     subprocess.run(command)
                 if table_ship:
                     table_ship = add_text_bar(table_ship, NAMES.goods)
                     table_ship.save(cropped_save_pth2)
-                    command = [config["magick_exe"], "convert", cropped_save_pth2, *config["magick_opt"], cropped_save_pth2]
+                    command = [config["magick_exe"], "convert", cropped_save_pth2, *config["magick_opt"],
+                               cropped_save_pth2]
                     subprocess.run(command)
 
                 command = [config["magick_exe"], "convert", idx_save_path, *config["magick_opt"], idx_save_path]
