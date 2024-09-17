@@ -52,10 +52,23 @@ def generate_html_from_json(data, parent_key="", prefix=""):
         for key, value in data.items():
             new_key = f'{parent_key}.{key}' if parent_key else key
             display_key = key
+            char_key = re.sub(r'\W', '', str(key))
             if isinstance(value, (dict, list)):
-                html_content += f'<fieldset><legend>{escape(display_key)}</legend>\n'
-                html_content += generate_html_from_json(value, new_key, prefix)
-                html_content += '</fieldset>\n'
+
+                # номер сделки
+                if key == NAMES.transactions:
+                    html_content += f'<div class="input-group">'
+                    html_content += f'<label>Номер сделки</label>'
+                    html_content += f'<select class={char_key}>'
+                    for v in value:
+                        html_content += f'<option value="{v}">{v}</option>'
+                    html_content += f'<option value="Нет">Нет</option>'
+                    html_content += f'</select>'
+                    html_content += f'</div>'
+                else:
+                    html_content += f'<fieldset><legend>{escape(display_key)}</legend>\n'
+                    html_content += generate_html_from_json(value, new_key, prefix)
+                    html_content += '</fieldset>\n'
             else:
                 html_content += generate_input_html(display_key, value)
     elif isinstance(data, list):
@@ -130,3 +143,9 @@ def create_html_form(json_file, output_file, file_path):
         f.write(prettified)
 
     logger.print(f'HTML страница сгенерирована и сохранена в {output_file}')
+
+
+if __name__ == '__main__':
+    create_html_form(r"C:\Users\Filipp\Desktop\Новая папка (4)\0.json",
+                     r"C:\Users\Filipp\Desktop\Новая папка (4)\0.html",
+                     r"C:\Users\Filipp\Desktop\Новая папка (4)\20_Содружество_Балтика-Транс.pdf")
