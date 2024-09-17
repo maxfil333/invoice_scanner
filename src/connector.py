@@ -13,7 +13,7 @@ def create_connection(connection_params):
     connection_start = time.perf_counter()
     v8com = win32com.client.Dispatch("V83.COMConnector")
     connection = v8com.Connect(connection_params)
-    logger.print('connection time:', time.perf_counter() - connection_start)
+    logger.print(f'connection time: {time.perf_counter() - connection_start:.2f}\n')
     return connection
 
 
@@ -107,6 +107,7 @@ def get_transaction_number(json_formatted_str: str, connection) -> str:
             dct[NAMES.transactions_type] = 'TRAILER'
 
     if deals:
+        deals = list(set(deals))
         deals.sort(key=lambda x: datetime.strptime(re.fullmatch(r'(.*) (от) (.*)', x).group(3), '%d.%m.%Y').date()
                    if re.fullmatch(r'(.*) (от) (.*)', x)
                    else datetime.fromtimestamp(0).date(), reverse=True)
@@ -114,3 +115,8 @@ def get_transaction_number(json_formatted_str: str, connection) -> str:
         dct[NAMES.transactions] = deals
 
     return json.dumps(dct, ensure_ascii=False, indent=4)
+
+
+if __name__ == '__main__':
+    from config.config import config
+    create_connection(config['V83_CONN_STRING'])
