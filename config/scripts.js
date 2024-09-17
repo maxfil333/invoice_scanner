@@ -80,6 +80,40 @@ function good_input_cleaner() {
 
 
 // --------------------------------------------------------------------------------------------------------------------
+// Очистка одного из полей класса .Номерсделки / .Номерсделкиввестисвой
+
+document.addEventListener('DOMContentLoaded', sdelka_cleaner);
+
+function sdelka_cleaner() {
+
+    // Находим все поля с классом .Номерсделки / .Номерсделкиввестисвой
+    const sdelka = document.querySelector('.Номерсделки');
+    const sdelka_new = document.querySelector('.Номерсделкиввестисвой');
+
+    // Функция для очистки .Номерсделки, если в .Номерсделкиввестисвой есть текст
+    function handleInput2() {
+        if (sdelka_new.value.trim() !== '') {
+            sdelka.value = 'Нет';
+        }
+    }
+
+    // Функция для очистки .Номерсделкиввестисвой, если в .Номерсделки есть текст
+    function handleInput1() {
+        if (sdelka.value.trim() !== 'Нет') {
+            sdelka_new.value = '';
+        }
+    }
+
+    // Добавляем слушатели событий на textarea
+    if (sdelka && sdelka_new) {
+        sdelka_new.addEventListener('input', handleInput2);
+        sdelka.addEventListener('input', handleInput1);
+        sdelka_new.addEventListener('change', handleInput2);
+        sdelka.addEventListener('change', handleInput1);
+    }
+}
+
+// --------------------------------------------------------------------------------------------------------------------
 // Размер textarea
 
 function autoResize(textarea) {
