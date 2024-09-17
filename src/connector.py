@@ -30,8 +30,9 @@ def response_to_deals(response: str) -> list[str] | None:
 
 def get_transaction_number(json_formatted_str: str, connection) -> str:
     dct = json.loads(json_formatted_str)
-    dct['Номера сделок'] = []
-    dct['Тип поиска сделки'] = ''
+    dct[NAMES.transactions] = []
+    dct[NAMES.transactions_new] = ''
+    dct[NAMES.transactions_type] = ''
 
     # если не соединения возвращаем то, что было + dct['Номера сделок'] = []; + dct['Тип поиска сделки'] = ''.
     if not connection:
@@ -54,7 +55,7 @@ def get_transaction_number(json_formatted_str: str, connection) -> str:
         numbers_DT = connection.InteractionWithExternalApplications.TransactionNumberFromGTD(DT)
         deals = response_to_deals(numbers_DT)
         if deals:
-            dct['Тип поиска сделки'] = 'DT'
+            dct[NAMES.transactions_type] = 'DT'
 
     if not deals and CONTAINERS:
         deals = []
@@ -65,7 +66,7 @@ def get_transaction_number(json_formatted_str: str, connection) -> str:
             if deal:
                 deals.extend(deal)
         if deals:
-            dct['Тип поиска сделки'] = 'CONTAINERS'
+            dct[NAMES.transactions_type] = 'CONTAINERS'
 
     if not deals and CONOSES:
         deals = []
@@ -76,13 +77,13 @@ def get_transaction_number(json_formatted_str: str, connection) -> str:
             if deal:
                 deals.extend(deal)
         if deals:
-            dct['Тип поиска сделки'] = 'CONOS'
+            dct[NAMES.transactions_type] = 'CONOS'
 
     if not deals and SHIP:
         numbers_SHIP = connection.InteractionWithExternalApplications.TransactionNumberFromShip(SHIP)
         deals = response_to_deals(numbers_SHIP)
         if deals:
-            dct['Тип поиска сделки'] = 'SHIP'
+            dct[NAMES.transactions_type] = 'SHIP'
 
     if not deals and AUTOS:
         deals = []
@@ -92,7 +93,7 @@ def get_transaction_number(json_formatted_str: str, connection) -> str:
             if deal:
                 deals.extend(deal)
         if deals:
-            dct['Тип поиска сделки'] = 'AUTO'
+            dct[NAMES.transactions_type] = 'AUTO'
 
     if not deals and TRAILERS:
         deals = []
@@ -103,13 +104,13 @@ def get_transaction_number(json_formatted_str: str, connection) -> str:
             if deal:
                 deals.extend(deal)
         if deals:
-            dct['Тип поиска сделки'] = 'TRAILER'
+            dct[NAMES.transactions_type] = 'TRAILER'
 
     if deals:
         deals.sort(key=lambda x: datetime.strptime(re.fullmatch(r'(.*) (от) (.*)', x).group(3), '%d.%m.%Y').date()
                    if re.fullmatch(r'(.*) (от) (.*)', x)
                    else datetime.fromtimestamp(0).date(), reverse=True)
 
-        dct['Номера сделок'] = deals
+        dct[NAMES.transactions] = deals
 
     return json.dumps(dct, ensure_ascii=False, indent=4)

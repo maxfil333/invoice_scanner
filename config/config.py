@@ -100,6 +100,9 @@ class ConfigNames:
     total_with = 'Всего к оплате включая НДС'
     total_nds = 'Всего НДС'
     price_type = 'price_type'
+    transactions = 'Номер сделки'
+    transactions_new = 'Номер сделки (ввести свой)'
+    transactions_type = 'Тип поиска сделки'
 
 
 NAMES = ConfigNames()
