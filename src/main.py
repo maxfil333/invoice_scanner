@@ -16,18 +16,26 @@ from main_edit import main as main_edit
 from generate_html import create_html_form
 from main_openai import run_chat, run_assistant
 from utils import delete_all_files, create_date_folder_in_check
+from connector import create_connection, get_transaction_number
 
 
-def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text_to_assistant=False, stop_when=0):
+def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text_to_assistant=False,
+         ignore_connection=False, stop_when=0):
     """
     :param date_folder: folder for saving results
     :param hide_logs: run without logs
     :param test_mode: run without main_openai using "config/__test.json"
     :param use_existing: run without main_edit using files in "IN/edited" folder
     :param text_to_assistant: do not use OCR to extract text from digital pdf, use loading pdf to assistant instead
+    :param ignore_connection: run without 1C-connection
     :param stop_when: stop script after N files
     :return:
     """
+
+    # _______ CONNECTION ________
+    connection = None
+    if not ignore_connection:
+        connection = create_connection(config['V83_CONN_STRING'])
 
     # _____  FILL IN_FOLDER_EDIT  _____
     if not use_existing:
@@ -73,18 +81,23 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
             if result is None:
                 continue
 
+            # _____________ GET TRANS.NUMBER FROM 1C _____________
+            if not ignore_connection:
+                result = get_transaction_number(result, connection=connection)
+
+            # _____ * SAVE JSON FILE * _____
             local_check_folder = os.path.join(date_folder, text_or_scanned_folder, folder_name)
             os.makedirs(local_check_folder, exist_ok=False)
             json_path = os.path.join(local_check_folder, json_name)
             with open(json_path, 'w', encoding='utf-8') as file:
                 file.write(result)
 
-            # _____  COPY ORIGINAL FILE  _____
+            # _____ * COPY ORIGINAL FILE * _____
             with open(os.path.join(folder, 'main_file.txt'), 'r', encoding='utf-8') as f:
                 original_file = f.read().strip()
             shutil.copy(original_file, os.path.join(local_check_folder, os.path.basename(original_file)))
 
-            # _____  CREATE HTML  _____
+            # _____ * CREATE HTML FILE * _____
             html_name = os.path.basename(local_check_folder) + '.html'
             html_path = os.path.join(local_check_folder, html_name)
             create_html_form(json_path, html_path, original_file)
@@ -119,6 +132,7 @@ if __name__ == "__main__":
     parser.add_argument('--test_mode', action='store_true', help='Режим тестирования')
     parser.add_argument('--use_existing', action='store_true', help='Использовать существующие файлы')
     parser.add_argument('--text_to_assistant', action='store_true', help='Обрабатывать цифровые pdf ассистентом')
+    parser.add_argument('--ignore_connection', action='store_true', help='Запуск без 1С')
     parser.add_argument('--no_exit', action='store_true', help='Не закрывать окно')
     parser.add_argument('--stop_when', type=int, default=-1, help='Максимальное количество файлов')
     args = parser.parse_args()
@@ -131,6 +145,7 @@ if __name__ == "__main__":
                               test_mode=args.test_mode,
                               use_existing=args.use_existing,
                               text_to_assistant=args.text_to_assistant,
+                              ignore_connection=args.ignore_connection,
                               stop_when=args.stop_when)
         logger.print(f'\nresult_message:\n{result_message}\n')
     except PermissionDeniedError:
