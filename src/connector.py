@@ -45,8 +45,8 @@ def response_to_deals(response: str) -> list[str] | None:
 # __________________ HTTP-REQUEST __________________
 
 def cup_http_request(function, *args, kappa=False):
-    username = config["user_1C"]
-    password = config["password_1C"]
+    user_1C = os.getenv('user_1C')
+    password_1C = os.getenv('password_1C')
 
     if kappa:
         base = r'http://kappa5.group.ru:81/ca/hs/interaction/'
@@ -57,7 +57,7 @@ def cup_http_request(function, *args, kappa=False):
     url = base + function + r'/' + function_args
     logger.write(url)
 
-    response = requests.get(url, auth=HTTPBasicAuth(username, password))
+    response = requests.get(url, auth=HTTPBasicAuth(user_1C, password_1C))
     if response.status_code == 200:
         return response.json()
     else:
