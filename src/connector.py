@@ -8,8 +8,8 @@ import base64
 import requests
 from requests.auth import HTTPBasicAuth
 
-from logger import logger
 from config.config import config, NAMES
+from src.logger import logger
 
 
 # __________________ COM-OBJECT __________________

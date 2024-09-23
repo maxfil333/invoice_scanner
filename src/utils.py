@@ -22,8 +22,8 @@ from PIL import Image, ImageDraw, ImageFont
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
 
-from logger import logger
 from config.config import config, NAMES
+from src.logger import logger
 
 
 # _________ ENCODERS _________

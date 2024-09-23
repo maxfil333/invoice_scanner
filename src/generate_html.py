@@ -4,8 +4,8 @@ import json
 from html import escape
 from bs4 import BeautifulSoup as bs
 
-from logger import logger
 from config.config import config, NAMES
+from src.logger import logger
 
 
 def generate_input_html(key, val):

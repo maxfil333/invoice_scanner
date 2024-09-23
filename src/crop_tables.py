@@ -1,13 +1,13 @@
 import os
 import sys
-from PIL import Image
-from img2table.document import Image as IMAGE
-import pytesseract
-import numpy as np
 import re
+import numpy as np
+import pytesseract
+from PIL import Image
 from time import perf_counter
+from img2table.document import Image as IMAGE
 
-from preprocessor import main as main_preprocessor
+from src.preprocessor import main as main_preprocessor
 
 
 def extract_text_from_image(image: np.array, psm=3):

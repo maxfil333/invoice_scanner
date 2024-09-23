@@ -2,10 +2,9 @@ import os
 import sys
 import json
 import msvcrt
-from glob import glob
-from logger import logger
-
 from dotenv import load_dotenv
+
+from src.logger import logger
 
 # main.spec
 r"""

@@ -4,7 +4,7 @@ from glob import glob
 from pdf2image import convert_from_path
 
 from config.config import config
-from pdf_files_parser import parse
+from src.pdf_files_parser import parse
 
 
 def convert_pdfs(pdf_paths, output_folder, first_page=0, last_page=1, dpi=350, fmt='jpeg'):

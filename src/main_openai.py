@@ -11,12 +11,13 @@ from PIL import Image
 from time import perf_counter
 from dotenv import load_dotenv
 
-from logger import logger
 from config.config import config, NAMES
-from utils import chroma_get_relevant
-from utils import extract_text_with_fitz, check_sums, order_goods
-from utils import replace_container_with_latin, replace_container_with_none, switch_to_latin
-from utils import base64_encode_pil, convert_json_values_to_strings, get_stream_dotenv, postprocessing_openai_response
+from src.logger import logger
+from src.utils import chroma_get_relevant
+from src.utils import extract_text_with_fitz, check_sums, order_goods
+from src.utils import convert_json_values_to_strings, get_stream_dotenv, postprocessing_openai_response
+from src.utils import replace_container_with_latin, replace_container_with_none, switch_to_latin, base64_encode_pil
+
 
 # ___________________________ general ___________________________
 

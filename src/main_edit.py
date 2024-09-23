@@ -5,13 +5,13 @@ from PIL import Image
 from itertools import count
 from pdf2image import convert_from_path
 
-from utils import is_scanned_pdf, count_pages, align_pdf_orientation, extract_pages
-from utils import pack_folders, mark_get_required_pages, mark_get_main_file
-from utils import add_text_bar, image_upstanding, rename_files_in_directory
-from crop_tables import define_and_return
 from config.config import config, NAMES
-from rotator import main as rotate
-from logger import logger
+from src.utils import is_scanned_pdf, count_pages, align_pdf_orientation, extract_pages
+from src.utils import pack_folders, mark_get_required_pages, mark_get_main_file
+from src.utils import add_text_bar, image_upstanding, rename_files_in_directory
+from src.crop_tables import define_and_return
+from src.rotator import main as rotate
+from src.logger import logger
 
 
 def main(dir_path: str = config['IN_FOLDER'], hide_logs=False, stop_when=-1):

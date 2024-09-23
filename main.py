@@ -10,13 +10,13 @@ from itertools import count
 from natsort import os_sorted
 from openai import PermissionDeniedError
 
-from logger import logger
 from config.config import config
-from main_edit import main as main_edit
-from generate_html import create_html_form
-from main_openai import run_chat, run_assistant
-from utils import delete_all_files, create_date_folder_in_check
-from connector import create_connection, get_transaction_number
+from src.logger import logger
+from src.main_edit import main as main_edit
+from src.generate_html import create_html_form
+from src.main_openai import run_chat, run_assistant
+from src.utils import delete_all_files, create_date_folder_in_check
+from src.connector import create_connection, get_transaction_number
 
 
 def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text_to_assistant=False,
