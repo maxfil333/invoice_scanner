@@ -36,7 +36,7 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
     # _______ CONNECTION ________
     if ignore_connection is False:
         if use_com_connector:
-            connection = create_connection(config['V83_CONN_STRING'])
+            connection = create_connection()
         else:
             connection = 'http'
     else:

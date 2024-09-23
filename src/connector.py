@@ -1,6 +1,8 @@
+import os
 import re
 import time
 import json
+from dotenv import load_dotenv
 import win32com.client
 from datetime import datetime
 
@@ -10,15 +12,21 @@ from requests.auth import HTTPBasicAuth
 
 from config.config import config, NAMES
 from src.logger import logger
+from src.utils import get_stream_dotenv
+
+load_dotenv(stream=get_stream_dotenv())
 
 
 # __________________ COM-OBJECT __________________
 
-def create_connection(connection_params):
+def create_connection():
     logger.print('connector initialization...')
+    user_1C = os.getenv('user_1C')
+    password_1C = os.getenv('password_1C')
+    V83_CONN_STRING = f"Srvr=kappa; Ref=CUP; Usr={user_1C}; Pwd={password_1C}"
     connection_start = time.perf_counter()
     v8com = win32com.client.Dispatch("V83.COMConnector")
-    connection = v8com.Connect(connection_params)
+    connection = v8com.Connect(V83_CONN_STRING)
     logger.print(f'connection time: {time.perf_counter() - connection_start:.2f}\n')
     return connection
 
