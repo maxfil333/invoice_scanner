@@ -20,22 +20,27 @@ from connector import create_connection, get_transaction_number
 
 
 def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text_to_assistant=False,
-         ignore_connection=False, stop_when=0):
+         use_com_connector=False, ignore_connection=False, stop_when=0):
     """
     :param date_folder: folder for saving results
     :param hide_logs: run without logs
     :param test_mode: run without main_openai using "config/__test.json"
     :param use_existing: run without main_edit using files in "IN/edited" folder
     :param text_to_assistant: do not use OCR to extract text from digital pdf, use loading pdf to assistant instead
-    :param ignore_connection: run without 1C-connection
+    :param use_com_connector: use COM-object instead of http-request
+    :param ignore_connection: do not use any CUP requests
     :param stop_when: stop script after N files
     :return:
     """
 
     # _______ CONNECTION ________
-    connection = None
-    if not ignore_connection:
-        connection = create_connection(config['V83_CONN_STRING'])
+    if ignore_connection is False:
+        if use_com_connector:
+            connection = create_connection(config['V83_CONN_STRING'])
+        else:
+            connection = 'http'
+    else:
+        connection = None
 
     # _____  FILL IN_FOLDER_EDIT  _____
     if not use_existing:
@@ -82,7 +87,7 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
                 continue
 
             # _____________ GET TRANS.NUMBER FROM 1C _____________
-            if not ignore_connection:
+            if not use_com_connector:
                 result = get_transaction_number(result, connection=connection)
 
             # _____ * SAVE JSON FILE * _____
@@ -132,7 +137,8 @@ if __name__ == "__main__":
     parser.add_argument('--test_mode', action='store_true', help='Режим тестирования')
     parser.add_argument('--use_existing', action='store_true', help='Использовать существующие файлы')
     parser.add_argument('--text_to_assistant', action='store_true', help='Обрабатывать цифровые pdf ассистентом')
-    parser.add_argument('--ignore_connection', action='store_true', help='Запуск без 1С')
+    parser.add_argument('--use_com_connector', action='store_true', help='Использовать COM объект')
+    parser.add_argument('--ignore_connection', action='store_true', help='Не обращаться в ЦУП')
     parser.add_argument('--no_exit', action='store_true', help='Не закрывать окно')
     parser.add_argument('--stop_when', type=int, default=-1, help='Максимальное количество файлов')
     args = parser.parse_args()
@@ -145,6 +151,7 @@ if __name__ == "__main__":
                               test_mode=args.test_mode,
                               use_existing=args.use_existing,
                               text_to_assistant=args.text_to_assistant,
+                              use_com_connector=args.use_com_connector,
                               ignore_connection=args.ignore_connection,
                               stop_when=args.stop_when)
         logger.print(f'\nresult_message:\n{result_message}\n')

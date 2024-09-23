@@ -4,9 +4,15 @@ import json
 import win32com.client
 from datetime import datetime
 
-from logger import logger
-from config.config import NAMES
+import base64
+import requests
+from requests.auth import HTTPBasicAuth
 
+from logger import logger
+from config.config import config, NAMES
+
+
+# __________________ COM-OBJECT __________________
 
 def create_connection(connection_params):
     logger.print('connector initialization...')
@@ -28,13 +34,37 @@ def response_to_deals(response: str) -> list[str] | None:
         return
 
 
+# __________________ HTTP-REQUEST __________________
+
+def cup_http_request(function, *args, kappa=False):
+    username = config["user_1C"]
+    password = config["password_1C"]
+
+    if kappa:
+        base = r'http://kappa5.group.ru:81/ca/hs/interaction/'
+    else:
+        base = r'http://10.10.0.10:81/ca/hs/interaction/'
+
+    function_args = r'/'.join(map(lambda x: base64.urlsafe_b64encode(x.encode()).decode(), args))
+    url = base + function + r'/' + function_args
+    logger.write(url)
+
+    response = requests.get(url, auth=HTTPBasicAuth(username, password))
+    if response.status_code == 200:
+        return response.json()
+    else:
+        print(f"Ошибка: {response.status_code} - {response.reason}")
+
+
+# __________________ ADD TRANSACTIONS TO RESULT __________________
+
 def get_transaction_number(json_formatted_str: str, connection) -> str:
     dct = json.loads(json_formatted_str)
     dct[NAMES.transactions] = []
     dct[NAMES.transactions_new] = ''
     dct[NAMES.transactions_type] = ''
 
-    # если не соединения возвращаем то, что было + dct['Номера сделок'] = []; + dct['Тип поиска сделки'] = ''.
+    # если нет соединения возвращаем что было + dct['Номера сделок'] = []; + dct['Тип поиска сделки'] = ''.
     if not connection:
         return json.dumps(dct, ensure_ascii=False, indent=4)
 
@@ -52,65 +82,84 @@ def get_transaction_number(json_formatted_str: str, connection) -> str:
     deals = []
 
     if DT:
-        numbers_DT = connection.InteractionWithExternalApplications.TransactionNumberFromGTD(DT)
-        deals = response_to_deals(numbers_DT)
+        if connection == 'http':
+            deals = cup_http_request(r'TransactionNumberFromGTD', DT)
+        else:
+            numbers_DT = connection.InteractionWithExternalApplications.TransactionNumberFromGTD(DT)
+            deals = response_to_deals(numbers_DT)
         if deals:
             dct[NAMES.transactions_type] = 'DT'
 
     if not deals and CONTAINERS:
         deals = []
         for CONTAINER in CONTAINERS:
-            numbers_CONTAINERS = connection.InteractionWithExternalApplications.TransactionNumberFromContainer(
-                CONTAINER)
-            deal = response_to_deals(numbers_CONTAINERS)
-            if deal:
-                deals.extend(deal)
+            if connection == 'http':
+                deals_ = cup_http_request(r'TransactionNumberFromContainer', CONTAINER)
+            else:
+                numbers_CONTAINERS = connection.InteractionWithExternalApplications.TransactionNumberFromContainer(
+                    CONTAINER)
+                deals_ = response_to_deals(numbers_CONTAINERS)
+            if deals_:
+                deals.extend(deals_)
         if deals:
             dct[NAMES.transactions_type] = 'CONTAINERS'
 
     if not deals and CONOSES:
         deals = []
         for CONOS in CONOSES:
-            numbers_CONOSES = connection.InteractionWithExternalApplications.TransactionNumberFromBillOfLading(
-                CONOS)
-            deal = response_to_deals(numbers_CONOSES)
-            if deal:
-                deals.extend(deal)
+            if connection == 'http':
+                deals_ = cup_http_request(r'TransactionNumberFromBillOfLading', CONOS)
+            else:
+                numbers_CONOSES = connection.InteractionWithExternalApplications.TransactionNumberFromBillOfLading(
+                    CONOS)
+                deals_ = response_to_deals(numbers_CONOSES)
+            if deals_:
+                deals.extend(deals_)
         if deals:
             dct[NAMES.transactions_type] = 'CONOS'
 
     if not deals and SHIP:
-        numbers_SHIP = connection.InteractionWithExternalApplications.TransactionNumberFromShip(SHIP)
-        deals = response_to_deals(numbers_SHIP)
+        if connection == 'http':
+            deals = cup_http_request(r'TransactionNumberFromShip', SHIP)
+        else:
+            numbers_SHIP = connection.InteractionWithExternalApplications.TransactionNumberFromShip(SHIP)
+            deals = response_to_deals(numbers_SHIP)
         if deals:
             dct[NAMES.transactions_type] = 'SHIP'
 
     if not deals and AUTOS:
         deals = []
         for AUTO in AUTOS:
-            numbers_AUTOS = connection.InteractionWithExternalApplications.TransactionNumberFromCar(AUTO)
-            deal = response_to_deals(numbers_AUTOS)
-            if deal:
-                deals.extend(deal)
+            if connection == 'http':
+                deals_ = cup_http_request(r'TransactionNumberFromCar', AUTO)
+            else:
+                numbers_AUTOS = connection.InteractionWithExternalApplications.TransactionNumberFromCar(AUTO)
+                deals_ = response_to_deals(numbers_AUTOS)
+            if deals_:
+                deals.extend(deals_)
         if deals:
             dct[NAMES.transactions_type] = 'AUTO'
 
     if not deals and TRAILERS:
         deals = []
         for TRAILER in TRAILERS:
-            numbers_TRAILERS = connection.InteractionWithExternalApplications.TransactionNumberFromCarTrailer(
-                TRAILER)
-            deal = response_to_deals(numbers_TRAILERS)
-            if deal:
-                deals.extend(deal)
+            if connection == 'http':
+                deals_ = cup_http_request(r'TransactionNumberFromCarTrailer', TRAILER)
+            else:
+                numbers_TRAILERS = connection.InteractionWithExternalApplications.TransactionNumberFromCarTrailer(
+                    TRAILER)
+                deals_ = response_to_deals(numbers_TRAILERS)
+            if deals_:
+                deals.extend(deals_)
         if deals:
             dct[NAMES.transactions_type] = 'TRAILER'
 
     if deals:
+        regex = r'(.*) (от) (.*)'
         deals = list(set(deals))
-        deals.sort(key=lambda x: datetime.strptime(re.fullmatch(r'(.*) (от) (.*)', x).group(3), '%d.%m.%Y').date()
-                   if re.fullmatch(r'(.*) (от) (.*)', x)
-                   else datetime.fromtimestamp(0).date(), reverse=True)
+        deals.sort(
+            key=lambda x: datetime.strptime(re.fullmatch(regex, x).group(3), '%d.%m.%Y').date() if re.fullmatch(
+                regex, x) else datetime.fromtimestamp(0).date(), reverse=True)
 
         dct[NAMES.transactions] = deals
 
@@ -118,5 +167,7 @@ def get_transaction_number(json_formatted_str: str, connection) -> str:
 
 
 if __name__ == '__main__':
-    from config.config import config
-    create_connection(config['V83_CONN_STRING'])
+    # from config.config import config
+    # create_connection(config['V83_CONN_STRING'])
+
+    print(cup_http_request(r'TransactionNumberFromContainer', r'ADMU9000937'))
