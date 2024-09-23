@@ -87,8 +87,7 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
                 continue
 
             # _____________ GET TRANS.NUMBER FROM 1C _____________
-            if not use_com_connector:
-                result = get_transaction_number(result, connection=connection)
+            result = get_transaction_number(result, connection=connection)
 
             # _____ * SAVE JSON FILE * _____
             local_check_folder = os.path.join(date_folder, text_or_scanned_folder, folder_name)
