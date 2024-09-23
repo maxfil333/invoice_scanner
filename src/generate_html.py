@@ -59,7 +59,7 @@ def generate_html_from_json(data, parent_key="", prefix=""):
                 if key == NAMES.transactions:
                     html_content += f'<div class="input-group">'
                     html_content += f'<label>Номер сделки</label>'
-                    html_content += f'<select class={char_key}>'
+                    html_content += f'<select class={char_key} name={char_key}>'
                     for v in value:
                         html_content += f'<option value="{v}">{v}</option>'
                     html_content += f'<option value="Нет">Нет</option>'
