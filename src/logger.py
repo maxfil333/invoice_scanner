@@ -17,7 +17,7 @@ class Logger:
         self.data.append(message)
 
     def write(self, string_):
-        self.data.append(string_)
+        self.data.append(string_ + '\n')
 
     def save(self, log_folder):
         # Записываем логи в файл
