@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+import json
 import shutil
 import msvcrt
 import argparse
@@ -74,7 +75,7 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
                     else:
                         result = run_assistant(files[0], hide_logs=hide_logs)
             else:
-                text_or_scanned_folder = config['NAME_scanned']
+                text_or_scanned_folder: str = config['NAME_scanned']
                 files.sort(reverse=True)
                 # ___ RUN CHAT ___
                 if test_mode:
@@ -96,10 +97,16 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
             with open(json_path, 'w', encoding='utf-8') as file:
                 file.write(result)
 
-            # _____ * COPY ORIGINAL FILE * _____
-            with open(os.path.join(folder, 'main_file.txt'), 'r', encoding='utf-8') as f:
-                original_file = f.read().strip()
+            # _____ * COPY ORIGINAL FILE | COPY EXTRA FILES * _____
+            with open(os.path.join(folder, 'params.json'), 'r', encoding='utf-8') as f:
+                params_dict = json.load(f)
+                original_file = params_dict['main_file']
+                extra_files = params_dict['extra_files']
             shutil.copy(original_file, os.path.join(local_check_folder, os.path.basename(original_file)))
+
+            os.makedirs(os.path.join(local_check_folder, 'extra_files'), exist_ok=True)
+            for file in extra_files:
+                shutil.copy(file, os.path.join(local_check_folder, 'extra_files', os.path.basename(file)))
 
             # _____ * CREATE HTML FILE * _____
             html_name = os.path.basename(local_check_folder) + '.html'

@@ -1,4 +1,5 @@
 import os
+import json
 import subprocess
 import numpy as np
 from PIL import Image
@@ -41,8 +42,9 @@ def main(dir_path: str = config['IN_FOLDER'], hide_logs=False, stop_when=-1):
         edited_folder = os.path.join(config['EDITED'], folder_name)
         main_save_path = os.path.join(edited_folder, main_base)
         os.makedirs(edited_folder, exist_ok=False)
-        with open(os.path.join(edited_folder, 'main_file.txt'), 'w', encoding='utf-8') as f:
-            f.write(main_file)
+        with open(os.path.join(edited_folder, 'params.json'), 'w', encoding='utf-8') as f:
+            params_dict = {"main_file": main_file, "extra_files": extra_files}
+            json.dump(params_dict, f, ensure_ascii=False)
 
         # if digital pdf
         if (main_type.lower() == '.pdf') and (is_scanned_pdf(main_file, required_pages) is False):
