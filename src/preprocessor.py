@@ -1,10 +1,9 @@
 import numpy as np
 import cv2
-from PIL import Image
 
 
 def cyrillic_processing(image_path: str) -> np.array:
-    """функция обработчик путей файлов содержащих кириллицу"""
+    """ Функция обработчик путей файлов содержащих кириллицу """
 
     try:
         f = open(image_path, "rb")
@@ -18,13 +17,12 @@ def cyrillic_processing(image_path: str) -> np.array:
 
 
 def gray_and_threshold(image: np.array, thresh=127, maxval=255) -> np.array:
-    """перевод в градации серого и бинаризация"""
+    """ Перевод в градации серого и бинаризация """
 
     gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     blur = gray_image
 
     # blur = cv2.GaussianBlur(blur,(3,3),0)
-
     # kernel = np.ones((2, 2), np.uint8)
     # blur = cv2.dilate(blur, kernel, iterations=1)
 
@@ -36,7 +34,7 @@ def gray_and_threshold(image: np.array, thresh=127, maxval=255) -> np.array:
 
 
 def gray_to_rgb(image: np.array) -> np.array:
-    """делает из одноканального изображения трехканальное"""
+    """ Преобразовать одноканальное изображение в трехканальное """
 
     if len(np.array(image).shape) == 2:
         np_image = np.repeat(np.array(image)[:, :, np.newaxis], 3, axis=2)
@@ -46,6 +44,6 @@ def gray_to_rgb(image: np.array) -> np.array:
 
 
 def main(image_path: str) -> np.array:
-    """Принимает на вход путь, возвращает np.array"""
+    """ Принимает на вход путь, возвращает np.array """
 
     return gray_to_rgb(gray_and_threshold(cyrillic_processing(image_path)))
