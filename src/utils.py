@@ -88,7 +88,7 @@ def get_stream_dotenv():
     return string_stream
 
 
-def postprocessing_openai_response(response: str, hide_logs=False) -> str | None:
+def handling_openai_json(response: str, hide_logs=False) -> str | None:
     # удаление двойных пробелов и переносов строк
     re_response = re.sub(r'(\s{2,}|\n)', ' ', response)
 

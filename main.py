@@ -14,10 +14,11 @@ from openai import PermissionDeniedError
 from config.config import config
 from src.logger import logger
 from src.main_edit import main as main_edit
-from src.generate_html import create_html_form
 from src.main_openai import run_chat, run_assistant
+from src.generate_html import create_html_form
 from src.utils import delete_all_files, create_date_folder_in_check
-from src.connector import create_connection, get_transaction_number
+from src.connector import create_connection
+from src.response_postprocessing import get_transaction_number
 
 
 def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text_to_assistant=False,
