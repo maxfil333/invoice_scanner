@@ -148,7 +148,7 @@ def local_postprocessing(response, hide_logs=False) -> str | None:
 
     # 10. Судно
     ship = dct['additional_info']['Судно']
-    closest_match = difflib.get_close_matches(ship.upper(), config['ships'], n=1, cutoff=0.7)
+    closest_match = difflib.get_close_matches(ship.upper(), config['ships'], n=1, cutoff=0.8)
     if closest_match:
         dct['additional_info']['Судно'] = closest_match[0]
         logger.print(f'find ship: {ship} --> {closest_match[0]}')
