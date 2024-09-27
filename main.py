@@ -18,7 +18,7 @@ from src.main_openai import run_chat, run_assistant
 from src.generate_html import create_html_form
 from src.utils import delete_all_files, create_date_folder_in_check
 from src.connector import create_connection
-from src.response_postprocessing import get_transaction_number
+from src.response_postprocessing import get_transaction_number, local_postprocessing
 
 
 def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text_to_assistant=False,
@@ -70,6 +70,7 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
                 if test_mode:
                     with open(config['TESTFILE'], 'r', encoding='utf-8') as file:
                         result = file.read()
+                        result = local_postprocessing(result)
                 else:
                     if not text_to_assistant:
                         result = run_chat(files[0], detail='high', hide_logs=hide_logs, text_mode=True)
@@ -82,6 +83,7 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
                 if test_mode:
                     with open(config['TESTFILE'], 'r', encoding='utf-8') as file:
                         result = file.read()
+                        result = local_postprocessing(result)
                 else:
                     result = run_chat(*files, detail='high', hide_logs=hide_logs, text_mode=False)
 
@@ -163,6 +165,7 @@ if __name__ == "__main__":
                               stop_when=args.stop_when)
         logger.print(f'\nresult_message:\n{result_message}\n')
     except PermissionDeniedError:
+        logger.print(traceback.format_exc())
         logger.print('ОШИБКА ВЫПОЛНЕНИЯ:\n!!! Включите VPN !!!')
     except Exception as global_error:
         logger.print('GLOBAL_ERROR!:', global_error)
