@@ -64,7 +64,7 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
             json_name = folder_name + '_' + '0' * 11 + '.json'
 
             # _____________ RUN MAIN_OPENAI.PY _____________
-            if os.path.splitext(files[0])[-1] == '.pdf':  # достаточно проверить 1-й файл в папке, чтобы определить .ext
+            if os.path.splitext(files[0])[-1].lower() == '.pdf':  # достаточно проверить 1-й файл в папке, чтобы определить .ext
                 text_or_scanned_folder = config['NAME_text']
                 # ___ RUN ASSISTANT (or CHAT in text_to_assistant is False) ___
                 if test_mode:
