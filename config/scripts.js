@@ -1,4 +1,26 @@
 // --------------------------------------------------------------------------------------------------------------------
+// Копирование выбранного варианта Номер сделки в буфер
+
+document.addEventListener("DOMContentLoaded", function() {
+    const selectElement = document.querySelector('.Номерсделки');
+
+    selectElement.addEventListener('change', function() {
+        const selectedValue = selectElement.options[selectElement.selectedIndex].text;
+
+        // Создание временного текстового элемента для копирования
+        const tempTextArea = document.createElement('textarea');
+        tempTextArea.value = selectedValue;
+        document.body.appendChild(tempTextArea);
+        tempTextArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempTextArea);
+
+        console.log('Скопировано: ' + selectedValue);
+    });
+});
+
+
+// --------------------------------------------------------------------------------------------------------------------
 // Затемнение полей цена/сумма сНДС/безНДС в зависимости от price_type
 
 document.addEventListener('DOMContentLoaded', price_type_opacity);
