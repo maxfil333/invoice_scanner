@@ -2,9 +2,10 @@
 // Копирование выбранного варианта Номер сделки в буфер
 
 document.addEventListener("DOMContentLoaded", function() {
-    const selectElement = document.querySelector('.Номерсделки');
+    const selectElements = document.querySelectorAll('.Номерсделки');
 
-    selectElement.addEventListener('change', function() {
+    // Функция для копирования выбранного значения
+    function copySelectedValue(selectElement) {
         const selectedValue = selectElement.options[selectElement.selectedIndex].text;
 
         // Создание временного текстового элемента для копирования
@@ -16,6 +17,19 @@ document.addEventListener("DOMContentLoaded", function() {
         document.body.removeChild(tempTextArea);
 
         console.log('Скопировано: ' + selectedValue);
+    }
+
+    // Применяем событие ко всем элементам с классом .Номерсделки
+    selectElements.forEach(function(selectElement) {
+        // Используем событие focus для копирования при фокусировке
+        selectElement.addEventListener('focus', function() {
+            copySelectedValue(selectElement);
+        });
+
+        // Копирование при изменении выбранного значения
+        selectElement.addEventListener('change', function() {
+            copySelectedValue(selectElement);
+        });
     });
 });
 
