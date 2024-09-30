@@ -284,3 +284,8 @@ button[onclick="removeService(this)"]:active {
         width: calc(100% - 130px); /* Корректируем ширину для мобильных устройств */
     }
 }
+
+.Типпоискасделки {
+    pointer-events: none;
+    background-color: #e9ecef; /* светло-серый цвет для индикации, что поле нередактируемо */
+}
