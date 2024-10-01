@@ -123,31 +123,43 @@ document.addEventListener('DOMContentLoaded', sdelka_cleaner);
 function sdelka_cleaner() {
 
     // Находим все поля с классом .Номерсделки / .Номерсделкиввестисвой
-    const sdelka = document.querySelector('.Номерсделки');
-    const sdelka_new = document.querySelector('.Номерсделкиввестисвой');
+    const sdelkaElements = document.querySelectorAll('.Номерсделки');
+    const sdelkaNewElements = document.querySelectorAll('.Номерсделкиввестисвой');
 
-    // Функция для очистки .Номерсделки, если в .Номерсделкиввестисвой есть текст
-    function handleInput2() {
-        if (sdelka_new.value.trim() !== '') {
-            sdelka.value = 'Нет';
+    // Проверяем, чтобы количество элементов в обоих коллекциях было одинаковым
+    if (sdelkaElements.length !== sdelkaNewElements.length) {
+        console.error('Количество элементов с классами .Номерсделки и .Номерсделкиввестисвой не совпадает.');
+        return;
+    }
+
+    // Функция для обработки каждого набора полей
+    sdelkaElements.forEach((sdelka, index) => {
+        const sdelka_new = sdelkaNewElements[index];
+
+        // Функция для очистки .Номерсделки, если в .Номерсделкиввестисвой есть текст
+        function handleInput2() {
+            if (sdelka_new.value.trim() !== '') {
+                sdelka.value = 'Нет';
+            }
         }
-    }
 
-    // Функция для очистки .Номерсделкиввестисвой, если в .Номерсделки есть текст
-    function handleInput1() {
-        if (sdelka.value.trim() !== 'Нет') {
-            sdelka_new.value = '';
+        // Функция для очистки .Номерсделкиввестисвой, если в .Номерсделки есть текст
+        function handleInput1() {
+            if (sdelka.value.trim() !== 'Нет') {
+                sdelka_new.value = '';
+            }
         }
-    }
 
-    // Добавляем слушатели событий на textarea
-    if (sdelka && sdelka_new) {
-        sdelka_new.addEventListener('input', handleInput2);
-        sdelka.addEventListener('input', handleInput1);
-        sdelka_new.addEventListener('change', handleInput2);
-        sdelka.addEventListener('change', handleInput1);
-    }
+        // Добавляем слушатели событий на каждую пару элементов
+        if (sdelka && sdelka_new) {
+            sdelka_new.addEventListener('input', handleInput2);
+            sdelka.addEventListener('input', handleInput1);
+            sdelka_new.addEventListener('change', handleInput2);
+            sdelka.addEventListener('change', handleInput1);
+        }
+    });
 }
+
 
 // --------------------------------------------------------------------------------------------------------------------
 // Размер textarea
@@ -177,7 +189,7 @@ document.addEventListener('DOMContentLoaded', function () {
             this.style.height = (this.scrollHeight) + 'px';
         });
     });
-	
+
     const rightPane = document.querySelector('.right-pane');
     if (rightPane) {
         rightPane.style.userSelect = 'none'; // Предотвращаем выделение текста внутри .right-pane
@@ -230,7 +242,7 @@ document.addEventListener('DOMContentLoaded', function () {
             img.style.cursor = scale > 1 ? 'move' : 'grab';
             img.style.position = 'relative';
         });
-		
+
 		const centerImage = () => {
             const containerWidth = img.parentElement.clientWidth;
             const containerHeight = img.parentElement.clientHeight;
@@ -243,7 +255,7 @@ document.addEventListener('DOMContentLoaded', function () {
 			img.style.transition = 'left 0.5s, top 0.5s'; // Плавность центрирования
             img.style.left = `${offsetX}px`;
             img.style.top = `${offsetY}px`;
-			
+
 			// Удаление transition после завершения анимации
             setTimeout(() => {
                 img.style.transition = '';
