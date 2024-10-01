@@ -55,34 +55,35 @@ body {
     display: flex;
     width: 100%;
     flex-grow: 1;
-    height: 100vh; /* Высота контейнера равна высоте окна */
+    min-height: 100vh; /* Минимальная высота — вся высота окна */
+    height: auto; /* Автоматическая высота для роста при прокрутке */
 }
 
 .left-pane {
-    background-color: #ffffff; /* Белый фон */
+    background-color: #ffffff;
     padding: 20px;
     width: 50%;
     box-sizing: border-box;
     border-right: 2px solid #ddd;
-    height: 100vh; /* Гарантируем, что левая панель занимает всю высоту контейнера */
+    min-height: 100vh; /* Минимальная высота — вся высота окна */
+    height: auto; /* Высота адаптируется под контент */
 }
 
 .right-pane {
-    position: fixed; /* Фиксированное положение */
+    position: fixed; /* Оставляем фиксированное позиционирование */
     right: 0;
     top: 0;
     width: 50%;
     height: 100vh; /* Гарантируем, что правая панель занимает всю высоту окна */
-    background-color: #333; /* Темно-серый фон для правой панели */
-    color: #fff; /* Белый текст на темном фоне */
+    background-color: #333;
+    color: #fff;
     box-sizing: border-box;
-    overflow: hidden; /* Скрываем прокрутку */
-    padding: 0; /* Убираем padding */
-    margin: 0; /* Убираем margin */
+    overflow: auto; /* Включаем прокрутку внутри правой панели, если контент выходит за пределы */
+    padding: 0;
+    margin: 0;
     display: flex;
     justify-content: center;
     align-items: center;
-    overflow: scroll; /* Добавляем прокрутку при зумировании */
 }
 
 .right-pane img {
