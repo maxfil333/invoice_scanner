@@ -242,7 +242,7 @@ def get_transaction_number(json_formatted_str: str, connection: Union[None, Lite
         for i, good_dct in enumerate(dct[NAMES.goods]):  # то для каждой услуги где:
             if i not in history:  # не было контейнера или коносамента или сделка не была найдена
                 good_dct[NAMES.transactions] = sort_transactions(list(set(common_deals)))  # сделки = общие сделки
-                good_dct[NAMES.transactions_type] = 'наследовано от: контейнер/коносамент'
+                good_dct[NAMES.transactions_type] = 'нет конт-а/конос-а или сделка не найдена (наследуется от найденных)'
             else:
                 pass
 
