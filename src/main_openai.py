@@ -8,7 +8,6 @@ from dotenv import load_dotenv
 
 from src.logger import logger
 from config.config import config
-from src.response_postprocessing import local_postprocessing
 from src.utils import extract_text_with_fitz, get_stream_dotenv, base64_encode_pil
 
 
@@ -55,7 +54,7 @@ def run_chat(*img_paths: str, detail='high', hide_logs=False, text_mode=False) -
     logger.print(f'total_tokens: {response.usage.total_tokens}')
 
     response = response.choices[0].message.content
-    return local_postprocessing(response, hide_logs=hide_logs)
+    return response
 
 
 # ___________________________ ASSISTANT ___________________________
@@ -87,7 +86,7 @@ def run_assistant(file_path, hide_logs=False):
 
     messages = list(client.beta.threads.messages.list(thread_id=thread.id, run_id=run.id))
     response = messages[0].content[0].text.value
-    return local_postprocessing(response, hide_logs=hide_logs)
+    return response
 
 
 # ___________________________ TEST ___________________________
