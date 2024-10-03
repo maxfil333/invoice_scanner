@@ -51,6 +51,7 @@ def run_chat(*img_paths: str, detail='high', hide_logs=False, text_mode=False) -
     logger.print('chat model:', response.model)
     logger.print(f'time: {perf_counter() - start:.2f}')
     logger.print(f'completion_tokens: {response.usage.completion_tokens}')
+    logger.print(f'cached_tokens: {response.usage.prompt_tokens_details}')
     logger.print(f'prompt_tokens: {response.usage.prompt_tokens}')
     logger.print(f'total_tokens: {response.usage.total_tokens}')
 
