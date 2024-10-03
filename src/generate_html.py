@@ -131,7 +131,7 @@ def create_html_form(json_file, output_file, file_path):
         <script src="{config['JS_PATH']}"></script>
         <div jsonfilename="{os.path.basename(json_file)}" id="jsonfilenameid"></div>
         <div id="jsonfiledataid" hidden>{json.dumps(data, ensure_ascii=False)}</div>
-        <div id="services_dict" hidden>{json.dumps(config['unique_comments_dict'], ensure_ascii=False)}</div>
+        <div id="unique_services" hidden>{json.dumps(config['unique_services'], ensure_ascii=False)}</div>
     </body>
     </html>
     '''

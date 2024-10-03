@@ -655,14 +655,15 @@ def split_by_conoses(json_formatted_str: str) -> tuple[str, bool]:
 
 # _________ CHROMA DATABASE (CREATE CHUNKS AND DB) _________
 
-def create_chunks_from_json(json_path: str, truncation=200) -> list[str]:
+def create_chunks_from_json(json_path: str, truncation=200) -> dict:
     with open(json_path, encoding='utf-8') as f:
         json_ = json.load(f)
-        chunks = [f"[{d['id']}] {d['comment'][0:truncation]}" for d in json_]
-        return chunks
+        chunks = [d['comment'][0:truncation] for d in json_]    # ['chunk1', 'chunk2', 'chunk3']
+        metadata_ids = [{'id': d['id']} for d in json_]         # [{'id': 1}, {'id': 2}, {'id': 3}]
+        return {'chunks': chunks, 'metadata_ids': metadata_ids}
 
 
-def chroma_create_db_from_chunks(chroma_path: str, chunks: list[str]) -> None:
+def chroma_create_db_from_chunks(chroma_path: str, chunks_and_meta: dict) -> None:
     load_dotenv(stream=get_stream_dotenv())
     openai.api_key = os.environ.get("OPENAI_API_KEY")
     embedding_func = OpenAIEmbeddings()
@@ -671,35 +672,27 @@ def chroma_create_db_from_chunks(chroma_path: str, chunks: list[str]) -> None:
     if os.path.exists(chroma_path):
         shutil.rmtree(chroma_path)
 
-    Chroma.from_texts(chunks, embedding_func, persist_directory=chroma_path)
+    chunks, ids = chunks_and_meta['chunks'], chunks_and_meta['metadata_ids']
+    Chroma.from_texts(texts=chunks, embedding=embedding_func, metadatas=ids, persist_directory=chroma_path)
 
 
 def create_vector_database() -> None:
     """ create_chunks_from_json + chroma_create_db_from_chunks """
 
-    chunks = create_chunks_from_json(json_path=config['unique_comments_file'])
-    chroma_create_db_from_chunks(chroma_path=config['chroma_path'], chunks=chunks)
+    chunks_and_meta = create_chunks_from_json(json_path=config['unique_comments_file'])
+    chroma_create_db_from_chunks(chroma_path=config['chroma_path'], chunks_and_meta=chunks_and_meta)
     print('БАЗА ДАННЫХ СОЗДАНА.')
 
 
 def chroma_get_relevant(query, chroma_path, embedding_func, k=1, query_truncate=600):
-    def get_idx_and_comment(lst):  # lst = ['[341] Растарка контейнера ... ']
-        idx_comment_tuples = []
-        regex = r'\[(\d{1,10})\] (.*)'  # lst -> '341', 'Растарка контейнера ...'
-        for s in lst:
-            match = re.fullmatch(regex, s)
-            idx, text = int(match[1]), match[2]
-            idx_comment_tuples.append((idx, text))  # [('341', 'Растарка контейнера ...'), (..., ...)]
-        return idx_comment_tuples
-
+    query = re.sub(r'\W', '', query)  # спец символы влияют на смысл больше чем нужно, убираем
     db = Chroma(persist_directory=chroma_path, embedding_function=embedding_func)
     retriever = db.as_retriever(search_type='similarity', search_kwargs={"k": k})
     results = retriever.invoke(query[0:query_truncate])  # aka get_relevant_documents
     if len(results) == 0:
         logger.print(f"!!! CHROMA: Unable to find matching results !!!")
         return
-
-    return get_idx_and_comment(list(map(lambda x: x.page_content, results)))
+    return results
 
 
 # _________ MAIN_EDIT _________
@@ -759,13 +752,8 @@ def mark_get_main_file(folder_path: str) -> str | None:
 # _________ TEST _________
 
 if __name__ == '__main__':
-    # load_dotenv(stream=get_stream_dotenv())
-    # openai.api_key = os.environ.get("OPENAI_API_KEY")
-    # embedding_func = OpenAIEmbeddings()
-
-    # print(chroma_get_relevant('Лабораторные исследования',
-    #                           config['chroma_path'],
-    #                           OpenAIEmbeddings(),
-    #                           k=5))
-
+    load_dotenv(stream=get_stream_dotenv())
+    openai.api_key = os.environ.get("OPENAI_API_KEY")
+    embedding_func = OpenAIEmbeddings()
+    create_vector_database()
     pass

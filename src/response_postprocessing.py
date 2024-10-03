@@ -93,20 +93,24 @@ def local_postprocessing(response, hide_logs=False) -> str | None:
 
         # 5. заполнение 'Услуга1С'
         name_without_containers = replace_container_with_none(good_dct[NAMES.name], container_regex)
-        idx_comment_tuples = chroma_get_relevant(query=name_without_containers,
-                                                 chroma_path=config['chroma_path'],
-                                                 embedding_func=embedding_func,
-                                                 k=1)
-        if idx_comment_tuples:
-            # берем id и comment первого (наиболее вероятного) элемента из списка кортежей
-            idx, comment = idx_comment_tuples[0]
+        relevant_results = chroma_get_relevant(query=name_without_containers,
+                                               chroma_path=config['chroma_path'],
+                                               embedding_func=embedding_func,
+                                               k=1)
+        if relevant_results:
+            # берем первый (наиболее вероятный) элемента из списка результатов поиска
+            relevant_result = relevant_results[0]
+            comment_id, comment_content = relevant_result.metadata['id'], relevant_result.page_content
             logger.print(f"--- DB response {i_ + 1} ---:")
             logger.print(f"query:\n{name_without_containers}")
-            logger.print(f"response:\n{config['unique_comments_dict'][idx - 1]}")
-            # берем первый "service" в ключе "service_list" элемента словаря с индексом idx-1
-            good1C = config['unique_comments_dict'][idx - 1]['service_list'][0]
-            # перезаписываем поле "Услуга1С"
-            good_dct['Услуга1С'] = good1C
+
+            # id в каждом словарике {id: .., comment: .., service_code: ..} совпадает с порядковым номером словарика
+            uniq_comments_dct_by_idx = config['unique_comments_dict'][comment_id]  # {id: , comment: , service_code: }
+            logger.print(f"response:\n{uniq_comments_dct_by_idx}")
+
+            # берем первый "service#code#" в ключе "service_code" элемента словаря с индексом comment_id,
+            # заполняем поле "Услуга1С"
+            good_dct['Услуга1С'] = uniq_comments_dct_by_idx['service_code'][0]
 
         # 6. Добавить local_transaction, local_transactions_new, local_transaction_type
         good_dct[NAMES.transactions] = []

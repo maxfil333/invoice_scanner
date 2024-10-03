@@ -62,10 +62,12 @@ except Exception as e:
     raise
 
 config['unique_comments_file'] = os.path.join(config['CONFIG'], 'unique_comments.json')
-config['unique_comments_dict'] = None  # to html <div id="services_dict..."
+config['unique_services'] = None  # to html <div id="services_dict..."
 try:
     with open(config['unique_comments_file'], 'r', encoding='utf-8') as f:
-        config['unique_comments_dict'] = json.load(f)
+        dct = json.load(f)
+        config['unique_comments_dict'] = dct
+        config['unique_services'] = list(dict.fromkeys([code for lst_item in dct for code in lst_item['service_code']]))
 except FileNotFoundError:
     logger.print(f"!!! FILE {config['unique_comments_file']} NOT FOUND !!!")
     logger.save(config['CHECK_FOLDER'])
@@ -200,7 +202,7 @@ config['system_prompt'] = f"""
 if __name__ == '__main__':
     print('sys.frozen:', getattr(sys, 'frozen', False))
     for k, v in config.items():
-        if k not in ['unique_comments_dict', 'ships']:
+        if k not in ['unique_comments_dict', 'unique_services', 'ships']:
             print('-' * 50)
             print(k)
             print(v)

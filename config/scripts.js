@@ -439,18 +439,18 @@ document.addEventListener('DOMContentLoaded', dropdownService1C);
 
 function dropdownService1C() {
     // Встроенные данные
-    var originalJsonString = document.getElementById('services_dict').textContent;
+    var originalJsonString = document.getElementById('unique_services').textContent;
     try {
-        // Преобразуем строку JSON в объект JavaScript
+        // Преобразуем строку JSON в объект JavaScript (список строк)
         var data = JSON.parse(originalJsonString);
     } catch (error) {
         // В случае ошибки выводим сообщение об ошибке
-        alert("Произошла ошибка: " + error.message);
+        console.log("Произошла ошибка: " + error.message);
         return;
     }
 
-    // Извлекаем уникальные значения из service_list
-    const uniqueServices = [...new Set(data.flatMap(item => item.service_list))];
+    // Поскольку в services_dict уже хранятся уникальные значения, можно сразу использовать data
+    const uniqueServices = data;  // services_dict уже содержит уникальные значения
 
     const searchInputs = document.querySelectorAll('.Услуга1С');
     const dropdowns = document.querySelectorAll('.dropdown');
