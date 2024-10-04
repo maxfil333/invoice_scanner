@@ -92,6 +92,8 @@ def local_postprocessing(response, hide_logs=False) -> str | None:
         good_dct[NAMES.good1C_new] = ''
 
         # 5. заполнение 'Услуга1С'
+        logger.print(f"--- DB response {i_ + 1} ---:")
+
         name_without_containers = replace_container_with_none(good_dct[NAMES.name], container_regex)
         relevant_results = chroma_get_relevant(query=name_without_containers,
                                                chroma_path=config['chroma_path'],
@@ -101,8 +103,6 @@ def local_postprocessing(response, hide_logs=False) -> str | None:
             # берем первый (наиболее вероятный) элемента из списка результатов поиска
             relevant_result = relevant_results[0]
             comment_id, comment_content = relevant_result.metadata['id'], relevant_result.page_content
-            logger.print(f"--- DB response {i_ + 1} ---:")
-            logger.print(f"query:\n{name_without_containers}")
 
             # id в каждом словарике {id: .., comment: .., service_code: ..} совпадает с порядковым номером словарика
             uniq_comments_dct_by_idx = config['unique_comments_dict'][comment_id]  # {id: , comment: , service_code: }

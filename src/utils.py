@@ -685,7 +685,8 @@ def create_vector_database() -> None:
 
 
 def chroma_get_relevant(query, chroma_path, embedding_func, k=1, query_truncate=600):
-    query = re.sub(r'\W', '', query)  # спец символы влияют на смысл больше чем нужно, убираем
+    query = re.sub(r'[^\s\w]', '', query)  # спец символы влияют на смысл больше чем нужно, убираем
+    logger.print(f"query:\n{query}")
     db = Chroma(persist_directory=chroma_path, embedding_function=embedding_func)
     retriever = db.as_retriever(search_type='similarity', search_kwargs={"k": k})
     results = retriever.invoke(query[0:query_truncate])  # aka get_relevant_documents
