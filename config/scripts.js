@@ -401,13 +401,14 @@ function getFormData() {
 
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('invoice-form');
-    const keyNames = ['ИНН', 'КПП', 'БИК', 'корреспондентский счет', 'расчетный счет'];
+    const keyNames = ['ИНН', 'КПП', 'БИК', 'корреспондентский счет', 'расчетный счет', 'nds (%)'];
     const regexes = [
         /^\d{10}$|^\d{12}$/, // inn
         /^\d{9}$/,           // kpp
         /^04\d{7}$/,         // bik
         /^30101\d{15}$/,     // ks
-        /^(?:408|407|406|405)\d{17}$/ // rs
+        /^(?:408|407|406|405)\d{17}$/, // rs
+        /^(20|20\.0+|0|0\.0+)$/ // nds
     ];
 
     const inputs = form.querySelectorAll('input');
