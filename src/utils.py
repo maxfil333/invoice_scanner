@@ -579,6 +579,16 @@ def sort_transactions(transactions: list[str]) -> list:
             transactions.sort(
                 key=lambda x: datetime.strptime(re.fullmatch(regex, x).group(3), '%d.%m.%Y').date() if re.fullmatch(
                     regex, x) else datetime.fromtimestamp(0).date(), reverse=True)
+
+            # Сделки тб в конец списка
+            broker_deals, other_deals = [], []
+            for t in transactions:
+                if t.startswith('ТБ'):
+                    broker_deals.append(t)
+                else:
+                    other_deals.append(t)
+            transactions = other_deals + broker_deals
+
             return transactions
         else:
             return []
