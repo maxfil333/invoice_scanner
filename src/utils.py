@@ -173,7 +173,8 @@ def switch_to_latin(s: str, reverse: bool = False) -> str:
 
 # _________ FOLDERS _________
 
-def rename_files_in_directory(directory_path, hide_logs=False):
+def rename_files_in_directory(directory_path: str, max_len: int = 45, hide_logs: bool = False) -> None:
+
     def get_unique_filename(filepath):
         base, ext = os.path.splitext(filepath)
         counter = 1
@@ -181,12 +182,26 @@ def rename_files_in_directory(directory_path, hide_logs=False):
             counter += 1
         return f"{base}({counter}){ext}"
 
+    def sanitize_filename(filename: str) -> str:
+        # Заменяем все недопустимые символы на пробелы
+        sanitized = re.sub(r'[\<\>\/\"\\\|\?\*]', ' ', filename)
+        # Убираем пробелы в начале и конце строки
+        sanitized = sanitized.strip()
+        # Заменяем пробелы на "_"
+        sanitized = re.sub(r'\s+', '_', sanitized)
+        return sanitized
+
+    def crop_filename(filename: str, max_len: int) -> str:
+        base, ext = os.path.splitext(filename)
+        base = base[0:max_len]
+        return base + ext
+
     for filename in os.listdir(directory_path):
         # если путь - директория
         if os.path.isdir(os.path.join(directory_path, filename)):
             rename_files_in_directory(os.path.join(directory_path, filename))
 
-        new_filename = re.sub(r'\s+', '_', filename)
+        new_filename = crop_filename(sanitize_filename(filename), max_len=max_len)
         old_filepath = os.path.join(directory_path, filename)
         new_filepath = os.path.join(directory_path, new_filename)
         try:
@@ -658,8 +673,8 @@ def split_by_conoses(json_formatted_str: str) -> tuple[str, bool]:
 def create_chunks_from_json(json_path: str, truncation=200) -> dict:
     with open(json_path, encoding='utf-8') as f:
         json_ = json.load(f)
-        chunks = [d['comment'][0:truncation] for d in json_]    # ['chunk1', 'chunk2', 'chunk3']
-        metadata_ids = [{'id': d['id']} for d in json_]         # [{'id': 1}, {'id': 2}, {'id': 3}]
+        chunks = [d['comment'][0:truncation] for d in json_]  # ['chunk1', 'chunk2', 'chunk3']
+        metadata_ids = [{'id': d['id']} for d in json_]  # [{'id': 1}, {'id': 2}, {'id': 3}]
         return {'chunks': chunks, 'metadata_ids': metadata_ids}
 
 
