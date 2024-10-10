@@ -41,7 +41,7 @@ os.makedirs(config['CHECK_FOLDER'], exist_ok=True)
 config['CSS_PATH'] = os.path.join(config['CONFIG'], 'styles.css')
 config['JS_PATH'] = os.path.join(config['CONFIG'], 'scripts.js')
 config['crypto_env'] = os.path.join(config['CONFIG'], 'encrypted.env')
-config['TESTFILE'] = os.path.join(config['CONFIG'], '__test.json')
+config['TESTFILE'] = os.path.join(config['CONFIG'], 'test.json')
 config['GPTMODEL'] = 'gpt-4o-2024-08-06'
 # config['GPTMODEL'] = 'gpt-4o'
 # config['GPTMODEL'] = 'gpt-4o-mini'
@@ -62,10 +62,12 @@ except Exception as e:
     raise
 
 config['unique_comments_file'] = os.path.join(config['CONFIG'], 'unique_comments.json')
-config['unique_comments_dict'] = None  # to html <div id="services_dict..."
+config['unique_services'] = None  # to html <div id="services_dict..."
 try:
     with open(config['unique_comments_file'], 'r', encoding='utf-8') as f:
-        config['unique_comments_dict'] = json.load(f)
+        dct = json.load(f)
+        config['unique_comments_dict'] = dct
+        config['unique_services'] = list(dict.fromkeys([code for lst_item in dct for code in lst_item['service_code']]))
 except FileNotFoundError:
     logger.print(f"!!! FILE {config['unique_comments_file']} NOT FOUND !!!")
     logger.save(config['CHECK_FOLDER'])
@@ -85,12 +87,13 @@ except FileNotFoundError as e:
 class ConfigNames:
     goods = 'Услуги'
     name = 'Наименование'  # 1
-    good1C = 'Услуга1С'    # -
-    good1C_new = 'Услуга1С (новая)'  # -
-    cont = 'Контейнеры'    # 2
-    unit = 'Единица'       # 3
+    good1C = 'Услуга1С'
+    good1C_new = 'Услуга1С (новая)'
+    cont = 'Контейнеры'  # 2
+    local_conos = 'Коносаменты (для услуги)'
+    unit = 'Единица'  # 3
     amount = 'Количество'  # 4
-    price = 'Цена'         # 5
+    price = 'Цена'  # 5
     sum_with = 'Сумма включая НДС'  # 6
     sum_nds = 'Сумма НДС'  # 7
     total_with = 'Всего к оплате включая НДС'
@@ -103,12 +106,12 @@ class ConfigNames:
 
 NAMES = ConfigNames()
 
-# 11 = 7(оригинальных) - (price - sum_with - sum_nds)(3) + (2*Сумма + 2*Цена)(4) + (price_type + good1C + good1C_new)(3)
-# 11 = 7 - 3 + 4 + 3
+# 15 = 7(prompt) - (price - sum_with - sum_nds)(3) + (2*Сумма + 2*Цена)(4) + (good1C + good1C_new + price_type)(3) + (tran, tran_new, tran_type)(3) + local_conos(1)
+# 15 = 7 - 3 + 4 + 3 + 3 + 1
 config['services_order'] = [NAMES.name, NAMES.good1C, NAMES.good1C_new,
-                            NAMES.cont, NAMES.unit, NAMES.amount,
-                            'Цена (без НДС)', 'Сумма (без НДС)', 'Цена (с НДС)', 'Сумма (с НДС)',
-                            'price_type']
+                            NAMES.cont, NAMES.local_conos, NAMES.unit, NAMES.amount,
+                            'Цена (без НДС)', 'Сумма (без НДС)', 'Цена (с НДС)', 'Сумма (с НДС)', NAMES.price_type,
+                            NAMES.transactions, NAMES.transactions_new, NAMES.transactions_type]
 
 JSON_SCHEMA = {
     "name": "document",
@@ -199,7 +202,7 @@ config['system_prompt'] = f"""
 if __name__ == '__main__':
     print('sys.frozen:', getattr(sys, 'frozen', False))
     for k, v in config.items():
-        if k not in ['unique_comments_dict', 'ships']:
+        if k not in ['unique_comments_dict', 'unique_services', 'ships']:
             print('-' * 50)
             print(k)
             print(v)

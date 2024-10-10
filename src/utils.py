@@ -9,11 +9,11 @@ import PyPDF2
 import msvcrt
 import base64
 import openai
-import datetime
 import pytesseract
 import numpy as np
 from openai import OpenAI
 from typing import Literal
+from datetime import datetime
 from dotenv import load_dotenv
 from io import BytesIO, StringIO
 from collections import defaultdict
@@ -211,7 +211,7 @@ def create_date_folder_in_check(root_dir):
     """Создать внутри в указанной директории папку с текущей датой-временем и 3 подпапки"""
 
     # Создаем строку с текущей датой и временем
-    folder_name = datetime.datetime.now().strftime("%d-%m-%Y___%H-%M-%S")
+    folder_name = datetime.now().strftime("%d-%m-%Y___%H-%M-%S")
     # Создаем папку с указанным именем
     folder_path = os.path.join(root_dir, folder_name)
     os.makedirs(folder_path, exist_ok=True)
@@ -425,7 +425,36 @@ def update_assistant_system_prompt(new_prompt: str):
     )
 
 
-# _________ LOCAL _________
+# _________ LOCAL POSTPROCESSING _________
+
+def order_goods(dct: dict, new_order: list[str]) -> dict | None:
+    """ Сортировка ключей Услуг """
+
+    if not dct[NAMES.goods]:
+        return dct
+
+    ordered_goods = []
+    for good_dct in dct[NAMES.goods]:  # цикл на случай если dct['Услуги'] == []
+        current_keys = list(good_dct)
+        missing_keys = set(new_order).difference(set(current_keys))
+        excess_keys = set(current_keys).difference(set(new_order))
+
+        for unknown_key in missing_keys:
+            good_dct[unknown_key] = ''
+
+        one_reordered_goods_dct = {}
+
+        for k in new_order:
+            one_reordered_goods_dct[k] = good_dct[k]
+
+        for k in excess_keys:
+            one_reordered_goods_dct[k] = good_dct[k]
+
+        ordered_goods.append(one_reordered_goods_dct)
+
+    dct[NAMES.goods] = ordered_goods
+    return dct
+
 
 def check_sums(dct: dict) -> dict:
     """
@@ -525,35 +554,116 @@ def check_sums(dct: dict) -> dict:
     return dct
 
 
-def order_goods(dct: dict) -> dict | None:
-    """ Сортировка ключей Услуг """
+# _________ TRANSACTIONS _________
 
-    new_order = config['services_order']
-    for i in dct[NAMES.goods]:  # цикл на случай если dct['Услуги'] == []
-        if len(new_order) != len(i):
-            logger.print('\n!!! При сортировке ключей в "Услугах" произошла ошибка.\n'
-                         'проверьте количество ключей по следующей формуле:\n'
-                         'KEYS(config[system_prompt]) + NEWKEYS(local_postprocessing) = config[services_order] !!!\n')
+def sort_transactions(transactions: list[str]) -> list:
+    try:
+        if transactions:
+            regex = r'(.*) (от) (.*)'
+            transactions = list(set(transactions))
+            transactions.sort(
+                key=lambda x: datetime.strptime(re.fullmatch(regex, x).group(3), '%d.%m.%Y').date() if re.fullmatch(
+                    regex, x) else datetime.fromtimestamp(0).date(), reverse=True)
+            return transactions
         else:
-            ordered_goods = []
-            for good_dct in dct[NAMES.goods]:
-                one_reordered_goods_dct = {k: good_dct[k] for k in new_order}
-                ordered_goods.append(one_reordered_goods_dct)
-            dct[NAMES.goods] = ordered_goods
-        break
-    return dct
+            return []
+    except:
+        return transactions
+
+
+def one_good_split_by_containers(good: dict) -> list[dict]:
+    # Разделение строки контейнеров
+    containers = good[NAMES.cont].split()
+    num_containers = len(containers)
+
+    # Разделение количественных данных
+    quantity_per_container = float(good[NAMES.amount]) / num_containers
+    sum_without_tax_per_container = float(good['Сумма (без НДС)']) / num_containers
+    sum_with_tax_per_container = float(good['Сумма (с НДС)']) / num_containers
+
+    # Создание списка новых объектов
+    split_objects = []
+    for container in containers:
+        new_obj = good.copy()  # Копирование исходного объекта
+        new_obj[NAMES.cont] = container  # Присваивание одного контейнера
+        new_obj[NAMES.amount] = f"{quantity_per_container:.2f}"  # Новое количество
+        new_obj['Сумма (без НДС)'] = f"{sum_without_tax_per_container:.2f}"  # Новая сумма без НДС
+        new_obj['Сумма (с НДС)'] = f"{sum_with_tax_per_container:.2f}"  # Новая сумма с НДС
+        split_objects.append(new_obj)
+
+    return split_objects
+
+
+def split_by_containers(json_formatted_str: str) -> tuple[str, bool]:
+    dct = json.loads(json_formatted_str)
+    goods = dct[NAMES.goods]
+    was_edited = False
+    new_goods = []
+    for good in goods:
+        if len(good[NAMES.cont].split()) > 1:
+            _new_goods = one_good_split_by_containers(good)
+            new_goods.extend(_new_goods)
+            was_edited = True
+        else:
+            new_goods.append(good)
+
+    dct[NAMES.goods] = new_goods
+
+    return json.dumps(dct, ensure_ascii=False), was_edited
+
+
+def one_good_split_by_conos(good: dict) -> list:
+    # Разделение строки коносаментов
+    conoses = good[NAMES.local_conos].split()
+    num_conoses = len(conoses)
+
+    # Разделение количественных данных
+    quantity_per_conos = float(good[NAMES.amount]) / num_conoses
+    sum_without_tax_per_conos = float(good['Сумма (без НДС)']) / num_conoses
+    sum_with_tax_per_conos = float(good['Сумма (с НДС)']) / num_conoses
+
+    # Создание списка новых объектов
+    split_objects = []
+    for conos in conoses:
+        new_obj = good.copy()  # Копирование исходного объекта
+        new_obj[NAMES.local_conos] = conos  # Присваивание одного коносамента
+        new_obj[NAMES.amount] = f"{quantity_per_conos:.2f}"  # Новое количество
+        new_obj['Сумма (без НДС)'] = f"{sum_without_tax_per_conos:.2f}"  # Новая сумма без НДС
+        new_obj['Сумма (с НДС)'] = f"{sum_with_tax_per_conos:.2f}"  # Новая сумма с НДС
+        split_objects.append(new_obj)
+
+    return split_objects
+
+
+def split_by_conoses(json_formatted_str: str) -> tuple[str, bool]:
+    dct = json.loads(json_formatted_str)
+    goods = dct[NAMES.goods]
+    was_edited = False
+    new_goods = []
+    for good in goods:
+        if len(good[NAMES.local_conos].split()) > 1:
+            _new_goods = one_good_split_by_conos(good)
+            new_goods.extend(_new_goods)
+            was_edited = True
+        else:
+            new_goods.append(good)
+
+    dct[NAMES.goods] = new_goods
+
+    return json.dumps(dct, ensure_ascii=False), was_edited
 
 
 # _________ CHROMA DATABASE (CREATE CHUNKS AND DB) _________
 
-def create_chunks_from_json(json_path: str, truncation=200) -> list[str]:
+def create_chunks_from_json(json_path: str, truncation=200) -> dict:
     with open(json_path, encoding='utf-8') as f:
         json_ = json.load(f)
-        chunks = [f"[{d['id']}] {d['comment'][0:truncation]}" for d in json_]
-        return chunks
+        chunks = [d['comment'][0:truncation] for d in json_]    # ['chunk1', 'chunk2', 'chunk3']
+        metadata_ids = [{'id': d['id']} for d in json_]         # [{'id': 1}, {'id': 2}, {'id': 3}]
+        return {'chunks': chunks, 'metadata_ids': metadata_ids}
 
 
-def chroma_create_db_from_chunks(chroma_path: str, chunks: list[str]) -> None:
+def chroma_create_db_from_chunks(chroma_path: str, chunks_and_meta: dict) -> None:
     load_dotenv(stream=get_stream_dotenv())
     openai.api_key = os.environ.get("OPENAI_API_KEY")
     embedding_func = OpenAIEmbeddings()
@@ -562,35 +672,28 @@ def chroma_create_db_from_chunks(chroma_path: str, chunks: list[str]) -> None:
     if os.path.exists(chroma_path):
         shutil.rmtree(chroma_path)
 
-    Chroma.from_texts(chunks, embedding_func, persist_directory=chroma_path)
+    chunks, ids = chunks_and_meta['chunks'], chunks_and_meta['metadata_ids']
+    Chroma.from_texts(texts=chunks, embedding=embedding_func, metadatas=ids, persist_directory=chroma_path)
 
 
 def create_vector_database() -> None:
     """ create_chunks_from_json + chroma_create_db_from_chunks """
 
-    chunks = create_chunks_from_json(json_path=config['unique_comments_file'])
-    chroma_create_db_from_chunks(chroma_path=config['chroma_path'], chunks=chunks)
+    chunks_and_meta = create_chunks_from_json(json_path=config['unique_comments_file'])
+    chroma_create_db_from_chunks(chroma_path=config['chroma_path'], chunks_and_meta=chunks_and_meta)
     print('БАЗА ДАННЫХ СОЗДАНА.')
 
 
 def chroma_get_relevant(query, chroma_path, embedding_func, k=1, query_truncate=600):
-    def get_idx_and_comment(lst):  # lst = ['[341] Растарка контейнера ... ']
-        idx_comment_tuples = []
-        regex = r'\[(\d{1,10})\] (.*)'  # lst -> '341', 'Растарка контейнера ...'
-        for s in lst:
-            match = re.fullmatch(regex, s)
-            idx, text = int(match[1]), match[2]
-            idx_comment_tuples.append((idx, text))  # [('341', 'Растарка контейнера ...'), (..., ...)]
-        return idx_comment_tuples
-
+    query = re.sub(r'[^\s\w]', '', query)  # спец символы влияют на смысл больше чем нужно, убираем
+    logger.print(f"query:\n{query}")
     db = Chroma(persist_directory=chroma_path, embedding_function=embedding_func)
     retriever = db.as_retriever(search_type='similarity', search_kwargs={"k": k})
     results = retriever.invoke(query[0:query_truncate])  # aka get_relevant_documents
     if len(results) == 0:
         logger.print(f"!!! CHROMA: Unable to find matching results !!!")
         return
-
-    return get_idx_and_comment(list(map(lambda x: x.page_content, results)))
+    return results
 
 
 # _________ MAIN_EDIT _________
@@ -650,13 +753,8 @@ def mark_get_main_file(folder_path: str) -> str | None:
 # _________ TEST _________
 
 if __name__ == '__main__':
-    # load_dotenv(stream=get_stream_dotenv())
-    # openai.api_key = os.environ.get("OPENAI_API_KEY")
-    # embedding_func = OpenAIEmbeddings()
-
-    # print(chroma_get_relevant('Лабораторные исследования',
-    #                           config['chroma_path'],
-    #                           OpenAIEmbeddings(),
-    #                           k=5))
-
+    load_dotenv(stream=get_stream_dotenv())
+    openai.api_key = os.environ.get("OPENAI_API_KEY")
+    embedding_func = OpenAIEmbeddings()
+    create_vector_database()
     pass

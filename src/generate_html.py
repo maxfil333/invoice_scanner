@@ -31,7 +31,7 @@ def generate_input_html(key, val):
         checked = 'checked' if val else ''
         html_content += f'<input type="{input_type}" name="{escape(key)}" {checked}></div>\n'
 
-    elif isinstance(val, str) and (key in [NAMES.name, NAMES.cont, NAMES.good1C, NAMES.good1C_new]
+    elif isinstance(val, str) and (key in [NAMES.name, NAMES.cont, NAMES.good1C, NAMES.good1C_new, 'Сделки по коносаментам']
                                    or len(val) > 30):
         html_content += (f'<textarea name="{escape(key)}" class="{escape(char_key)}" rows="1" style="resize:none;" '
                          f'oninput="autoResize(this)">{escape(val)}</textarea>')
@@ -131,7 +131,7 @@ def create_html_form(json_file, output_file, file_path):
         <script src="{config['JS_PATH']}"></script>
         <div jsonfilename="{os.path.basename(json_file)}" id="jsonfilenameid"></div>
         <div id="jsonfiledataid" hidden>{json.dumps(data, ensure_ascii=False)}</div>
-        <div id="services_dict" hidden>{json.dumps(config['unique_comments_dict'], ensure_ascii=False)}</div>
+        <div id="unique_services" hidden>{json.dumps(config['unique_services'], ensure_ascii=False)}</div>
     </body>
     </html>
     '''

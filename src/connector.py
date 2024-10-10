@@ -65,4 +65,7 @@ if __name__ == '__main__':
     # from config.config import config
     # create_connection(config['V83_CONN_STRING'])
 
-    print(cup_http_request(r'TransactionNumberFromContainer', r'ADMU9000937'))
+    print(cup_http_request(r'TransactionNumberFromContainer', r'UNIU6002157'))
+    print(cup_http_request(r'TransactionNumberFromContainer', r'VEZU2602114'))
+    print(cup_http_request(r'TransactionNumberFromContainer', r'FENU2604371'))
+    print(cup_http_request(r'TransactionNumberFromBillOfLading', r'ULDALYNVK000033'))

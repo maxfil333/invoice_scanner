@@ -11,12 +11,12 @@ from itertools import count
 from natsort import os_sorted
 from openai import PermissionDeniedError
 
-from config.config import config
+from config.config import config, NAMES
 from src.logger import logger
 from src.main_edit import main as main_edit
 from src.main_openai import run_chat, run_assistant
 from src.generate_html import create_html_form
-from src.utils import delete_all_files, create_date_folder_in_check
+from src.utils import delete_all_files, create_date_folder_in_check, split_by_containers, split_by_conoses
 from src.connector import create_connection
 from src.response_postprocessing import get_transaction_number, local_postprocessing
 
@@ -87,8 +87,21 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
                 else:
                     result = run_chat(*files, detail='high', hide_logs=hide_logs, text_mode=False)
 
+            # _____________ LOCAL POSTPROCESSING _____________
+            result = local_postprocessing(result)
+
             if result is None:
                 continue
+
+            # _____________ SPLIT BY CONTAINERS _____________
+            result, was_edited = split_by_containers(result)
+
+            # _____________ SPLIT BY CONOSES _____________
+            if was_edited:  # если уже было распределение по контейнерам, ничего не делать
+                pass
+            else:
+                if json.loads(result)['additional_info']['Коносаменты']:
+                    result, was_edited = split_by_conoses(result)
 
             # _____________ GET TRANS.NUMBER FROM 1C _____________
             result = get_transaction_number(result, connection=connection)

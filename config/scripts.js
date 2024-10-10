@@ -401,13 +401,14 @@ function getFormData() {
 
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('invoice-form');
-    const keyNames = ['ИНН', 'КПП', 'БИК', 'корреспондентский счет', 'расчетный счет'];
+    const keyNames = ['ИНН', 'КПП', 'БИК', 'корреспондентский счет', 'расчетный счет', 'nds (%)'];
     const regexes = [
         /^\d{10}$|^\d{12}$/, // inn
         /^\d{9}$/,           // kpp
         /^04\d{7}$/,         // bik
         /^30101\d{15}$/,     // ks
-        /^(?:408|407|406|405)\d{17}$/ // rs
+        /^(?:408|407|406|405)\d{17}$/, // rs
+        /^(20|20\.0+|0|0\.0+)$/ // nds
     ];
 
     const inputs = form.querySelectorAll('input');
@@ -439,18 +440,18 @@ document.addEventListener('DOMContentLoaded', dropdownService1C);
 
 function dropdownService1C() {
     // Встроенные данные
-    var originalJsonString = document.getElementById('services_dict').textContent;
+    var originalJsonString = document.getElementById('unique_services').textContent;
     try {
-        // Преобразуем строку JSON в объект JavaScript
+        // Преобразуем строку JSON в объект JavaScript (список строк)
         var data = JSON.parse(originalJsonString);
     } catch (error) {
         // В случае ошибки выводим сообщение об ошибке
-        alert("Произошла ошибка: " + error.message);
+        console.log("Произошла ошибка: " + error.message);
         return;
     }
 
-    // Извлекаем уникальные значения из service_list
-    const uniqueServices = [...new Set(data.flatMap(item => item.service_list))];
+    // Поскольку в services_dict уже хранятся уникальные значения, можно сразу использовать data
+    const uniqueServices = data;  // services_dict уже содержит уникальные значения
 
     const searchInputs = document.querySelectorAll('.Услуга1С');
     const dropdowns = document.querySelectorAll('.dropdown');
