@@ -35,26 +35,46 @@ document.addEventListener("DOMContentLoaded", function() {
 
 
 // --------------------------------------------------------------------------------------------------------------------
-// Затемнение полей цена/сумма сНДС/безНДС в зависимости от price_type
+// Затемнение, блокировка полей цена/сумма сНДС/безНДС в зависимости от price_type
 
 document.addEventListener('DOMContentLoaded', price_type_opacity);
 
 function price_type_opacity() {
-    // Function to update the opacity based on price type
+    // Function to update the opacity and disable status based on price type
     function updateOpacity(fieldset) {
         const priceTypeSelect = fieldset.querySelector('.price_type');
         const priceType = priceTypeSelect.value;
         const inputGroups = fieldset.querySelectorAll('.input-group');
 
-        // Remove .opacity-50 from all input groups in the current fieldset
-        inputGroups.forEach(group => group.classList.remove('opacity-50'));
+        // Remove .opacity-50 and enable all inputs in the current fieldset
+        inputGroups.forEach(group => {
+            group.classList.remove('opacity-50');
+            const input = group.querySelector('input');
+            if (input) {
+                input.removeAttribute('disabled'); // Снимаем отключение поля
+            }
+        });
 
         if (priceType === 'Сверху') {
-            fieldset.querySelector('.ЦенасНДС').parentElement.classList.add('opacity-50');
-            fieldset.querySelector('.СуммасНДС').parentElement.classList.add('opacity-50');
+            // Добавляем затемнение и отключаем соответствующие поля
+            const priceWithVAT = fieldset.querySelector('.ЦенасНДС').parentElement;
+            const sumWithVAT = fieldset.querySelector('.СуммасНДС').parentElement;
+
+            priceWithVAT.classList.add('opacity-50');
+            sumWithVAT.classList.add('opacity-50');
+
+            priceWithVAT.querySelector('input').setAttribute('disabled', 'disabled');
+            sumWithVAT.querySelector('input').setAttribute('disabled', 'disabled');
         } else {
-            fieldset.querySelector('.ЦенабезНДС').parentElement.classList.add('opacity-50');
-            fieldset.querySelector('.СуммабезНДС').parentElement.classList.add('opacity-50');
+            // Добавляем затемнение и отключаем соответствующие поля
+            const priceWithoutVAT = fieldset.querySelector('.ЦенабезНДС').parentElement;
+            const sumWithoutVAT = fieldset.querySelector('.СуммабезНДС').parentElement;
+
+            priceWithoutVAT.classList.add('opacity-50');
+            sumWithoutVAT.classList.add('opacity-50');
+
+            priceWithoutVAT.querySelector('input').setAttribute('disabled', 'disabled');
+            sumWithoutVAT.querySelector('input').setAttribute('disabled', 'disabled');
         }
     }
 
