@@ -480,16 +480,19 @@ def check_sums(dct: dict) -> dict:
     logger.print('--- start check_sums ---')
 
     # _____ Определение ставки НДС _____
+
+    # 1. Берем ВСЕГО ВКЛЮЧАЯ НДС из счета
     total_with_nds = float(dct[NAMES.total_with]) if dct[NAMES.total_with] != '' else None
-    if not total_with_nds:  # Всего к оплате включая НДС
+    if not total_with_nds:
         logger.print('!!! total_with_nds not found !!! total_with_nds = sum("Сумма включая НДС")')
         total_with_nds = sum([x[NAMES.sum_with] for x in dct[NAMES.goods]])
 
+    # 2. Берем ВСЕГО НДС
     total_nds = float(dct[NAMES.total_nds]) if dct[NAMES.total_nds] != '' else None
-    if total_nds is not None:  # Всего НДС
-        total_without_nds = round(total_with_nds - total_nds, 2)
-        nds = round((total_nds / total_without_nds) * 100, 2)
-    else:
+    if total_nds is not None:                                     # если ВСЕГО НДС найдено
+        total_without_nds = round(total_with_nds - total_nds, 2)  # ВСЕГО БЕЗ НДС =  ВСЕГО ВКЛЮЧАЯ НДС - ВСЕГО НДС
+        nds = round((total_nds / total_without_nds) * 100, 2)     # nds = ВСЕГО НДС / ВСЕГО БЕЗ НДС * 100
+    else:                                                         # если ВСЕГО НДС не найдено: nds = 0, ВСЕГО НДС = 0
         logger.print('! total_nds not found ! nds = 0; total_nds = 0')
         nds = 0.0
         dct[NAMES.total_nds] = 0.0  # если НДС = 0, то Всего НДС = 0.
@@ -505,9 +508,12 @@ def check_sums(dct: dict) -> dict:
             logger.print('cum_sum pass')
             pass
 
-    # сравниваем сумму "сумм с НДС" с Всего -> определяем тип "сумм"
+    # сравниваем сумму "сумм с НДС" с Всего -> определяем *ТИП СУММ*
+
+    # если "сумма сумм с НДС" == ВСЕГО С НДС: сумма с НДС действительно с НДС
     if round(cum_sum, 1) == round(total_with_nds, 1):
         sum_type = 'with'
+    # если "сумма сумм с НДС" == ВСЕГО БЕЗ НДС: сумма с НДС действительно с НДС
     elif round(cum_sum, 1) == round(total_without_nds, 1):
         sum_type = 'without'
     else:
@@ -534,7 +540,8 @@ def check_sums(dct: dict) -> dict:
             logger.print('cum_amount_and_price pass')
             pass
 
-    # сравниваем сумму (количество * цена) с Всего -> определяем тип "Цены"
+    # сравниваем сумму (количество * цена) с Всего -> определяем *ТИП ЦЕН*
+
     # исходя из того как в чеке записана цена (тип: без НДС / с НДС) выбирается nds_type
     if round(cum_amount_and_price, 1) == round(total_with_nds, 1):  # с НДС -> В т.ч.
         nds_type = 'В т.ч.'
