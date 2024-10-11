@@ -333,6 +333,8 @@ function addService(button) {
     good_input_cleaner();
     // Вызов price_type_opacity после добавления нового service для обновления элементов .price_type
     price_type_opacity();
+    // Вызов подсветки ошибок после добавления нового service
+    highlight_errors();
 }
 
 
@@ -418,8 +420,9 @@ function getFormData() {
 
 // --------------------------------------------------------------------------------------------------------------------
 // Подсветить ошибки
+document.addEventListener('DOMContentLoaded', highlight_errors);
 
-document.addEventListener('DOMContentLoaded', function() {
+function highlight_errors() {
     const form = document.getElementById('invoice-form');
     const keyNames = ['ИНН', 'КПП', 'БИК', 'корреспондентский счет', 'расчетный счет', 'nds (%)'];
     const regexes = [
@@ -450,7 +453,7 @@ document.addEventListener('DOMContentLoaded', function() {
         input.addEventListener('input', () => validateInput(input));
         validateInput(input); // Initial validation
     });
-});
+}
 
 
 // --------------------------------------------------------------------------------------------------------------------
