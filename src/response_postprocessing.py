@@ -14,7 +14,7 @@ from src.logger import logger
 from config.config import config, NAMES
 from src.connector import cup_http_request, response_to_deals
 from src.utils import convert_json_values_to_strings, handling_openai_json
-from src.utils import chroma_get_relevant, get_stream_dotenv, check_sums, order_goods
+from src.utils import chroma_get_relevant, get_stream_dotenv, check_sums, propagate_nds, order_goods
 from src.utils import replace_container_with_latin, replace_container_with_none, switch_to_latin, sort_transactions
 
 load_dotenv(stream=get_stream_dotenv())
@@ -132,6 +132,9 @@ def local_postprocessing(response, hide_logs=False) -> str | None:
             good["Сумма (с НДС)"] = ""
             good["price_type"] = ""
         logger.print(f'!! ОШИБКА В CHECK_SUMS: {error} !!')
+
+    # split nds
+    dct = propagate_nds(dct)
 
     # 7. order dct['Услуги']
     dct = order_goods(dct, config['services_order'])

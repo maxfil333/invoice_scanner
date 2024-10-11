@@ -576,6 +576,16 @@ def check_sums(dct: dict) -> dict:
     return dct
 
 
+def propagate_nds(dct: dict):
+
+    nds = dct['nds (%)']
+    for good_dct in dct[NAMES.goods]:
+        good_dct['nds (%)'] = nds
+    dct.pop('nds (%)')
+
+    return dct
+
+
 # _________ TRANSACTIONS _________
 
 def sort_transactions(transactions: list[str]) -> list:
