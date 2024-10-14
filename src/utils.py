@@ -481,7 +481,7 @@ def check_sums(dct: dict) -> dict:
 
     # _____ Определение ставки НДС _____
 
-    # 1. Берем ВСЕГО ВКЛЮЧАЯ НДС из счета
+    # 1. Берем ВСЕГО ВКЛЮЧАЯ НДС из счета (если не найдено, суммируем услуги по "Сумма включая НДС")
     total_with_nds = float(dct[NAMES.total_with]) if dct[NAMES.total_with] != '' else None
     if not total_with_nds:
         logger.print('!!! total_with_nds not found !!! total_with_nds = sum("Сумма включая НДС")')
@@ -499,29 +499,31 @@ def check_sums(dct: dict) -> dict:
         total_without_nds = total_with_nds
     dct['nds (%)'] = nds
 
-    # _____ считаем сумму "сумм с НДС" _____
-    cum_sum = 0
+    # __________________ Сумма с НДС -> Сумма (с НДС), Сумма (без НДС) __________________
+
+    # 1) считаем сумму "сумм с НДС"
+    sum_of_sums_with_nds = 0
     for good_dct in dct[NAMES.goods]:
         try:
-            cum_sum += float(good_dct[NAMES.sum_with])
+            sum_of_sums_with_nds += float(good_dct[NAMES.sum_with])
         except:
-            logger.print('cum_sum pass')
+            logger.print('sum_of_sums_with_nds pass')
             pass
-
-    # сравниваем сумму "сумм с НДС" с Всего -> определяем *ТИП СУММ*
-
-    # если "сумма сумм с НДС" == ВСЕГО С НДС: сумма с НДС действительно с НДС
-    if round(cum_sum, 1) == round(total_with_nds, 1):
+    # 2) сравниваем сумму "сумм с НДС" с ВСЕГО ВКЛЮЧАЯ НДС;
+    # определяем действительно ли сумма "сумм с НДС" включает в себя НДС (или это сумма "сумм без НДС");
+    # если сумма "сумм с НДС" == ВСЕГО ВКЛЮЧАЯ НДС: то действительно включает
+    if round(sum_of_sums_with_nds, 1) == round(total_with_nds, 1):
         sum_type = 'with'
-    # если "сумма сумм с НДС" == ВСЕГО БЕЗ НДС: сумма с НДС действительно с НДС
-    elif round(cum_sum, 1) == round(total_without_nds, 1):
+    # если сумма "сумм с НДС" == ВСЕГО БЕЗ НДС: сумма "сумм с НДС" на самом деле сумма "сумм без НДС"
+    elif round(sum_of_sums_with_nds, 1) == round(total_without_nds, 1):
         sum_type = 'without'
     else:
         sum_type = 'None'
 
-    # в зависимости от того была ли "сумма" из оригинального json "суммой с НДС" или "суммой без НДС" заполняем поля:
+    # Создание из (sum_with = 'Сумма включая НДС' # 6), (sum_nds = 'Сумма НДС' # 7) новых полей Сумма (без НДС)/(с НДС)
+    # В зависимости от того была ли "сумма" из оригинального json "суммой с НДС" или "суммой без НДС" заполняем поля:
     for good_dct in dct[NAMES.goods]:
-        old_sum = round(float(good_dct.pop(NAMES.sum_with)), 2)  # Сумма "включая/не включая" НДС
+        old_sum = round(float(good_dct.pop(NAMES.sum_with)), 2)  # Сумма услуги из openai-json
         good_dct.pop(NAMES.sum_nds)
         if sum_type in ['with', 'None']:
             good_dct['Сумма (без НДС)'] = round(old_sum / (1 + (nds / 100)), 2)
@@ -530,7 +532,9 @@ def check_sums(dct: dict) -> dict:
             good_dct['Сумма (без НДС)'] = old_sum
             good_dct['Сумма (с НДС)'] = round(old_sum * (1 + (nds / 100)), 2)
 
-    # _____ считаем сумму (количество * цена) _____
+    # __________________ Цена -> Цена (с НДС), Цена (без НДС) -> nds_type __________________
+
+    # 1) считаем сумму (количество * цена)
     cum_amount_and_price = 0
     for good_dct in dct[NAMES.goods]:
         try:
@@ -539,9 +543,8 @@ def check_sums(dct: dict) -> dict:
         except:
             logger.print('cum_amount_and_price pass')
             pass
-
-    # сравниваем сумму (количество * цена) с Всего -> определяем *ТИП ЦЕН*
-
+    # 2) сравниваем сумму (количество * цена) с ВСЕГО ВКЛЮЧАЯ НДС -> определяем *ТИП ЦЕН*
+    # создание вместо старого "Цена", новых Цена (без НДС)/(с НДС)
     # исходя из того как в чеке записана цена (тип: без НДС / с НДС) выбирается nds_type
     if round(cum_amount_and_price, 1) == round(total_with_nds, 1):  # с НДС -> В т.ч.
         nds_type = 'В т.ч.'
