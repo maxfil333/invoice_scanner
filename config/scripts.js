@@ -47,7 +47,6 @@ window.addEventListener('load', function() {
 
 
 // --------------------------------------------------------------------------------------------------------------------
-
 // Функция для перерасчета цены на основе суммы
 function recalculate_price_by_sum() {
     document.querySelectorAll('.service').forEach(service => {
@@ -95,6 +94,63 @@ function initListeners_recalculate_price_by_sum() {
 window.addEventListener('load', function() {
     initListeners_recalculate_price_by_sum();
     recalculate_price_by_sum(); // начальный расчет
+});
+
+
+// --------------------------------------------------------------------------------------------------------------------
+// Функция для проверки соответствия суммы "СуммасНДС" всех услуг значению "ВсегокоплатевключаяНДС"
+function validate_total_amount() {
+    let totalSumWithNDS = 0;
+    let totalNDSDifference = 0;
+
+    // Суммируем все значения "СуммасНДС" и разницу между "СуммасНДС" и "СуммабезНДС" из всех услуг
+    document.querySelectorAll('.service').forEach(service => {
+        let sumWithNDS = parseFloat(service.querySelector('.СуммасНДС').value) || 0;
+        let sumWithoutNDS = parseFloat(service.querySelector('.СуммабезНДС').value) || 0;
+
+        totalSumWithNDS += sumWithNDS;
+        totalNDSDifference += (sumWithNDS - sumWithoutNDS);
+    });
+
+    // Проверка "ВсегокоплатевключаяНДС"
+    let totalAmountField = document.querySelector('.ВсегокоплатевключаяНДС');
+    let totalAmountValue = parseFloat(totalAmountField.value) || 0;
+    console.log('ВсегокоплатевключаяНДС:', 'sum:', totalSumWithNDS.toFixed(2), 'total:', totalAmountValue.toFixed(2))
+
+    if (totalSumWithNDS.toFixed(2) === totalAmountValue.toFixed(2)) {
+        totalAmountField.style.backgroundColor = '#39C452';
+    } else {
+        totalAmountField.style.backgroundColor = '#f2dce0';
+    }
+
+    // Проверка "ВсегоНДС"
+    let totalNDSField = document.querySelector('.ВсегоНДС');
+    let totalNDSValue = parseFloat(totalNDSField.value) || 0;
+    console.log('ВсегоНДС:', 'sum:', totalNDSDifference.toFixed(2), 'total:', totalNDSValue.toFixed(2))
+
+    if (totalNDSDifference.toFixed(2) === totalNDSValue.toFixed(2)) {
+        totalNDSField.style.backgroundColor = '#39C452';
+    } else {
+        totalNDSField.style.backgroundColor = '#f2dce0';
+    }
+}
+
+// Функция для инициализации проверки при изменении полей
+function initListeners_validate_total_amount() {
+    const fieldsToWatch = ['.СуммабезНДС', '.СуммасНДС', '.nds', '.price_type',
+     '.ЦенасНДС', '.ЦенабезНДС', '.Количество', '.ВсегокоплатевключаяНДС', '.ВсегоНДС'];
+
+    fieldsToWatch.forEach(selector => {
+        document.querySelectorAll(selector).forEach(input => {
+            input.addEventListener('input', validate_total_amount);
+        });
+    });
+}
+
+// Запуск проверки и инициализации событий при загрузке страницы
+window.addEventListener('load', function() {
+    initListeners_validate_total_amount();
+    validate_total_amount(); // начальная проверка при загрузке
 });
 
 
