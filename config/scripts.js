@@ -1,3 +1,103 @@
+// Функция для перерасчета значений цен, сумм от количества/НДС/цен
+function recalculate() {
+    document.querySelectorAll('.service').forEach(service => {
+        let priceType = service.querySelector('.price_type').value;
+        let nds = parseFloat(service.querySelector('.nds').value) || 0;
+        let priceWithoutNDS = parseFloat(service.querySelector('.ЦенабезНДС').value) || 0;
+        let priceWithNDS = parseFloat(service.querySelector('.ЦенасНДС').value) || 0;
+        let quantity = parseFloat(service.querySelector('.Количество').value) || 1;
+
+        // Рассчитываем сумму на основании цены и количества
+        let sumWithoutNDS = priceWithoutNDS * quantity;
+        let sumWithNDS = priceWithNDS * quantity;
+
+        // Логика перерасчета цены в зависимости от price_type
+        if (priceType === "Сверху") {
+            priceWithNDS = priceWithoutNDS * (1 + nds / 100);
+            sumWithNDS = priceWithNDS * quantity; // Сумма с НДС также обновляется
+            service.querySelector('.ЦенасНДС').value = priceWithNDS.toFixed(2);
+        } else if (priceType === "В т.ч.") {
+            priceWithoutNDS = priceWithNDS * 100 / (100 + nds);
+            sumWithoutNDS = priceWithoutNDS * quantity; // Сумма без НДС также обновляется
+            service.querySelector('.ЦенабезНДС').value = priceWithoutNDS.toFixed(2);
+        }
+
+        // Обновляем суммы
+        service.querySelector('.СуммабезНДС').value = sumWithoutNDS.toFixed(2);
+        service.querySelector('.СуммасНДС').value = sumWithNDS.toFixed(2);
+    });
+}
+
+// Функция для инициализации событий на указанных полях
+function initListeners_recalculate() {
+    const fieldsToWatch = ['.nds', '.price_type', '.ЦенасНДС', '.ЦенабезНДС', '.Количество'];
+
+    fieldsToWatch.forEach(selector => {
+        document.querySelectorAll(selector).forEach(input => {
+            input.addEventListener('input', recalculate);
+        });
+    });
+}
+
+// Запуск функции при загрузке страницы
+window.addEventListener('load', function() {
+    initListeners_recalculate();
+    recalculate(); // начальный расчет
+});
+
+
+// --------------------------------------------------------------------------------------------------------------------
+
+// Функция для перерасчета цены на основе суммы
+function recalculate_price_by_sum() {
+    document.querySelectorAll('.service').forEach(service => {
+        let priceType = service.querySelector('.price_type').value;
+        let nds = parseFloat(service.querySelector('.nds').value) || 0;
+        let quantity = parseFloat(service.querySelector('.Количество').value) || 1;
+        let sumWithoutNDS = parseFloat(service.querySelector('.СуммабезНДС').value) || 0;
+        let sumWithNDS = parseFloat(service.querySelector('.СуммасНДС').value) || 0;
+
+        // Рассчитываем цены на основании суммы и количества
+        let priceWithoutNDS = sumWithoutNDS / quantity;
+        let priceWithNDS = sumWithNDS / quantity;
+
+        // Обновляем цены
+        service.querySelector('.ЦенабезНДС').value = priceWithoutNDS.toFixed(2);
+        service.querySelector('.ЦенасНДС').value = priceWithNDS.toFixed(2);
+
+        // Логика перерасчета цены в зависимости от priceType
+        if (priceType === "Сверху") {
+            priceWithNDS = priceWithoutNDS * (1 + nds / 100);
+            sumWithNDS = priceWithNDS * quantity; // Сумма с НДС также обновляется
+            service.querySelector('.ЦенасНДС').value = priceWithNDS.toFixed(2);
+            service.querySelector('.СуммасНДС').value = sumWithNDS.toFixed(2);
+        } else if (priceType === "В т.ч.") {
+            priceWithoutNDS = priceWithNDS * 100 / (100 + nds);
+            sumWithoutNDS = priceWithoutNDS * quantity; // Сумма без НДС также обновляется
+            service.querySelector('.ЦенабезНДС').value = priceWithoutNDS.toFixed(2);
+            service.querySelector('.СуммабезНДС').value = sumWithoutNDS.toFixed(2);
+        }
+    });
+}
+
+// Функция для инициализации событий на полях "Сумма без НДС" и "Сумма с НДС"
+function initListeners_recalculate_price_by_sum() {
+    const fieldsToWatch = ['.СуммабезНДС', '.СуммасНДС'];
+
+    fieldsToWatch.forEach(selector => {
+        document.querySelectorAll(selector).forEach(input => {
+            input.addEventListener('input', recalculate_price_by_sum);
+        });
+    });
+}
+
+// Запуск функции при загрузке страницы
+window.addEventListener('load', function() {
+    initListeners_recalculate_price_by_sum();
+    recalculate_price_by_sum(); // начальный расчет
+});
+
+
 // --------------------------------------------------------------------------------------------------------------------
 // Копирование выбранного варианта Номер сделки в буфер
 
