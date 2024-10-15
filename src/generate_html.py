@@ -120,8 +120,14 @@ def create_html_form(json_file, output_file, file_path):
     html_content += generate_html_from_json(data)
 
     html_content += f'''
-    
-                     <button type="button" id="save-button">Сохранить</button>
+                     <div class="button-container">
+                         <button type="button" id="save-button">Сохранить</button>
+                         <label class="switch">
+                             <span class="switch-label">Авторасчет</span>
+                             <input type="checkbox" checked>
+                             <span class="slider"></span>
+                         </label>
+                     </div>
                 </form>
             </div>
             <div class="right-pane">
