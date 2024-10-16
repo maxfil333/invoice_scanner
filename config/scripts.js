@@ -90,10 +90,9 @@ function initListeners_recalculate_price_by_sum() {
     });
 }
 
-// Запуск функции при загрузке страницы
+// Запуск слушателей при загрузке страницы
 window.addEventListener('load', function() {
     initListeners_recalculate_price_by_sum();
-    recalculate_price_by_sum(); // начальный расчет
 });
 
 
