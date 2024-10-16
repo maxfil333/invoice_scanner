@@ -1,31 +1,34 @@
 // Функция для перерасчета значений цен, сумм от количества/НДС/цен
 function recalculate() {
-    document.querySelectorAll('.service').forEach(service => {
-        let priceType = service.querySelector('.price_type').value;
-        let nds = parseFloat(service.querySelector('.nds').value) || 0;
-        let priceWithoutNDS = parseFloat(service.querySelector('.ЦенабезНДС').value) || 0;
-        let priceWithNDS = parseFloat(service.querySelector('.ЦенасНДС').value) || 0;
-        let quantity = parseFloat(service.querySelector('.Количество').value) || 1;
+    const autoRecalculateCheckbox = document.querySelector('.switch input[type="checkbox"]');
+    if (autoRecalculateCheckbox.checked) {
+        document.querySelectorAll('.service').forEach(service => {
+            let priceType = service.querySelector('.price_type').value;
+            let nds = parseFloat(service.querySelector('.nds').value) || 0;
+            let priceWithoutNDS = parseFloat(service.querySelector('.ЦенабезНДС').value) || 0;
+            let priceWithNDS = parseFloat(service.querySelector('.ЦенасНДС').value) || 0;
+            let quantity = parseFloat(service.querySelector('.Количество').value) || 1;
 
-        // Рассчитываем сумму на основании цены и количества
-        let sumWithoutNDS = priceWithoutNDS * quantity;
-        let sumWithNDS = priceWithNDS * quantity;
+            // Рассчитываем сумму на основании цены и количества
+            let sumWithoutNDS = priceWithoutNDS * quantity;
+            let sumWithNDS = priceWithNDS * quantity;
 
-        // Логика перерасчета цены в зависимости от price_type
-        if (priceType === "Сверху") {
-            priceWithNDS = priceWithoutNDS * (1 + nds / 100);
-            sumWithNDS = priceWithNDS * quantity; // Сумма с НДС также обновляется
-            service.querySelector('.ЦенасНДС').value = priceWithNDS.toFixed(2);
-        } else if (priceType === "В т.ч.") {
-            priceWithoutNDS = priceWithNDS * 100 / (100 + nds);
-            sumWithoutNDS = priceWithoutNDS * quantity; // Сумма без НДС также обновляется
-            service.querySelector('.ЦенабезНДС').value = priceWithoutNDS.toFixed(2);
-        }
+            // Логика перерасчета цены в зависимости от price_type
+            if (priceType === "Сверху") {
+                priceWithNDS = priceWithoutNDS * (1 + nds / 100);
+                sumWithNDS = priceWithNDS * quantity; // Сумма с НДС также обновляется
+                service.querySelector('.ЦенасНДС').value = priceWithNDS.toFixed(2);
+            } else if (priceType === "В т.ч.") {
+                priceWithoutNDS = priceWithNDS * 100 / (100 + nds);
+                sumWithoutNDS = priceWithoutNDS * quantity; // Сумма без НДС также обновляется
+                service.querySelector('.ЦенабезНДС').value = priceWithoutNDS.toFixed(2);
+            }
 
-        // Обновляем суммы
-        service.querySelector('.СуммабезНДС').value = sumWithoutNDS.toFixed(2);
-        service.querySelector('.СуммасНДС').value = sumWithNDS.toFixed(2);
-    });
+            // Обновляем суммы
+            service.querySelector('.СуммабезНДС').value = sumWithoutNDS.toFixed(2);
+            service.querySelector('.СуммасНДС').value = sumWithNDS.toFixed(2);
+        });
+    }
 }
 
 // Функция для инициализации событий на указанных полях
@@ -49,34 +52,37 @@ window.addEventListener('load', function() {
 // --------------------------------------------------------------------------------------------------------------------
 // Функция для перерасчета цены на основе суммы
 function recalculate_price_by_sum() {
-    document.querySelectorAll('.service').forEach(service => {
-        let priceType = service.querySelector('.price_type').value;
-        let nds = parseFloat(service.querySelector('.nds').value) || 0;
-        let quantity = parseFloat(service.querySelector('.Количество').value) || 1;
-        let sumWithoutNDS = parseFloat(service.querySelector('.СуммабезНДС').value) || 0;
-        let sumWithNDS = parseFloat(service.querySelector('.СуммасНДС').value) || 0;
+    const autoRecalculateCheckbox = document.querySelector('.switch input[type="checkbox"]');
+    if (autoRecalculateCheckbox.checked) {
+        document.querySelectorAll('.service').forEach(service => {
+            let priceType = service.querySelector('.price_type').value;
+            let nds = parseFloat(service.querySelector('.nds').value) || 0;
+            let quantity = parseFloat(service.querySelector('.Количество').value) || 1;
+            let sumWithoutNDS = parseFloat(service.querySelector('.СуммабезНДС').value) || 0;
+            let sumWithNDS = parseFloat(service.querySelector('.СуммасНДС').value) || 0;
 
-        // Рассчитываем цены на основании суммы и количества
-        let priceWithoutNDS = sumWithoutNDS / quantity;
-        let priceWithNDS = sumWithNDS / quantity;
+            // Рассчитываем цены на основании суммы и количества
+            let priceWithoutNDS = sumWithoutNDS / quantity;
+            let priceWithNDS = sumWithNDS / quantity;
 
-        // Обновляем цены
-        service.querySelector('.ЦенабезНДС').value = priceWithoutNDS.toFixed(2);
-        service.querySelector('.ЦенасНДС').value = priceWithNDS.toFixed(2);
-
-        // Логика перерасчета цены в зависимости от priceType
-        if (priceType === "Сверху") {
-            priceWithNDS = priceWithoutNDS * (1 + nds / 100);
-            sumWithNDS = priceWithNDS * quantity; // Сумма с НДС также обновляется
-            service.querySelector('.ЦенасНДС').value = priceWithNDS.toFixed(2);
-            service.querySelector('.СуммасНДС').value = sumWithNDS.toFixed(2);
-        } else if (priceType === "В т.ч.") {
-            priceWithoutNDS = priceWithNDS * 100 / (100 + nds);
-            sumWithoutNDS = priceWithoutNDS * quantity; // Сумма без НДС также обновляется
+            // Обновляем цены
             service.querySelector('.ЦенабезНДС').value = priceWithoutNDS.toFixed(2);
-            service.querySelector('.СуммабезНДС').value = sumWithoutNDS.toFixed(2);
-        }
-    });
+            service.querySelector('.ЦенасНДС').value = priceWithNDS.toFixed(2);
+
+            // Логика перерасчета цены в зависимости от priceType
+            if (priceType === "Сверху") {
+                priceWithNDS = priceWithoutNDS * (1 + nds / 100);
+                sumWithNDS = priceWithNDS * quantity; // Сумма с НДС также обновляется
+                service.querySelector('.ЦенасНДС').value = priceWithNDS.toFixed(2);
+                service.querySelector('.СуммасНДС').value = sumWithNDS.toFixed(2);
+            } else if (priceType === "В т.ч.") {
+                priceWithoutNDS = priceWithNDS * 100 / (100 + nds);
+                sumWithoutNDS = priceWithoutNDS * quantity; // Сумма без НДС также обновляется
+                service.querySelector('.ЦенабезНДС').value = priceWithoutNDS.toFixed(2);
+                service.querySelector('.СуммабезНДС').value = sumWithoutNDS.toFixed(2);
+            }
+        });
+    }
 }
 
 // Функция для инициализации событий на полях "Сумма без НДС" и "Сумма с НДС"
@@ -197,6 +203,7 @@ document.addEventListener('DOMContentLoaded', price_type_opacity);
 function price_type_opacity() {
     // Function to update the opacity and disable status based on price type
     function updateOpacity(fieldset) {
+        const autoRecalculateCheckbox = document.querySelector('.switch input[type="checkbox"]');
         const priceTypeSelect = fieldset.querySelector('.price_type');
         const priceType = priceTypeSelect.value;
         const inputGroups = fieldset.querySelectorAll('.input-group');
@@ -218,8 +225,10 @@ function price_type_opacity() {
             priceWithVAT.classList.add('opacity-50');
             sumWithVAT.classList.add('opacity-50');
 
-            priceWithVAT.querySelector('input').setAttribute('disabled', 'disabled');
-            sumWithVAT.querySelector('input').setAttribute('disabled', 'disabled');
+             if (autoRecalculateCheckbox.checked) {
+                priceWithVAT.querySelector('input').setAttribute('disabled', 'disabled');
+                sumWithVAT.querySelector('input').setAttribute('disabled', 'disabled');
+                }
         } else {
             // Добавляем затемнение и отключаем соответствующие поля
             const priceWithoutVAT = fieldset.querySelector('.ЦенабезНДС').parentElement;
@@ -228,8 +237,10 @@ function price_type_opacity() {
             priceWithoutVAT.classList.add('opacity-50');
             sumWithoutVAT.classList.add('opacity-50');
 
-            priceWithoutVAT.querySelector('input').setAttribute('disabled', 'disabled');
-            sumWithoutVAT.querySelector('input').setAttribute('disabled', 'disabled');
+            if (autoRecalculateCheckbox.checked) {
+                priceWithoutVAT.querySelector('input').setAttribute('disabled', 'disabled');
+                sumWithoutVAT.querySelector('input').setAttribute('disabled', 'disabled');
+                }
         }
     }
 
@@ -239,10 +250,13 @@ function price_type_opacity() {
     // Iterate over each fieldset and add event listeners to its select element
     fieldsets.forEach(fieldset => {
         const priceTypeSelect = fieldset.querySelector('.price_type');
+        const autoRecalculateCheckbox = document.querySelector('.switch input[type="checkbox"]');
 
-        // Add event listener for when the select changes
-        priceTypeSelect.addEventListener('change', function() {
-            updateOpacity(fieldset);
+        // Add event listener для смены price_type и для смены autoRecalculateCheckbox
+        [priceTypeSelect, autoRecalculateCheckbox].forEach(element => {
+            element.addEventListener('change', function() {
+                updateOpacity(fieldset);
+            });
         });
 
         // Run the function once on page load for each fieldset
