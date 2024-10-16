@@ -487,7 +487,7 @@ def check_sums(dct: dict) -> dict:
         logger.print('!!! total_with_nds not found !!! total_with_nds = sum("Сумма включая НДС")')
         total_with_nds = sum([x[NAMES.sum_with] for x in dct[NAMES.goods]])
 
-    # 2. Берем ВСЕГО НДС
+    # 2. Берем ВСЕГО НДС, вычисляем ВСЕГО БЕЗ НДС и ставку НДС
     total_nds = float(dct[NAMES.total_nds]) if dct[NAMES.total_nds] != '' else None
     if total_nds is not None:                                     # если ВСЕГО НДС найдено
         total_without_nds = round(total_with_nds - total_nds, 2)  # ВСЕГО БЕЗ НДС =  ВСЕГО ВКЛЮЧАЯ НДС - ВСЕГО НДС
@@ -499,39 +499,6 @@ def check_sums(dct: dict) -> dict:
         total_without_nds = total_with_nds
     dct['nds (%)'] = nds
 
-    # __________________ Сумма с НДС -> Сумма (с НДС), Сумма (без НДС) __________________
-
-    # 1) считаем сумму "сумм с НДС"
-    sum_of_sums_with_nds = 0
-    for good_dct in dct[NAMES.goods]:
-        try:
-            sum_of_sums_with_nds += float(good_dct[NAMES.sum_with])
-        except:
-            logger.print('sum_of_sums_with_nds pass')
-            pass
-    # 2) сравниваем сумму "сумм с НДС" с ВСЕГО ВКЛЮЧАЯ НДС;
-    # определяем действительно ли сумма "сумм с НДС" включает в себя НДС (или это сумма "сумм без НДС");
-    # если сумма "сумм с НДС" == ВСЕГО ВКЛЮЧАЯ НДС: то действительно включает
-    if round(sum_of_sums_with_nds, 1) == round(total_with_nds, 1):
-        sum_type = 'with'
-    # если сумма "сумм с НДС" == ВСЕГО БЕЗ НДС: сумма "сумм с НДС" на самом деле сумма "сумм без НДС"
-    elif round(sum_of_sums_with_nds, 1) == round(total_without_nds, 1):
-        sum_type = 'without'
-    else:
-        sum_type = 'None'
-
-    # Создание из (sum_with = 'Сумма включая НДС' # 6), (sum_nds = 'Сумма НДС' # 7) новых полей Сумма (без НДС)/(с НДС)
-    # В зависимости от того была ли "сумма" из оригинального json "суммой с НДС" или "суммой без НДС" заполняем поля:
-    for good_dct in dct[NAMES.goods]:
-        old_sum = round(float(good_dct.pop(NAMES.sum_with)), 2)  # Сумма услуги из openai-json
-        good_dct.pop(NAMES.sum_nds)
-        if sum_type in ['with', 'None']:
-            good_dct['Сумма (без НДС)'] = round(old_sum / (1 + (nds / 100)), 2)
-            good_dct['Сумма (с НДС)'] = old_sum
-        elif sum_type == 'without':
-            good_dct['Сумма (без НДС)'] = old_sum
-            good_dct['Сумма (с НДС)'] = round(old_sum * (1 + (nds / 100)), 2)
-
     # __________________ Цена -> Цена (с НДС), Цена (без НДС) -> nds_type __________________
 
     # 1) считаем сумму (количество * цена)
@@ -541,7 +508,6 @@ def check_sums(dct: dict) -> dict:
             amount = float(good_dct[NAMES.amount]) if good_dct[NAMES.amount] != '' else 1
             cum_amount_and_price += float(amount) * float(good_dct[NAMES.price])
         except:
-            logger.print('cum_amount_and_price pass')
             pass
     # 2) сравниваем сумму (количество * цена) с ВСЕГО ВКЛЮЧАЯ НДС -> определяем *ТИП ЦЕН*
     # создание вместо старого "Цена", новых Цена (без НДС)/(с НДС)
@@ -553,6 +519,8 @@ def check_sums(dct: dict) -> dict:
             good_dct['Цена (без НДС)'] = round(old_price / (1 + (nds / 100)), 2)
             good_dct['Цена (с НДС)'] = old_price
             good_dct['price_type'] = nds_type
+            del good_dct[NAMES.sum_with]
+            del good_dct[NAMES.sum_nds]
     elif round(cum_amount_and_price, 1) == round(total_without_nds, 1):  # без НДС -> Сверху
         nds_type = 'Сверху'
         for good_dct in dct[NAMES.goods]:
@@ -560,12 +528,50 @@ def check_sums(dct: dict) -> dict:
             good_dct['Цена (без НДС)'] = old_price
             good_dct['Цена (с НДС)'] = round(old_price * (1 + (nds / 100)), 2)
             good_dct['price_type'] = nds_type
+            del good_dct[NAMES.sum_with]
+            del good_dct[NAMES.sum_nds]
     else:
         # Цена неправильно считана (ее вообще нет или она взята из неправильного поля).
-        logger.print('Неверно посчитана цена: рассчитываем. Тип такой же, как у sum_type')
+        logger.print('Неверно посчитана цена: рассчитываем ее на основе параметра "Сумма"')
+
+        # __________________ Сумма с НДС -> Сумма (с НДС), Сумма (без НДС) __________________
+
+        # 1) считаем сумму "сумм с НДС"
+        sum_of_sums_with_nds = 0
+        for good_dct in dct[NAMES.goods]:
+            try:
+                sum_of_sums_with_nds += float(good_dct[NAMES.sum_with])
+            except:
+                logger.print('sum_of_sums_with_nds pass')
+                pass
+        # 2) сравниваем сумму "сумм с НДС" и ВСЕГО ВКЛЮЧАЯ НДС;
+        # определяем действительно ли сумма "сумм с НДС" включает в себя НДС (или это сумма "сумм без НДС");
+        # если сумма "сумм с НДС" == ВСЕГО ВКЛЮЧАЯ НДС: то действительно включает
+        if round(sum_of_sums_with_nds, 1) == round(total_with_nds, 1):
+            sum_type = 'with'
+        # если сумма "сумм с НДС" == ВСЕГО БЕЗ НДС: сумма "сумм с НДС" на самом деле сумма "сумм без НДС"
+        elif round(sum_of_sums_with_nds, 1) == round(total_without_nds, 1):
+            sum_type = 'without'
+        else:
+            sum_type = 'None'
+
+        # Создание из (sum_with='Сумма включая НДС' # 6), (sum_nds='Сумма НДС' # 7) новых полей Сумма (без НДС)/(с НДС)
+        # В зависимости от того была ли "сумма" из openai-json "суммой с НДС" или "суммой без НДС" заполняем поля:
+        for good_dct in dct[NAMES.goods]:
+            old_sum = round(float(good_dct.pop(NAMES.sum_with)), 2)  # Сумма услуги из openai-json
+            good_dct.pop(NAMES.sum_nds)
+            if sum_type in ['with', 'None']:
+                good_dct['Сумма (без НДС)'] = round(old_sum / (1 + (nds / 100)), 2)
+                good_dct['Сумма (с НДС)'] = old_sum
+            elif sum_type == 'without':
+                good_dct['Сумма (без НДС)'] = old_sum
+                good_dct['Сумма (с НДС)'] = round(old_sum * (1 + (nds / 100)), 2)
+
+        # __________________ Расчет "Цен (с/без)" на основе "Сумм (с/без)" __________________
+
         for good_dct in dct[NAMES.goods]:
             amount = float(good_dct[NAMES.amount]) if good_dct[NAMES.amount] != '' else 1
-            old_price = float(good_dct.pop(NAMES.price))
+            del good_dct[NAMES.price]
             good_dct['Цена (без НДС)'] = round(good_dct['Сумма (без НДС)'] / amount, 2)
             good_dct['Цена (с НДС)'] = round(good_dct['Сумма (с НДС)'] / amount, 2)
             if nds != 0:
@@ -573,6 +579,12 @@ def check_sums(dct: dict) -> dict:
             else:
                 nds_type = 'Сверху'
             good_dct['price_type'] = nds_type
+
+    # __________________ расчет "Сумм" на основе "Цена" и "Количество" __________________
+    for good_dct in dct[NAMES.goods]:
+        amount = float(good_dct[NAMES.amount]) if good_dct[NAMES.amount] != '' else 1
+        good_dct['Сумма (без НДС)'] = round(good_dct['Цена (без НДС)'] * amount, 2)
+        good_dct['Сумма (с НДС)'] = round(good_dct['Цена (с НДС)'] * amount, 2)
 
     logger.print('--- end check_sums ---')
 
