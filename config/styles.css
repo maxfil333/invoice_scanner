@@ -141,12 +141,28 @@ label {
 }
 
 .input-group {
-    position: relative; /* Добавить относительное позиционирование к родительскому элементу */
     display: flex;
     align-items: center;
-    margin-bottom: 0.5em; /* Уменьшаем отступ между группами */
-    color: blue; /* Цвет для текста */
-    font-size: 16px; /* Увеличиваем размер шрифта */
+    margin-bottom: 0.5em;
+    width: 100%;
+}
+
+.input-group label {
+    flex-shrink: 0; /* Запрещаем сжатие метки */
+    width: 220px; /* Задаем одинаковую ширину для всех меток */
+    margin-right: 10px; /* Отступ между меткой и полем ввода */
+}
+
+.input-group input {
+    flex-grow: 1;
+}
+
+.input-group input#last {
+    color: #96AC99;
+    font-style: italic;
+    max-width: 180px;
+    flex-grow: 1;
+    margin-left: 0.5em;
 }
 
 .input-group.opacity-50 {
