@@ -561,8 +561,11 @@ function getFormData() {
         }
     });
 
-    form.querySelectorAll('input:not(fieldset input), textarea:not(fieldset textarea), select:not(fieldset select)').forEach(input => {
+    // Собираем все input, textarea, select, которые не находятся внутри fieldset и не имеют класс "not_for_json"
+    form.querySelectorAll('input:not(fieldset input):not(.not_for_json), textarea:not(fieldset textarea):not(.not_for_json), select:not(fieldset select):not(.not_for_json)').forEach(input => {
+        // Если элемент не находится внутри fieldset
         if (!input.closest('fieldset')) {
+            // Добавляем его в общий объект data, если он не имеет класс "not_for_json"
             data[input.name] = input.value;
         }
     });

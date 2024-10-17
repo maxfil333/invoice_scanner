@@ -32,7 +32,7 @@ def generate_input_html(key, val):
         html_content += (f'<input type="{input_type}" name="{escape(key)}" '
                          f'class="{escape(char_key)}" value="{escape(str(val))}">\n')
         html_content += (f'<input type="{input_type}" name="{escape(key)}" '
-                         f'class="{escape(char_key)}" value="" id="last" disabled>\n')
+                         f'class="not_for_json" value="" id="last" disabled>\n')
         html_content += '</div>\n</div>\n'
 
     elif isinstance(val, bool):
@@ -133,7 +133,7 @@ def create_html_form(json_file, output_file, file_path):
                          <button type="button" id="save-button">Сохранить</button>
                          <label class="switch">
                              <span class="switch-label">Авторасчет</span>
-                             <input type="checkbox" checked>
+                             <input type="checkbox" class="not_for_json" checked>
                              <span class="slider"></span>
                          </label>
                      </div>
