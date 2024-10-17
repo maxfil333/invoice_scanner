@@ -2,14 +2,14 @@ import os
 import re
 import json
 from html import escape
-from bs4 import BeautifulSoup as bs
+from bs4 import BeautifulSoup
 
 from config.config import config, NAMES
 from src.logger import logger
 
 
 def generate_input_html(key, val):
-    char_key = re.sub(r'\W','',str(key))
+    char_key = re.sub(r'\W', '', str(key))
 
     input_type = "text"
     html_content = (f'<div class="input-group">\n'
@@ -26,13 +26,22 @@ def generate_input_html(key, val):
             html_content += f'<option value="{escape(option_value)}" {selected}>{escape(option_label)}</option>'
         html_content += '</select></div>\n'
 
+    # создание дополнительного поля для суммирования по услугам рядом с "Всего к оплате включая НДС" и "Всего НДС"
+    elif key in [NAMES.total_with, NAMES.total_nds]:
+        html_content += '<div class="input-group">\n'
+        html_content += (f'<input type="{input_type}" name="{escape(key)}" '
+                         f'class="{escape(char_key)}" value="{escape(str(val))}">\n')
+        html_content += (f'<input type="{input_type}" name="{escape(key)}" '
+                         f'class="{escape(char_key)}" value="" id="last" disabled>\n')
+        html_content += '</div>\n</div>\n'
+
     elif isinstance(val, bool):
         input_type = "checkbox"
         checked = 'checked' if val else ''
         html_content += f'<input type="{input_type}" name="{escape(key)}" {checked}></div>\n'
 
-    elif isinstance(val, str) and (key in [NAMES.name, NAMES.cont, NAMES.good1C, NAMES.good1C_new, 'Сделки по коносаментам']
-                                   or len(val) > 30):
+    elif (isinstance(val, str) and (key in [NAMES.name, NAMES.cont, NAMES.good1C,
+                                            NAMES.good1C_new, 'Сделки по коносаментам'] or len(val) > 30)):
         html_content += (f'<textarea name="{escape(key)}" class="{escape(char_key)}" rows="1" style="resize:none;" '
                          f'oninput="autoResize(this)">{escape(val)}</textarea>')
         if key == NAMES.good1C:
@@ -142,7 +151,7 @@ def create_html_form(json_file, output_file, file_path):
     </html>
     '''
 
-    soup = bs(html_content, 'html.parser')
+    soup = BeautifulSoup(html_content, 'html.parser')
     prettified = soup.prettify()
 
     with open(output_file, 'w', encoding='utf-8') as f:
@@ -152,6 +161,6 @@ def create_html_form(json_file, output_file, file_path):
 
 
 if __name__ == '__main__':
-    create_html_form(r"C:\Users\Filipp\Desktop\Новая папка (4)\0.json",
-                     r"C:\Users\Filipp\Desktop\Новая папка (4)\0.html",
-                     r"C:\Users\Filipp\Desktop\Новая папка (4)\20_Содружество_Балтика-Транс.pdf")
+    create_html_form(r"C:\Users\Filipp\Desktop\0_DATA\Новая папка (4)\0.json",
+                     r"C:\Users\Filipp\Desktop\0_DATA\Новая папка (4)\0.html",
+                     r"C:\Users\Filipp\Desktop\0_DATA\Новая папка (4)\20_Содружество_Балтика-Транс.pdf")
