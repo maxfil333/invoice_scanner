@@ -504,6 +504,15 @@ function addService(button) {
     price_type_opacity();
     // Вызов подсветки ошибок после добавления нового service
     highlight_errors();
+    // Вызов перерасчета значений цен, сумм от количества/НДС/цен
+    initListeners_recalculate();
+    recalculate();
+    // Вызов перерасчета значений цены от суммы
+    initListeners_recalculate_price_by_sum();
+    recalculate_price_by_sum();
+    // Проверка соответствия суммы "СуммасНДС" всех услуг значению "ВсегокоплатевключаяНДС"
+    initListeners_validate_total_amount();
+    validate_total_amount();
 }
 
 
@@ -520,6 +529,16 @@ function removeService(button) {
     } else {
         alert("Нельзя удалить единственную услугу.");
     }
+
+    // Вызов перерасчета значений цен, сумм от количества/НДС/цен
+    initListeners_recalculate();
+    recalculate();
+    // Вызов перерасчета значений цены от суммы
+    initListeners_recalculate_price_by_sum();
+    recalculate_price_by_sum();
+    // Проверка соответствия суммы "СуммасНДС" всех услуг значению "ВсегокоплатевключаяНДС"
+    initListeners_validate_total_amount();
+    validate_total_amount();
 }
 
 
