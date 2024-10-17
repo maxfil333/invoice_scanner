@@ -160,42 +160,6 @@ window.addEventListener('load', function() {
 
 
 // --------------------------------------------------------------------------------------------------------------------
-// Копирование выбранного варианта Номер сделки в буфер
-
-document.addEventListener("DOMContentLoaded", function() {
-    const selectElements = document.querySelectorAll('.Номерсделки');
-
-    // Функция для копирования выбранного значения
-    function copySelectedValue(selectElement) {
-        const selectedValue = selectElement.options[selectElement.selectedIndex].text;
-
-        // Создание временного текстового элемента для копирования
-        const tempTextArea = document.createElement('textarea');
-        tempTextArea.value = selectedValue;
-        document.body.appendChild(tempTextArea);
-        tempTextArea.select();
-        document.execCommand('copy');
-        document.body.removeChild(tempTextArea);
-
-        console.log('Скопировано: ' + selectedValue);
-    }
-
-    // Применяем событие ко всем элементам с классом .Номерсделки
-    selectElements.forEach(function(selectElement) {
-        // Используем событие focus для копирования при фокусировке
-        selectElement.addEventListener('focus', function() {
-            copySelectedValue(selectElement);
-        });
-
-        // Копирование при изменении выбранного значения
-        selectElement.addEventListener('change', function() {
-            copySelectedValue(selectElement);
-        });
-    });
-});
-
-
-// --------------------------------------------------------------------------------------------------------------------
 // Затемнение, блокировка полей цена/сумма сНДС/безНДС в зависимости от price_type
 
 document.addEventListener('DOMContentLoaded', price_type_opacity);
@@ -351,122 +315,6 @@ function sdelka_cleaner() {
 
 
 // --------------------------------------------------------------------------------------------------------------------
-// Размер textarea
-
-function autoResize(textarea) {
-    textarea.style.height = 'auto';
-    textarea.style.height = (textarea.scrollHeight) + 'px';
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    // Инициализация начального размера для всех текстовых полей
-    document.querySelectorAll('textarea').forEach(textarea => {
-        autoResize(textarea);
-    });
-});
-
-
-// --------------------------------------------------------------------------------------------------------------------
-// zoom jpg в правой части страницы
-
-document.addEventListener('DOMContentLoaded', function () {
-    // Автоматическая настройка высоты textarea
-    document.querySelectorAll('textarea').forEach(function(textarea) {
-        textarea.style.height = textarea.scrollHeight + 'px';
-        textarea.addEventListener('input', function() {
-            this.style.height = 'auto';
-            this.style.height = (this.scrollHeight) + 'px';
-        });
-    });
-
-    const rightPane = document.querySelector('.right-pane');
-    if (rightPane) {
-        rightPane.style.userSelect = 'none'; // Предотвращаем выделение текста внутри .right-pane
-    }
-
-    const img = document.querySelector('.right-pane img');
-    if (img) {
-        let scale = 1;
-        let isDragging = false;
-        let startX, startY;
-
-        img.addEventListener('mousedown', (e) => {
-            if (scale > 1) {
-                isDragging = true;
-                startX = e.pageX - img.offsetLeft;
-                startY = e.pageY - img.offsetTop;
-                img.style.cursor = 'grabbing';
-                e.preventDefault(); // Предотвращаем выделение текста
-            }
-        });
-
-        img.addEventListener('mouseleave', () => {
-            isDragging = false;
-            img.style.cursor = scale > 1 ? 'move' : 'grab';
-        });
-
-        img.addEventListener('mouseup', () => {
-            isDragging = false;
-            img.style.cursor = scale > 1 ? 'move' : 'grab';
-        });
-
-        img.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            const x = e.pageX - startX;
-            const y = e.pageY - startY;
-            img.style.left = `${x}px`;
-            img.style.top = `${y}px`;
-        });
-
-        img.addEventListener('wheel', (e) => {
-            e.preventDefault(); // Предотвращаем прокрутку страницы при зумировании
-            if (e.deltaY > 0) {
-                // Zoom out
-                scale = Math.max(1, scale - 0.2);
-            } else {
-                // Zoom in
-                scale += 0.2;
-            }
-            img.style.transform = `scale(${scale})`;
-            img.style.cursor = scale > 1 ? 'move' : 'grab';
-            img.style.position = 'relative';
-        });
-
-		const centerImage = () => {
-            const containerWidth = img.parentElement.clientWidth;
-            const containerHeight = img.parentElement.clientHeight;
-            const imgWidth = img.clientWidth * scale;
-            const imgHeight = img.clientHeight * scale;
-            const offsetX = (containerWidth - imgWidth) / 2;
-            const offsetY = (containerHeight - imgHeight) / 2;
-            img.style.left = `${offsetX}px`;
-            img.style.top = `${offsetY}px`;
-			img.style.transition = 'left 0.5s, top 0.5s'; // Плавность центрирования
-            img.style.left = `${offsetX}px`;
-            img.style.top = `${offsetY}px`;
-
-			// Удаление transition после завершения анимации
-            setTimeout(() => {
-                img.style.transition = '';
-            }, 500);
-        };
-
-        img.addEventListener('dblclick', () => {
-            if (scale === 1) {
-                scale = 2; // Двойной зум
-            } else {
-                scale = 1; // Обратное действие
-                setTimeout(centerImage, 500); // Центрирование изображения
-            }
-            img.style.transform = `scale(${scale})`;
-            img.style.cursor = scale > 1 ? 'move' : 'grab';
-            img.style.position = 'relative';
-        });
-    }
-});
-
-
-// --------------------------------------------------------------------------------------------------------------------
 // Добавить новую услугу
 
 function addService(button) {
@@ -539,70 +387,6 @@ function removeService(button) {
     // Проверка соответствия суммы "СуммасНДС" всех услуг значению "ВсегокоплатевключаяНДС"
     initListeners_validate_total_amount();
     validate_total_amount();
-}
-
-
-// --------------------------------------------------------------------------------------------------------------------
-// Получить текущую структуру JSON
-
-document.getElementById('save-button').addEventListener('click', getFormData);
-
-function getCurrentTime() {
-    // Получаем текущее время в миллисекундах с начала эпохи
-    const milliseconds = Date.now().toString().slice(0,11);
-    return milliseconds;
-}
-
-function getFormData() {
-    const form = document.getElementById('invoice-form');
-    const data = {};
-    const services = [];
-
-    form.querySelectorAll('fieldset').forEach(fieldset => {
-        const legend = fieldset.querySelector('legend');
-        if (legend) {
-            const fieldsetName = legend.textContent.trim();
-
-            if (fieldset.classList.contains('service')) {
-                const serviceData = {};
-                fieldset.querySelectorAll('input, textarea, select').forEach(input => {
-                    serviceData[input.name] = input.value;
-                });
-                services.push(serviceData);
-            } else if (fieldsetName === 'Услуги') {
-                data[fieldsetName] = services;
-            } else {
-                data[fieldsetName] = {};
-                fieldset.querySelectorAll('input, textarea, select').forEach(input => {
-                    data[fieldsetName][input.name] = input.value;
-                });
-            }
-        }
-    });
-
-    form.querySelectorAll('input:not(fieldset input), textarea:not(fieldset textarea), select:not(fieldset select)').forEach(input => {
-        if (!input.closest('fieldset')) {
-            data[input.name] = input.value;
-        }
-    });
-
-    // Сохранить JSON в файл
-    const json = JSON.stringify(data, null, 2);
-    const blob = new Blob([json], {type: 'application/json'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-
-    var currentTime = getCurrentTime();
-    var originalFilename = document.getElementById('jsonfilenameid').getAttribute('jsonfilename');
-    // 11 знаков (временная отметка)  + 1 "_" + 5 ".json" = 17 знаков
-    var newFilename = originalFilename.slice(0, -17) + `_${currentTime}.json`;
-
-    a.download = newFilename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
 }
 
 
@@ -737,3 +521,219 @@ function dropdownService1C() {
         });
     });
 }
+
+
+// --------------------------------------------------------------------------------------------------------------------
+// Получить текущую структуру JSON
+
+document.getElementById('save-button').addEventListener('click', getFormData);
+
+function getCurrentTime() {
+    // Получаем текущее время в миллисекундах с начала эпохи
+    const milliseconds = Date.now().toString().slice(0,11);
+    return milliseconds;
+}
+
+function getFormData() {
+    const form = document.getElementById('invoice-form');
+    const data = {};
+    const services = [];
+
+    form.querySelectorAll('fieldset').forEach(fieldset => {
+        const legend = fieldset.querySelector('legend');
+        if (legend) {
+            const fieldsetName = legend.textContent.trim();
+
+            if (fieldset.classList.contains('service')) {
+                const serviceData = {};
+                fieldset.querySelectorAll('input, textarea, select').forEach(input => {
+                    serviceData[input.name] = input.value;
+                });
+                services.push(serviceData);
+            } else if (fieldsetName === 'Услуги') {
+                data[fieldsetName] = services;
+            } else {
+                data[fieldsetName] = {};
+                fieldset.querySelectorAll('input, textarea, select').forEach(input => {
+                    data[fieldsetName][input.name] = input.value;
+                });
+            }
+        }
+    });
+
+    form.querySelectorAll('input:not(fieldset input), textarea:not(fieldset textarea), select:not(fieldset select)').forEach(input => {
+        if (!input.closest('fieldset')) {
+            data[input.name] = input.value;
+        }
+    });
+
+    // Сохранить JSON в файл
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+
+    var currentTime = getCurrentTime();
+    var originalFilename = document.getElementById('jsonfilenameid').getAttribute('jsonfilename');
+    // 11 знаков (временная отметка)  + 1 "_" + 5 ".json" = 17 знаков
+    var newFilename = originalFilename.slice(0, -17) + `_${currentTime}.json`;
+
+    a.download = newFilename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+
+// --------------------------------------------------------------------------------------------------------------------
+// Копирование выбранного варианта Номер сделки в буфер
+
+document.addEventListener("DOMContentLoaded", function() {
+    const selectElements = document.querySelectorAll('.Номерсделки');
+
+    // Функция для копирования выбранного значения
+    function copySelectedValue(selectElement) {
+        const selectedValue = selectElement.options[selectElement.selectedIndex].text;
+
+        // Создание временного текстового элемента для копирования
+        const tempTextArea = document.createElement('textarea');
+        tempTextArea.value = selectedValue;
+        document.body.appendChild(tempTextArea);
+        tempTextArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempTextArea);
+
+        console.log('Скопировано: ' + selectedValue);
+    }
+
+    // Применяем событие ко всем элементам с классом .Номерсделки
+    selectElements.forEach(function(selectElement) {
+        // Используем событие focus для копирования при фокусировке
+        selectElement.addEventListener('focus', function() {
+            copySelectedValue(selectElement);
+        });
+
+        // Копирование при изменении выбранного значения
+        selectElement.addEventListener('change', function() {
+            copySelectedValue(selectElement);
+        });
+    });
+});
+
+
+// --------------------------------------------------------------------------------------------------------------------
+// zoom jpg в правой части страницы
+
+document.addEventListener('DOMContentLoaded', function () {
+    // Автоматическая настройка высоты textarea
+    document.querySelectorAll('textarea').forEach(function(textarea) {
+        textarea.style.height = textarea.scrollHeight + 'px';
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+    });
+
+    const rightPane = document.querySelector('.right-pane');
+    if (rightPane) {
+        rightPane.style.userSelect = 'none'; // Предотвращаем выделение текста внутри .right-pane
+    }
+
+    const img = document.querySelector('.right-pane img');
+    if (img) {
+        let scale = 1;
+        let isDragging = false;
+        let startX, startY;
+
+        img.addEventListener('mousedown', (e) => {
+            if (scale > 1) {
+                isDragging = true;
+                startX = e.pageX - img.offsetLeft;
+                startY = e.pageY - img.offsetTop;
+                img.style.cursor = 'grabbing';
+                e.preventDefault(); // Предотвращаем выделение текста
+            }
+        });
+
+        img.addEventListener('mouseleave', () => {
+            isDragging = false;
+            img.style.cursor = scale > 1 ? 'move' : 'grab';
+        });
+
+        img.addEventListener('mouseup', () => {
+            isDragging = false;
+            img.style.cursor = scale > 1 ? 'move' : 'grab';
+        });
+
+        img.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const x = e.pageX - startX;
+            const y = e.pageY - startY;
+            img.style.left = `${x}px`;
+            img.style.top = `${y}px`;
+        });
+
+        img.addEventListener('wheel', (e) => {
+            e.preventDefault(); // Предотвращаем прокрутку страницы при зумировании
+            if (e.deltaY > 0) {
+                // Zoom out
+                scale = Math.max(1, scale - 0.2);
+            } else {
+                // Zoom in
+                scale += 0.2;
+            }
+            img.style.transform = `scale(${scale})`;
+            img.style.cursor = scale > 1 ? 'move' : 'grab';
+            img.style.position = 'relative';
+        });
+
+		const centerImage = () => {
+            const containerWidth = img.parentElement.clientWidth;
+            const containerHeight = img.parentElement.clientHeight;
+            const imgWidth = img.clientWidth * scale;
+            const imgHeight = img.clientHeight * scale;
+            const offsetX = (containerWidth - imgWidth) / 2;
+            const offsetY = (containerHeight - imgHeight) / 2;
+            img.style.left = `${offsetX}px`;
+            img.style.top = `${offsetY}px`;
+			img.style.transition = 'left 0.5s, top 0.5s'; // Плавность центрирования
+            img.style.left = `${offsetX}px`;
+            img.style.top = `${offsetY}px`;
+
+			// Удаление transition после завершения анимации
+            setTimeout(() => {
+                img.style.transition = '';
+            }, 500);
+        };
+
+        img.addEventListener('dblclick', () => {
+            if (scale === 1) {
+                scale = 2; // Двойной зум
+            } else {
+                scale = 1; // Обратное действие
+                setTimeout(centerImage, 500); // Центрирование изображения
+            }
+            img.style.transform = `scale(${scale})`;
+            img.style.cursor = scale > 1 ? 'move' : 'grab';
+            img.style.position = 'relative';
+        });
+    }
+});
+
+
+// --------------------------------------------------------------------------------------------------------------------
+// Размер textarea
+
+function autoResize(textarea) {
+    textarea.style.height = 'auto';
+    textarea.style.height = (textarea.scrollHeight) + 'px';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Инициализация начального размера для всех текстовых полей
+    document.querySelectorAll('textarea').forEach(textarea => {
+        autoResize(textarea);
+    });
+});
