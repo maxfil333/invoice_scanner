@@ -535,26 +535,46 @@ function getCurrentTime() {
 }
 
 function getFormData() {
+    // Находим форму с id 'invoice-form'
     const form = document.getElementById('invoice-form');
+    // Создаем пустой объект для хранения данных формы
     const data = {};
+    // Массив для хранения данных полей, относящихся к услугам
     const services = [];
 
+    // Проходим по всем fieldset (группам полей) формы
     form.querySelectorAll('fieldset').forEach(fieldset => {
+        // Ищем элемент legend (заголовок fieldset) и сохраняем его текст
         const legend = fieldset.querySelector('legend');
         if (legend) {
+            // Получаем имя fieldset из текста legend и удаляем лишние пробелы
             const fieldsetName = legend.textContent.trim();
 
+            // Проверяем, если fieldset имеет класс 'service'
             if (fieldset.classList.contains('service')) {
+                // Создаем объект для хранения данных конкретной услуги
                 const serviceData = {};
+
+                // Собираем все input, textarea и select в этом fieldset
                 fieldset.querySelectorAll('input, textarea, select').forEach(input => {
+                    // Добавляем данные поля в объект serviceData по имени поля (input.name)
                     serviceData[input.name] = input.value;
                 });
+
+                // Добавляем объект serviceData в массив services
                 services.push(serviceData);
+
+            // Проверяем, если это fieldset с названием 'Услуги'
             } else if (fieldsetName === 'Услуги') {
+                // Записываем массив услуг в общий объект data под ключом 'Услуги'
                 data[fieldsetName] = services;
             } else {
+                // Если это другой fieldset, создаем для него пустой объект в data
                 data[fieldsetName] = {};
+
+                // Собираем все input, textarea и select в этом fieldset
                 fieldset.querySelectorAll('input, textarea, select').forEach(input => {
+                    // Добавляем данные в объект по имени поля input.name
                     data[fieldsetName][input.name] = input.value;
                 });
             }
