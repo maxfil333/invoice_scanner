@@ -141,6 +141,7 @@ label {
 }
 
 .input-group {
+    position: relative; /* Добавить относительное позиционирование к родительскому элементу */
     display: flex;
     align-items: center;
     margin-bottom: 0.5em;
