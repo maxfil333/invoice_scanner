@@ -31,8 +31,12 @@ def generate_input_html(key, val):
         html_content += '<div class="input-group">\n'
         html_content += (f'<input type="{input_type}" name="{escape(key)}" '
                          f'class="{escape(char_key)}" value="{escape(str(val))}">\n')
-        html_content += (f'<input type="{input_type}" name="{escape(key)}" '
-                         f'class="not_for_json" value="" id="last" disabled>\n')
+        if key == NAMES.total_with:
+            html_content += (f'<input type="{input_type}" name="{escape(key)}" '
+                             f'class="not_for_json" value="" id="last_total_with" disabled>\n')
+        else:
+            html_content += (f'<input type="{input_type}" name="{escape(key)}" '
+                             f'class="not_for_json" value="" id="last_total_nds" disabled>\n')
         html_content += '</div>\n</div>\n'
 
     elif isinstance(val, bool):

@@ -158,10 +158,10 @@ label {
     flex-grow: 1;
 }
 
-.input-group input#last {
+.input-group input#last_total_with,
+.input-group input#last_total_nds {
     color: #96AC99;
-    font-style: italic;
-    max-width: 180px;
+    max-width: 220px;
     flex-grow: 1;
     margin-left: 0.5em;
 }
@@ -246,7 +246,6 @@ button[onclick="addService(this)"] {
     font-family: 'Consolas', Courier, monospace;
     text-align: center;
     font-size: 18px;
-    background-color: #39C452; /* Зеленый фон */
 }
 
 button[onclick="addService(this)"]:hover {
