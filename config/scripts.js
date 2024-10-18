@@ -103,7 +103,7 @@ window.addEventListener('load', function() {
 
 
 // --------------------------------------------------------------------------------------------------------------------
-// Функция для проверки соответствия суммы "СуммасНДС" всех услуг значению "ВсегокоплатевключаяНДС"
+// Функция для проверки соответствия сумм всех услуг значениям "ВсегокоплатевключаяНДС" и "ВсегоНДС"
 function validate_total_amount() {
     let totalSumWithNDS = 0;
     let totalNDSDifference = 0;
@@ -117,13 +117,17 @@ function validate_total_amount() {
         totalNDSDifference += (sumWithNDS - sumWithoutNDS);
     });
 
+    // Заполнение поверочных полей #last
+    document.querySelector('#last_total_with').value = `Σ(по услугам): ${totalSumWithNDS.toFixed(2) || 0}`;
+    document.querySelector('#last_total_nds').value = `Σ(по услугам): ${totalNDSDifference.toFixed(2) || 0}`;
+
     // Проверка "ВсегокоплатевключаяНДС"
     let totalAmountField = document.querySelector('.ВсегокоплатевключаяНДС');
     let totalAmountValue = parseFloat(totalAmountField.value) || 0;
     console.log('ВсегокоплатевключаяНДС:', 'sum:', totalSumWithNDS.toFixed(2), 'total:', totalAmountValue.toFixed(2))
 
     if (totalSumWithNDS.toFixed(2) === totalAmountValue.toFixed(2)) {
-        totalAmountField.style.backgroundColor = '#39C452';
+        totalAmountField.style.backgroundColor = '#A5F0B0';
     } else {
         totalAmountField.style.backgroundColor = '#f2dce0';
     }
@@ -134,7 +138,7 @@ function validate_total_amount() {
     console.log('ВсегоНДС:', 'sum:', totalNDSDifference.toFixed(2), 'total:', totalNDSValue.toFixed(2))
 
     if (totalNDSDifference.toFixed(2) === totalNDSValue.toFixed(2)) {
-        totalNDSField.style.backgroundColor = '#39C452';
+        totalNDSField.style.backgroundColor = '#A5F0B0';
     } else {
         totalNDSField.style.backgroundColor = '#f2dce0';
     }
