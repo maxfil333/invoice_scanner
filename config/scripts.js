@@ -1,4 +1,4 @@
-// Функция для перерасчета значений цен, сумм от количества/НДС/цен
+// Функция для перерасчета цен и сумм от количества/НДС/цен
 function recalculate() {
     const autoRecalculateCheckbox = document.querySelector('.switch input[type="checkbox"]');
     if (autoRecalculateCheckbox.checked) {
@@ -9,24 +9,33 @@ function recalculate() {
             let priceWithNDS = parseFloat(service.querySelector('.ЦенасНДС').value) || 0;
             let quantity = parseFloat(service.querySelector('.Количество').value) || 1;
 
-            // Рассчитываем сумму на основании цены и количества
-            let sumWithoutNDS = priceWithoutNDS * quantity;
-            let sumWithNDS = priceWithNDS * quantity;
-
             // Логика перерасчета цены в зависимости от price_type
             if (priceType === "Сверху") {
-                priceWithNDS = priceWithoutNDS * (1 + nds / 100);
-                sumWithNDS = priceWithNDS * quantity; // Сумма с НДС также обновляется
-                service.querySelector('.ЦенасНДС').value = priceWithNDS.toFixed(2);
-            } else if (priceType === "В т.ч.") {
-                priceWithoutNDS = priceWithNDS * 100 / (100 + nds);
-                sumWithoutNDS = priceWithoutNDS * quantity; // Сумма без НДС также обновляется
-                service.querySelector('.ЦенабезНДС').value = priceWithoutNDS.toFixed(2);
-            }
+                // СуммаБез = Кол-во * ЦенаБеЗ
+                let sumWithoutNDS = quantity * priceWithoutNDS;
+                service.querySelector('.СуммабезНДС').value = sumWithoutNDS.toFixed(2);
 
-            // Обновляем суммы
-            service.querySelector('.СуммабезНДС').value = sumWithoutNDS.toFixed(2);
-            service.querySelector('.СуммасНДС').value = sumWithNDS.toFixed(2);
+                // ЦенаС = ЦенаБез * (1 + nds /100)
+                priceWithNDS = priceWithoutNDS * (1 + nds / 100);
+                service.querySelector('.ЦенасНДС').value = priceWithNDS.toFixed(2);
+
+                // СуммаС = Кол-во * ЦенаС
+                sumWithNDS = quantity * priceWithNDS;
+                service.querySelector('.СуммасНДС').value = sumWithNDS.toFixed(2);
+
+            } else if (priceType === "В т.ч.") {
+                // СуммаС = Кол-во * ЦенаС
+                let sumWithNDS = quantity * priceWithNDS;
+                service.querySelector('.СуммасНДС').value = sumWithNDS.toFixed(2);
+
+                // ЦенаБез = ЦенаС * 100 / (100 + nds)
+                priceWithoutNDS = priceWithNDS * 100 / (100 + nds);
+                service.querySelector('.ЦенабезНДС').value = priceWithoutNDS.toFixed(2);
+
+                // СуммаБез = Кол-во * ЦенаБез
+                sumWithoutNDS = quantity * priceWithoutNDS;
+                service.querySelector('.СуммабезНДС').value = sumWithoutNDS.toFixed(2);
+            }
         });
     }
 }
@@ -63,22 +72,22 @@ function recalculate_price_by_sum() {
 
             // Рассчитываем цены на основании суммы и количества
             let priceWithoutNDS = sumWithoutNDS / quantity;
-            let priceWithNDS = sumWithNDS / quantity;
-
-            // Обновляем цены
             service.querySelector('.ЦенабезНДС').value = priceWithoutNDS.toFixed(2);
+            let priceWithNDS = sumWithNDS / quantity;
             service.querySelector('.ЦенасНДС').value = priceWithNDS.toFixed(2);
 
             // Логика перерасчета цены в зависимости от priceType
             if (priceType === "Сверху") {
                 priceWithNDS = priceWithoutNDS * (1 + nds / 100);
-                sumWithNDS = priceWithNDS * quantity; // Сумма с НДС также обновляется
                 service.querySelector('.ЦенасНДС').value = priceWithNDS.toFixed(2);
+
+                sumWithNDS = priceWithNDS * quantity;
                 service.querySelector('.СуммасНДС').value = sumWithNDS.toFixed(2);
             } else if (priceType === "В т.ч.") {
                 priceWithoutNDS = priceWithNDS * 100 / (100 + nds);
-                sumWithoutNDS = priceWithoutNDS * quantity; // Сумма без НДС также обновляется
                 service.querySelector('.ЦенабезНДС').value = priceWithoutNDS.toFixed(2);
+
+                sumWithoutNDS = priceWithoutNDS * quantity
                 service.querySelector('.СуммабезНДС').value = sumWithoutNDS.toFixed(2);
             }
         });
