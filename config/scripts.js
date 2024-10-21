@@ -44,11 +44,22 @@ function recalculate() {
 function initListeners_recalculate() {
     const fieldsToWatch = ['.nds', '.price_type', '.ЦенасНДС', '.ЦенабезНДС', '.Количество'];
 
+    // Добавление обработчика событий для указанных полей
     fieldsToWatch.forEach(selector => {
         document.querySelectorAll(selector).forEach(input => {
             input.addEventListener('input', recalculate);
         });
     });
+
+    // Обработчик события изменения состояния чекбокса
+    const autoRecalculateCheckbox = document.querySelector('.switch input[type="checkbox"]');
+    if (autoRecalculateCheckbox) {
+        autoRecalculateCheckbox.addEventListener('change', () => {
+            if (autoRecalculateCheckbox.checked) {
+                recalculate(); // Вызываем пересчет при изменении состояния на checked
+            }
+        });
+    }
 }
 
 // Запуск функции при загрузке страницы
@@ -156,12 +167,19 @@ function validate_total_amount() {
 // Функция для инициализации проверки при изменении полей
 function initListeners_validate_total_amount() {
     const fieldsToWatch = ['.СуммабезНДС', '.СуммасНДС', '.nds', '.price_type',
-     '.ЦенасНДС', '.ЦенабезНДС', '.Количество', '.ВсегокоплатевключаяНДС', '.ВсегоНДС'];
+        '.ЦенасНДС', '.ЦенабезНДС', '.Количество', '.ВсегокоплатевключаяНДС', '.ВсегоНДС'];
 
+    // Добавление обработчика событий для указанных полей
     fieldsToWatch.forEach(selector => {
         document.querySelectorAll(selector).forEach(input => {
             input.addEventListener('input', validate_total_amount);
         });
+    });
+
+    // Добавление обработчика для всех чекбоксов
+    const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', validate_total_amount);
     });
 }
 
