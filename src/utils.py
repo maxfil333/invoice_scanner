@@ -9,6 +9,7 @@ import PyPDF2
 import msvcrt
 import base64
 import openai
+import hashlib
 import pytesseract
 import numpy as np
 from openai import OpenAI
@@ -38,6 +39,20 @@ def base64_encode_pil(image: Image.Image):
     buffered = BytesIO()
     image.save(buffered, format="PNG")
     return base64.b64encode(buffered.getvalue()).decode('utf-8')
+
+
+def calculate_hash(file_path):
+    # Инициализация хэш-объекта MD5
+    md5_hash = hashlib.md5()
+
+    # Открываем файл в бинарном режиме для чтения
+    with open(file_path, "rb") as f:
+        # Чтение файла блоками по 4096 байт (можно настроить)
+        for byte_block in iter(lambda: f.read(4096), b""):
+            md5_hash.update(byte_block)
+
+    # Возвращаем хэш-сумму в виде шестнадцатеричной строки
+    return md5_hash.hexdigest()
 
 
 # _________ COMMON _________
