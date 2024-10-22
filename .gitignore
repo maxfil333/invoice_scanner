@@ -12,6 +12,7 @@ config/ships.json
 config/freq_services.json
 unique_comments.json
 config/chroma
+config/generate_services
 data
 
 
