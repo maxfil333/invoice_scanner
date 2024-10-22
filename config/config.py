@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 
 from src.logger import logger
 
+load_dotenv()
+
 # main.spec
 r"""
 datas=[
@@ -18,6 +20,8 @@ datas=[
 """
 
 config = dict()
+config['user_1C'] = os.getenv('user_1C')
+config['password_1C'] = os.getenv('password_1C')
 config['magick_opt'] = '-colorspace Gray -quality 100 -units PixelsPerInch -density 350'.split(' ')
 config['NAME_scanned'] = 'scannedPDFs'
 config['NAME_text'] = 'textPDFs'
