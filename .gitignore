@@ -10,9 +10,11 @@ crypto.key
 config/parameters.json
 config/ships.json
 config/freq_services.json
-unique_comments.json
 config/chroma
 config/generated_services
+config/*.txt
+
+unique_comments.json
 data
 
 
