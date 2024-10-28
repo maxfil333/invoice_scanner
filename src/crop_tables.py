@@ -10,7 +10,7 @@ from img2table.document import Image as IMAGE
 from src.preprocessor import main as main_preprocessor
 
 
-def extract_text_from_image(image: np.array, psm=3):
+def extract_text_from_image(image: np.ndarray, psm=3):
     if getattr(sys, 'frozen', False):
         bundle_dir = sys._MEIPASS
         pytesseract.pytesseract.tesseract_cmd = os.path.join(bundle_dir, 'Tesseract-OCR', 'tesseract.exe')
