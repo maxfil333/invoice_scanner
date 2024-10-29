@@ -512,7 +512,7 @@ def check_sums(dct: dict) -> dict:
         nds = 0.0
         dct[NAMES.total_nds] = 0.0  # если НДС = 0, то Всего НДС = 0.
         total_without_nds = total_with_nds
-    dct['nds (%)'] = nds
+    dct[NAMES.nds_percent] = nds
 
     # __________________ Цена -> Цена (с НДС), Цена (без НДС) -> nds_type __________________
 
@@ -608,10 +608,10 @@ def check_sums(dct: dict) -> dict:
 
 def propagate_nds(dct: dict):
 
-    nds = dct['nds (%)']
+    nds = dct[NAMES.nds_percent]
     for good_dct in dct[NAMES.goods]:
-        good_dct['nds (%)'] = nds
-    dct.pop('nds (%)')
+        good_dct[NAMES.nds_percent] = nds
+    dct.pop(NAMES.nds_percent)
 
     return dct
 

@@ -106,6 +106,8 @@ class ConfigNames:
     transactions = 'Номер сделки'
     transactions_new = 'Номер сделки (ввести свой)'
     transactions_type = 'Тип поиска сделки'
+    nds_percent = 'nds (%)'
+    noNDS = 'Без НДС'
 
 
 NAMES = ConfigNames()
