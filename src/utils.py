@@ -13,13 +13,13 @@ import hashlib
 import pytesseract
 import numpy as np
 from openai import OpenAI
-from typing import Literal
 from datetime import datetime
 from dotenv import load_dotenv
 from io import BytesIO, StringIO
 from collections import defaultdict
 from cryptography.fernet import Fernet
 from PIL import Image, ImageDraw, ImageFont
+from typing import Literal, Optional, Union
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
 
@@ -307,7 +307,7 @@ def image_upstanding(img: np.ndarray) -> np.ndarray:
 
 # _________ PDF _________
 
-def is_scanned_pdf(file_path, pages_to_analyse=None):
+def is_scanned_pdf(file_path, pages_to_analyse=None) -> Optional[bool]:
     try:
         # Открытие PDF файла
         with open(file_path, 'rb') as file:
@@ -362,7 +362,7 @@ def extract_text_with_fitz(pdf_path):
     return text
 
 
-def align_pdf_orientation(input_file: str | bytes, output_pdf_path):
+def align_pdf_orientation(input_file: str | bytes, output_pdf_path: str) -> None:
     """ get input_pdf_path - save to output_pdf_path - returns None """
 
     if isinstance(input_file, bytes):
@@ -401,7 +401,7 @@ def align_pdf_orientation(input_file: str | bytes, output_pdf_path):
     pdf_document.close()
 
 
-def extract_pages(input_pdf_path, pages_to_keep, output_pdf_path=None):
+def extract_pages(input_pdf_path, pages_to_keep, output_pdf_path=None) -> bytes:
     """ Извлечение страниц из pdf. Если output_pdf_path не задан, возвращает байты """
 
     # Открываем исходный PDF файл
