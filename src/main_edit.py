@@ -42,9 +42,7 @@ def main(dir_path: str = config['IN_FOLDER'], hide_logs=False, stop_when=-1):
         edited_folder = os.path.join(config['EDITED'], folder_name)
         main_save_path = os.path.join(edited_folder, main_base)
         os.makedirs(edited_folder, exist_ok=False)
-        with open(os.path.join(edited_folder, 'params.json'), 'w', encoding='utf-8') as f:
-            params_dict = {"main_file": main_file, "extra_files": extra_files}
-            json.dump(params_dict, f, ensure_ascii=False)
+        main_local_files = []  # список главных файлов (без _TAB1, _TAB2)
 
         # if digital pdf
         if (main_type.lower() == '.pdf') and (is_scanned_pdf(main_file, required_pages) is False):
@@ -98,6 +96,7 @@ def main(dir_path: str = config['IN_FOLDER'], hide_logs=False, stop_when=-1):
                 if rotated.mode == "RGBA":
                     rotated = rotated.convert('RGB')
                 rotated.save(idx_save_path, quality=100)
+                main_local_files.append(idx_save_path)
 
                 # extract and crop two tables
                 cropped_save_pth1 = os.path.splitext(idx_save_path)[0] + '_TAB1+' + os.path.splitext(idx_save_path)[1]
@@ -118,6 +117,11 @@ def main(dir_path: str = config['IN_FOLDER'], hide_logs=False, stop_when=-1):
 
                 command = [config["magick_exe"], "convert", idx_save_path, *config["magick_opt"], idx_save_path]
                 subprocess.run(command)
+
+        with open(os.path.join(edited_folder, 'params.json'), 'w', encoding='utf-8') as f:
+            params_dict = {"main_file": main_file, "extra_files": extra_files, "main_local_files": main_local_files}
+            json.dump(params_dict, f, ensure_ascii=False, indent=4)
+
         print('------------------------------')
         # _____  STOP ITERATION  _____
         if stop_when > 0:

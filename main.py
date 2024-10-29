@@ -73,9 +73,9 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
                         result = local_postprocessing(result)
                 else:
                     if not text_to_assistant:
-                        result = run_chat(files[0], detail='high', hide_logs=hide_logs, text_mode=True)
+                        result = run_chat(files[0], detail='high', text_mode=True)
                     else:
-                        result = run_assistant(files[0], hide_logs=hide_logs)
+                        result = run_assistant(files[0])
             else:
                 text_or_scanned_folder: str = config['NAME_scanned']
                 files.sort(reverse=True)
@@ -85,10 +85,10 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
                         result = file.read()
                         result = local_postprocessing(result)
                 else:
-                    result = run_chat(*files, detail='high', hide_logs=hide_logs, text_mode=False)
+                    result = run_chat(*files, detail='high', text_mode=False)
 
             # _____________ LOCAL POSTPROCESSING _____________
-            result = local_postprocessing(result)
+            result = local_postprocessing(result, hide_logs=hide_logs, folder=folder)
 
             if result is None:
                 continue

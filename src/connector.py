@@ -42,7 +42,7 @@ def response_to_deals(response: str) -> list[str] | None:
 
 # __________________ HTTP-REQUEST __________________
 
-def cup_http_request(function, *args, kappa=True) -> Union[list, dict, None]:
+def cup_http_request(function, *args, kappa=False) -> Union[list, dict, None]:
     user_1C = config['user_1C']
     password_1C = config['password_1C']
 

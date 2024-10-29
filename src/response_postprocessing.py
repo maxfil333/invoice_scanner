@@ -6,15 +6,18 @@ import re
 import json
 import inspect
 import difflib
+import numpy as np
+from PIL import Image
 from dotenv import load_dotenv
 from typing import Union, Literal
 from win32com.client import CDispatch
 
 from src.logger import logger
 from config.config import config, NAMES
+from src.crop_tables import extract_text_from_image
 from src.connector import cup_http_request, response_to_deals
 from src.utils import convert_json_values_to_strings, handling_openai_json
-from src.utils import chroma_get_relevant, get_stream_dotenv, check_sums, propagate_nds, order_goods
+from src.utils import chroma_get_relevant, get_stream_dotenv, check_sums, is_without_nds, propagate_nds, order_goods
 from src.utils import replace_container_with_latin, replace_container_with_none, switch_to_latin, sort_transactions
 
 load_dotenv(stream=get_stream_dotenv())
@@ -22,13 +25,12 @@ load_dotenv(stream=get_stream_dotenv())
 
 # ___________________________________________ HANDLING OPENAI OUTPUT (JSON) ___________________________________________
 
-def local_postprocessing(response, hide_logs=False) -> str | None:
-    re_response = handling_openai_json(response, hide_logs)
+def local_postprocessing(response, **kwargs) -> str | None:
+    re_response = handling_openai_json(response)
     if re_response is None:
         return None
-    if not hide_logs:
-        logger.print(f'function "{inspect.stack()[1].function}":')
-        logger.print('re_response:\n', repr(re_response))
+    logger.print(f'function "{inspect.stack()[1].function}":')
+    logger.print('re_response:\n', repr(re_response))
     dct = json.loads(re_response)
     dct = convert_json_values_to_strings(dct)
 
@@ -121,7 +123,7 @@ def local_postprocessing(response, hide_logs=False) -> str | None:
     try:
         dct = check_sums(dct)
     except Exception as error:
-        dct['nds (%)'] = 0
+        dct[NAMES.nds_percent] = 0
         for good in dct[NAMES.goods]:
             del good[NAMES.price]
             del good[NAMES.sum_with]
@@ -133,7 +135,26 @@ def local_postprocessing(response, hide_logs=False) -> str | None:
             good["price_type"] = ""
         logger.print(f'!! ОШИБКА В CHECK_SUMS: {error} !!')
 
-    # split nds
+    # 6.1. уточнение НДС (0.0 или "Без НДС")
+    if float(dct[NAMES.total_nds]) == 0:
+        # current text
+        if config.get('current_text', None):
+            current_text = config['current_text']
+            config['current_text'] = None
+        else:
+            edited_folder = kwargs.get('folder')
+            with open(os.path.join(edited_folder, 'params.json'), 'r', encoding='utf-8') as params_file:
+                params_dict = json.load(params_file)
+                main_local_files = params_dict['main_local_files']
+            current_text = ''
+            for local_file in main_local_files:
+                current_text += extract_text_from_image(np.array(Image.open(local_file)))
+
+        # classify current text
+        if is_without_nds(current_text):
+            dct[NAMES.nds_percent] = NAMES.noNDS
+
+    # 6.2. split nds
     dct = propagate_nds(dct)
 
     # 7. order dct['Услуги']

@@ -17,9 +17,9 @@ from datetime import datetime
 from dotenv import load_dotenv
 from io import BytesIO, StringIO
 from collections import defaultdict
+from typing import Literal, Optional
 from cryptography.fernet import Fernet
 from PIL import Image, ImageDraw, ImageFont
-from typing import Literal, Optional, Union
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
 
@@ -199,7 +199,7 @@ def rename_files_in_directory(directory_path: str, max_len: int = 45, hide_logs:
 
     def sanitize_filename(filename: str) -> str:
         # Заменяем все недопустимые символы на пробелы
-        sanitized = re.sub(r'[\<\>\/\"\\\|\?\*]', ' ', filename)
+        sanitized = re.sub(r'[<>/\"\\|?*]', ' ', filename)
         # Убираем пробелы в начале и конце строки
         sanitized = sanitized.strip()
         # Заменяем пробелы на "_"
@@ -614,6 +614,28 @@ def propagate_nds(dct: dict):
     dct.pop(NAMES.nds_percent)
 
     return dct
+
+
+def is_without_nds(text: str) -> bool:
+    """
+    checks: nds = 'Без НДС' OR nds = 0.00
+    :param text: text data from the invoice
+    :return: True if: nds == "Без НДС"
+    """
+
+    zero_nds_regex = r'НДС 0%'
+    matches = re.findall(zero_nds_regex, text, flags=re.IGNORECASE)
+    if len(matches) >= 1:
+        logger.print("nds regex matches:", matches)
+        return False
+    else:
+        without_nds_regex = r'без НДС|НДС не облагается|Без налога \(НДС\)|Услуги не подлежат начислению НДС'
+        matches = re.findall(without_nds_regex, text, flags=re.IGNORECASE)
+        if len(matches) >= 1:
+            logger.print("nds regex matches:", matches)
+            return True
+        else:
+            return False
 
 
 # _________ TRANSACTIONS _________

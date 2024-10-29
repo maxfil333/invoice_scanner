@@ -22,14 +22,15 @@ client = OpenAI()
 
 # ___________________________ CHAT ___________________________
 
-def run_chat(*img_paths: str, detail='high', hide_logs=False, text_mode=False) -> str:
+def run_chat(*file_paths: str, detail='high', text_mode=False) -> str:
     if text_mode:
-        if len(img_paths) != 1:
+        if len(file_paths) != 1:
             logger.print("ВНИМАНИЕ! На вход run_chat пришли pdf-файлы в количестве != 1")
-        content = extract_text_with_fitz(img_paths[0])
+        content = extract_text_with_fitz(file_paths[0])
+        config['current_text'] = content
     else:
         content = []
-        for img_path in img_paths:
+        for img_path in file_paths:
             d = {
                 "type": "image_url",
                 "image_url": {"url": f"data:image/jpeg;base64,{base64_encode_pil(Image.open(img_path))}",
@@ -60,7 +61,10 @@ def run_chat(*img_paths: str, detail='high', hide_logs=False, text_mode=False) -
 
 # ___________________________ ASSISTANT ___________________________
 
-def run_assistant(file_path, hide_logs=False):
+def run_assistant(file_path):
+    content = extract_text_with_fitz(file_path)
+    config['current_text'] = content
+
     assistant = client.beta.assistants.retrieve(assistant_id=ASSISTANT_ID)
     message_file = client.files.create(file=open(file_path, "rb"), purpose="assistants")
     # Create a thread and attach the file to the message
