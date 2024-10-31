@@ -244,6 +244,25 @@ def get_transaction_number(json_formatted_str: str, connection: Union[None, Lite
                 good_dct[NAMES.transactions] = sort_transactions(local_deals)
                 good_dct[NAMES.transactions_type] = 'CONTAINERS'
                 history.append(i)
+
+                # ______________ дополнительно смэтчим сделки от контейнеров со сделками от коносаментов _______________
+                # если для данной позиции найдено сделок по контейнерам больше 1, и кол-во коносаментов = 1
+                if len(local_deals) > 1 and len(local_conos.split()) == 1:
+                    # берем сделки по этому коносаменту (m_deals)
+                    if connection == 'http':
+                        m_deals_ = cup_http_request(r'TransactionNumberFromBillOfLading', local_conos)
+                    else:
+                        m_CONOSES = connection.InteractionWithExternalApplications.TransactionNumberFromBillOfLading(
+                            local_conos)
+                        m_deals_ = response_to_deals(m_CONOSES)
+                    # если нашли, находим общие со сделками по контейнерам, оставляем общие
+                    if m_deals_:
+                        deals_intersect = set(deals_).intersection(set(m_deals_))
+                        if deals_intersect:
+                            good_dct[NAMES.transactions] = sort_transactions(list(deals_intersect))
+                            good_dct[NAMES.transactions_type] = 'CONTAINER+CONOS'
+                # ______________________________________________________________________________________________________
+                
                 continue
 
         # ЕСЛИ нет контейнера, но есть коносамент, берем список сделок по нему и идем к следующей услуге
