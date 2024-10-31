@@ -375,6 +375,10 @@ function addService(button) {
 
     fieldset.insertBefore(newService, button);
 
+    // Вызов очистки сделок (для того чтобы найти новое поле "Номер сделки")
+    sdelka_cleaner();
+    // Вызов копирования сделки в буфер (для того чтобы найти новое поле "Номер сделки")
+    copyToBufferService1C();
     // Вызов функции dropdownService1C после добавления нового service
     dropdownService1C();
     // Вызов good_input_cleaner после добавления нового service для обновления элементов класса Услуга1С, Услуга1Сновая
@@ -644,7 +648,9 @@ function getFormData() {
 // --------------------------------------------------------------------------------------------------------------------
 // Копирование выбранного варианта Номер сделки в буфер
 
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener('DOMContentLoaded', copyToBufferService1C);
+
+function copyToBufferService1C() {
     const selectElements = document.querySelectorAll('.Номерсделки');
 
     // Функция для копирования выбранного значения
@@ -674,7 +680,7 @@ document.addEventListener("DOMContentLoaded", function() {
             copySelectedValue(selectElement);
         });
     });
-});
+}
 
 
 // --------------------------------------------------------------------------------------------------------------------
