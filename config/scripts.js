@@ -357,6 +357,10 @@ function addService(button) {
     var firstService = services[0];
     var newService = firstService.cloneNode(true);
 
+    var number_of_deal = newService.querySelector('.Номерсделки');
+    number_of_deal.removeAttribute("style");
+    number_of_deal.className = "Номерсделки"; // если был зеленый стиль, убираем
+
     var inputs = newService.querySelectorAll('input, textarea');
     inputs.forEach(function(input) {
         if (input.type === 'checkbox') {
@@ -797,3 +801,19 @@ document.addEventListener('DOMContentLoaded', function() {
         autoResize(textarea);
     });
 });
+
+
+document.addEventListener('DOMContentLoaded', highlight_one_service);
+
+function highlight_one_service() {
+
+  // Ищем все элементы с классом Номерсделки
+  const selectElements = document.querySelectorAll('.Номерсделки');
+
+  // Проверяем каждый <select>
+  selectElements.forEach(select => {
+    if (select.options.length === 2) {
+      select.classList.add('green-background');
+    }
+  });
+}
