@@ -276,6 +276,14 @@ button[onclick="removeService(this)"]:active {
     background-color: #f2dce0;
 }
 
+.green-background {
+    background-color: #A5F0B0;
+}
+
+option {
+    background-color:  #ffffff;
+}
+
 /* Адаптивные стили для мобильных устройств */
 @media (max-width: 600px) {
     .container {
