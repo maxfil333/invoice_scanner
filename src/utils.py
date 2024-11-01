@@ -488,9 +488,11 @@ def order_goods(dct: dict, new_order: list[str]) -> dict | None:
 
 def check_sums(dct: dict) -> dict:
     """
-    Если количество == '': принимается количество равное 1
+    1. Если количество == '': принимается количество равное 1
     nds_type = "Сверху" / "В т.ч." - выбирается исходя из того как в чеке записана цена (без НДС / с НДС)
-    если nds == 0, cum_amount_and_price == total_with_nds, nds_type = "В т.ч."
+    если nds == 0, cum_amount_and_price == total_with_nds, nds_type = "В т.ч.";
+    2. Округление до 2 знаков, выполняется только при сравнении величин.
+    В конце выполняется для 4 Цен и Сумм (не округляем промежуточные вычисления для большей точности).
     """
     logger.print('--- start check_sums ---')
 
@@ -531,7 +533,7 @@ def check_sums(dct: dict) -> dict:
         nds_type = 'В т.ч.'
         for good_dct in dct[NAMES.goods]:
             old_price = float(good_dct.pop(NAMES.price))
-            good_dct['Цена (без НДС)'] = round(old_price / (1 + (nds / 100)), 2)
+            good_dct['Цена (без НДС)'] = old_price / (1 + (nds / 100))
             good_dct['Цена (с НДС)'] = old_price
             good_dct['price_type'] = nds_type
             del good_dct[NAMES.sum_with]
@@ -541,7 +543,7 @@ def check_sums(dct: dict) -> dict:
         for good_dct in dct[NAMES.goods]:
             old_price = float(good_dct.pop(NAMES.price))
             good_dct['Цена (без НДС)'] = old_price
-            good_dct['Цена (с НДС)'] = round(old_price * (1 + (nds / 100)), 2)
+            good_dct['Цена (с НДС)'] = old_price * (1 + (nds / 100))
             good_dct['price_type'] = nds_type
             del good_dct[NAMES.sum_with]
             del good_dct[NAMES.sum_nds]
@@ -576,19 +578,19 @@ def check_sums(dct: dict) -> dict:
             old_sum = round(float(good_dct.pop(NAMES.sum_with)), 2)  # Сумма услуги из openai-json
             good_dct.pop(NAMES.sum_nds)
             if sum_type in ['with', 'None']:
-                good_dct['Сумма (без НДС)'] = round(old_sum / (1 + (nds / 100)), 2)
+                good_dct['Сумма (без НДС)'] = old_sum / (1 + (nds / 100))
                 good_dct['Сумма (с НДС)'] = old_sum
             elif sum_type == 'without':
                 good_dct['Сумма (без НДС)'] = old_sum
-                good_dct['Сумма (с НДС)'] = round(old_sum * (1 + (nds / 100)), 2)
+                good_dct['Сумма (с НДС)'] = old_sum * (1 + (nds / 100))
 
         # __________________ Расчет "Цен (с/без)" на основе "Сумм (с/без)" __________________
 
         for good_dct in dct[NAMES.goods]:
             amount = float(good_dct[NAMES.amount]) if good_dct[NAMES.amount] != '' else 1
             del good_dct[NAMES.price]
-            good_dct['Цена (без НДС)'] = round(good_dct['Сумма (без НДС)'] / amount, 2)
-            good_dct['Цена (с НДС)'] = round(good_dct['Сумма (с НДС)'] / amount, 2)
+            good_dct['Цена (без НДС)'] = good_dct['Сумма (без НДС)'] / amount
+            good_dct['Цена (с НДС)'] = good_dct['Сумма (с НДС)'] / amount
             if nds != 0:
                 nds_type = 'В т.ч.'
             else:
@@ -598,8 +600,15 @@ def check_sums(dct: dict) -> dict:
     # __________________ расчет "Сумм" на основе "Цена" и "Количество" __________________
     for good_dct in dct[NAMES.goods]:
         amount = float(good_dct[NAMES.amount]) if good_dct[NAMES.amount] != '' else 1
-        good_dct['Сумма (без НДС)'] = round(good_dct['Цена (без НДС)'] * amount, 2)
-        good_dct['Сумма (с НДС)'] = round(good_dct['Цена (с НДС)'] * amount, 2)
+        good_dct['Сумма (без НДС)'] = good_dct['Цена (без НДС)'] * amount
+        good_dct['Сумма (с НДС)'] = good_dct['Цена (с НДС)'] * amount
+
+    # __________________ округляем все рассчитанные суммы и цены до 2 знаков __________________
+    for good_dct in dct[NAMES.goods]:
+        good_dct['Цена (без НДС)'] = round(good_dct['Цена (без НДС)'], 2)
+        good_dct['Цена (с НДС)'] = round(good_dct['Цена (с НДС)'], 2)
+        good_dct['Сумма (без НДС)'] = round(good_dct['Сумма (без НДС)'], 2)
+        good_dct['Сумма (с НДС)'] = round(good_dct['Сумма (с НДС)'], 2)
 
     logger.print('--- end check_sums ---')
 
