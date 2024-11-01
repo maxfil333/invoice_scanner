@@ -4,7 +4,7 @@ import json
 from html import escape
 from bs4 import BeautifulSoup
 
-from config.config import config, NAMES
+from config.config import config, NAMES, current_file_params
 from src.logger import logger
 
 
@@ -140,12 +140,16 @@ def create_html_form(json_file, output_file, file_path):
 
     html_content += generate_html_from_json(data)
 
+    switch_checked_status = 'checked'  # по умолчанию включен Авто-расчет
+    if current_file_params.get('balance_fixes', False):  # если были распределения остатков - выключаем
+        switch_checked_status = ''
+
     html_content += f'''
                      <div class="button-container">
                          <button type="button" id="save-button">Сохранить</button>
                          <label class="switch">
                              <span class="switch-label">Авторасчет</span>
-                             <input type="checkbox" class="not_for_json" checked>
+                             <input type="checkbox" class="not_for_json" {switch_checked_status}>
                              <span class="slider"></span>
                          </label>
                      </div>
