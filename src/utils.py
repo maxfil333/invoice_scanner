@@ -749,10 +749,14 @@ def one_good_split_by_conos(good: dict) -> list:
     conoses = good[NAMES.local_conos].split()
     num_conoses = len(conoses)
 
+    # Исходные суммы позиции
+    old_sum_without_tax = float(good['Сумма (без НДС)'])
+    old_sum_with_tax = float(good['Сумма (с НДС)'])
+
     # Разделение количественных данных
     quantity_per_conos = float(good[NAMES.amount]) / num_conoses
-    sum_without_tax_per_conos = float(good['Сумма (без НДС)']) / num_conoses
-    sum_with_tax_per_conos = float(good['Сумма (с НДС)']) / num_conoses
+    sum_without_tax_per_conos = old_sum_without_tax / num_conoses
+    sum_with_tax_per_conos = old_sum_with_tax / num_conoses
 
     # Создание списка новых объектов
     split_objects = []

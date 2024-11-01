@@ -11,7 +11,7 @@ from itertools import count
 from natsort import os_sorted
 from openai import PermissionDeniedError
 
-from config.config import config, NAMES
+from config.config import config
 from src.logger import logger
 from src.main_edit import main as main_edit
 from src.main_openai import run_chat, run_assistant
@@ -64,7 +64,7 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
             json_name = folder_name + '_' + '0' * 11 + '.json'
 
             # _____________ RUN MAIN_OPENAI.PY _____________
-            if os.path.splitext(files[0])[-1].lower() == '.pdf':  # достаточно проверить 1-й файл в папке, чтобы определить .ext
+            if os.path.splitext(files[0])[-1].lower() == '.pdf':  # достаточно проверить 1-й файл, чтобы определить .ext
                 text_or_scanned_folder = config['NAME_text']
                 # ___ RUN ASSISTANT (or CHAT in text_to_assistant is False) ___
                 if test_mode:
