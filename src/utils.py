@@ -670,10 +670,14 @@ def one_good_split_by_containers(good: dict) -> list[dict]:
     containers = good[NAMES.cont].split()
     num_containers = len(containers)
 
+    # Исходные суммы позиции
+    old_sum_without_tax = float(good['Сумма (без НДС)'])
+    old_sum_with_tax = float(good['Сумма (с НДС)'])
+
     # Разделение количественных данных
     quantity_per_container = float(good[NAMES.amount]) / num_containers
-    sum_without_tax_per_container = float(good['Сумма (без НДС)']) / num_containers
-    sum_with_tax_per_container = float(good['Сумма (с НДС)']) / num_containers
+    sum_without_tax_per_container = old_sum_without_tax / num_containers
+    sum_with_tax_per_container = old_sum_with_tax / num_containers
 
     # Создание списка новых объектов
     split_objects = []
@@ -684,6 +688,31 @@ def one_good_split_by_containers(good: dict) -> list[dict]:
         new_obj['Сумма (без НДС)'] = f"{sum_without_tax_per_container:.2f}"  # Новая сумма без НДС
         new_obj['Сумма (с НДС)'] = f"{sum_with_tax_per_container:.2f}"  # Новая сумма с НДС
         split_objects.append(new_obj)
+
+    # # Проверка новых сумм
+    # new_sum_without_tax, new_sum_with_tax = 0, 0
+    # for split_good in split_objects:
+    #     new_sum_without_tax += split_good['Сумма (без НДС)']
+    #     new_sum_with_tax += split_good['Сумма (c НДС)']
+    #
+    # # Распределение остатков
+    # if old_sum_without_tax != new_sum_without_tax:
+    #     diff = round(old_sum_without_tax - new_sum_without_tax, 2)
+    #     for i in split_objects:
+    #         if diff == 0:
+    #             break
+    #         adjustment = round(diff / abs(diff) * (10 ** -2), 2)
+    #         i['Сумма (без НДС)'] += adjustment
+    #         diff -= adjustment
+    #
+    # if old_sum_with_tax != new_sum_with_tax:
+    #     diff = round(old_sum_with_tax - new_sum_with_tax, 2)
+    #     for i in split_objects:
+    #         if diff == 0:
+    #             break
+    #         adjustment = round(diff / abs(diff) * (10 ** -2), 2)
+    #         i['Сумма (с НДС)'] += adjustment
+    #         diff -= adjustment
 
     return split_objects
 
