@@ -193,6 +193,12 @@ def local_postprocessing(response, **kwargs) -> str | None:
         dct['additional_info']['Судно'] = closest_match[0]
         logger.print(f'find ship: {ship} --> {closest_match[0]}')
 
+    # 11. Идентификатор исходной позиции
+    initial_id_counter = 1
+    for i_, good_dct in enumerate(dct[NAMES.goods]):
+        good_dct['__исходный_айди'] = f"{initial_id_counter}|{good_dct['Сумма (без НДС)']}|{good_dct['Сумма (с НДС)']}"
+        initial_id_counter += 1
+
     string_dictionary = convert_json_values_to_strings(dct)
     return json.dumps(string_dictionary, ensure_ascii=False, indent=4)
 

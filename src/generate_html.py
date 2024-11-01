@@ -10,8 +10,16 @@ from src.logger import logger
 
 def generate_input_html(key, val):
     char_key = re.sub(r'\W', '', str(key))
-
     input_type = "text"
+
+    # если ключ начинается с __, label не создаем, input - скрытый
+    if str(key).startswith('__'):
+        html_content = f'<div class="input-group">\n'
+        html_content += (f'<input type="{input_type}" name="{escape(key)}" '
+                         f'class="{escape(char_key)}" value="{escape(str(val))}" hidden></div>\n')
+        return html_content
+
+    # обычный случай
     html_content = (f'<div class="input-group">\n'
                     f'<label>{escape(key)}</label>\n')
 
