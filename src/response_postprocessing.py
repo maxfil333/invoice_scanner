@@ -13,7 +13,7 @@ from typing import Union, Literal
 from win32com.client import CDispatch
 
 from src.logger import logger
-from config.config import config, NAMES
+from config.config import config, NAMES, current_file_params
 from src.crop_tables import extract_text_from_image
 from src.connector import cup_http_request, response_to_deals
 from src.utils import convert_json_values_to_strings, handling_openai_json
@@ -138,9 +138,8 @@ def local_postprocessing(response, **kwargs) -> str | None:
     # 6.1. уточнение НДС (0.0 или "Без НДС")
     if float(dct[NAMES.total_nds]) == 0:
         # current text
-        if config.get('current_text', None):
-            current_text = config['current_text']
-            config['current_text'] = None
+        if current_file_params.get('current_text', None):
+            current_text = current_file_params['current_text']
         else:
             edited_folder = kwargs.get('folder')
             with open(os.path.join(edited_folder, 'params.json'), 'r', encoding='utf-8') as params_file:

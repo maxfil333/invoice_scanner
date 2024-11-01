@@ -7,7 +7,7 @@ from time import perf_counter
 from dotenv import load_dotenv
 
 from src.logger import logger
-from config.config import config
+from config.config import config, current_file_params
 from src.utils import extract_text_with_fitz, get_stream_dotenv, base64_encode_pil
 
 
@@ -27,7 +27,7 @@ def run_chat(*file_paths: str, detail='high', text_mode=False) -> str:
         if len(file_paths) != 1:
             logger.print("ВНИМАНИЕ! На вход run_chat пришли pdf-файлы в количестве != 1")
         content = extract_text_with_fitz(file_paths[0])
-        config['current_text'] = content
+        current_file_params['current_text'] = content
     else:
         content = []
         for img_path in file_paths:
@@ -63,7 +63,7 @@ def run_chat(*file_paths: str, detail='high', text_mode=False) -> str:
 
 def run_assistant(file_path):
     content = extract_text_with_fitz(file_path)
-    config['current_text'] = content
+    current_file_params['current_text'] = content
 
     assistant = client.beta.assistants.retrieve(assistant_id=ASSISTANT_ID)
     message_file = client.files.create(file=open(file_path, "rb"), purpose="assistants")

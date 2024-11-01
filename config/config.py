@@ -19,6 +19,8 @@ datas=[
 ],
 """
 
+current_file_params = dict()
+
 config = dict()
 config['user_1C'] = os.getenv('user_1C')
 config['password_1C'] = os.getenv('password_1C')
@@ -108,11 +110,16 @@ class ConfigNames:
     transactions_type = 'Тип поиска сделки'
     nds_percent = 'nds (%)'
     noNDS = 'Без НДС'
+    sum_w_nds = "Сумма (с НДС)"
+    sum_wo_nds = "Сумма (без НДС)"
+    price_w_nds = "Цена (с НДС)"
+    price_wo_nds = "Цена (без НДС)"
 
 
 NAMES = ConfigNames()
 
-# 15 = 7(prompt) - (price - sum_with - sum_nds)(3) + (2*Сумма + 2*Цена)(4) + (good1C + good1C_new + price_type)(3) + (tran, tran_new, tran_type)(3) + local_conos(1)
+# 15 = 7(prompt) - (price - sum_with - sum_nds)(3) + (2*Сумма + 2*Цена)(4)
+# + (good1C + good1C_new + price_type)(3) + (tran, tran_new, tran_type)(3) + local_conos(1)
 # 15 = 7 - 3 + 4 + 3 + 3 + 1
 config['services_order'] = [NAMES.name, NAMES.good1C, NAMES.good1C_new,
                             NAMES.cont, NAMES.local_conos, NAMES.unit, NAMES.amount,

@@ -11,7 +11,7 @@ from itertools import count
 from natsort import os_sorted
 from openai import PermissionDeniedError
 
-from config.config import config
+from config.config import config, current_file_params
 from src.logger import logger
 from src.main_edit import main as main_edit
 from src.main_openai import run_chat, run_assistant
@@ -128,6 +128,9 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
             html_name = os.path.basename(local_check_folder) + '.html'
             html_path = os.path.join(local_check_folder, html_name)
             create_html_form(json_path, html_path, original_file)
+
+            # _____ clear temp variable current_file_params _____
+            current_file_params.clear()
 
             # _____  STOP ITERATION  _____
             stop = next(c)
