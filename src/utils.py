@@ -189,7 +189,6 @@ def switch_to_latin(s: str, reverse: bool = False) -> str:
 # _________ FOLDERS _________
 
 def rename_files_in_directory(directory_path: str, max_len: int = 45, hide_logs: bool = False) -> None:
-
     def get_unique_filename(filepath):
         base, ext = os.path.splitext(filepath)
         counter = 1
@@ -506,10 +505,10 @@ def check_sums(dct: dict) -> dict:
 
     # 2. Берем ВСЕГО НДС, вычисляем ВСЕГО БЕЗ НДС и ставку НДС
     total_nds = float(dct[NAMES.total_nds]) if dct[NAMES.total_nds] != '' else None
-    if total_nds is not None:                                     # если ВСЕГО НДС найдено
+    if total_nds is not None:  # если ВСЕГО НДС найдено
         total_without_nds = round(total_with_nds - total_nds, 2)  # ВСЕГО БЕЗ НДС =  ВСЕГО ВКЛЮЧАЯ НДС - ВСЕГО НДС
-        nds = round((total_nds / total_without_nds) * 100, 2)     # nds = ВСЕГО НДС / ВСЕГО БЕЗ НДС * 100
-    else:                                                         # если ВСЕГО НДС не найдено: nds = 0, ВСЕГО НДС = 0
+        nds = round((total_nds / total_without_nds) * 100, 2)  # nds = ВСЕГО НДС / ВСЕГО БЕЗ НДС * 100
+    else:  # если ВСЕГО НДС не найдено: nds = 0, ВСЕГО НДС = 0
         logger.print('! total_nds not found ! nds = 0; total_nds = 0')
         nds = 0.0
         dct[NAMES.total_nds] = 0.0  # если НДС = 0, то Всего НДС = 0.
@@ -533,8 +532,8 @@ def check_sums(dct: dict) -> dict:
         nds_type = 'В т.ч.'
         for good_dct in dct[NAMES.goods]:
             old_price = float(good_dct.pop(NAMES.price))
-            good_dct['Цена (без НДС)'] = old_price / (1 + (nds / 100))
-            good_dct['Цена (с НДС)'] = old_price
+            good_dct[NAMES.price_wo_nds] = old_price / (1 + (nds / 100))
+            good_dct[NAMES.price_w_nds] = old_price
             good_dct['price_type'] = nds_type
             del good_dct[NAMES.sum_with]
             del good_dct[NAMES.sum_nds]
@@ -542,8 +541,8 @@ def check_sums(dct: dict) -> dict:
         nds_type = 'Сверху'
         for good_dct in dct[NAMES.goods]:
             old_price = float(good_dct.pop(NAMES.price))
-            good_dct['Цена (без НДС)'] = old_price
-            good_dct['Цена (с НДС)'] = old_price * (1 + (nds / 100))
+            good_dct[NAMES.price_wo_nds] = old_price
+            good_dct[NAMES.price_w_nds] = old_price * (1 + (nds / 100))
             good_dct['price_type'] = nds_type
             del good_dct[NAMES.sum_with]
             del good_dct[NAMES.sum_nds]
@@ -578,19 +577,19 @@ def check_sums(dct: dict) -> dict:
             old_sum = round(float(good_dct.pop(NAMES.sum_with)), 2)  # Сумма услуги из openai-json
             good_dct.pop(NAMES.sum_nds)
             if sum_type in ['with', 'None']:
-                good_dct['Сумма (без НДС)'] = old_sum / (1 + (nds / 100))
-                good_dct['Сумма (с НДС)'] = old_sum
+                good_dct[NAMES.sum_wo_nds] = old_sum / (1 + (nds / 100))
+                good_dct[NAMES.sum_w_nds] = old_sum
             elif sum_type == 'without':
-                good_dct['Сумма (без НДС)'] = old_sum
-                good_dct['Сумма (с НДС)'] = old_sum * (1 + (nds / 100))
+                good_dct[NAMES.sum_wo_nds] = old_sum
+                good_dct[NAMES.sum_w_nds] = old_sum * (1 + (nds / 100))
 
         # __________________ Расчет "Цен (с/без)" на основе "Сумм (с/без)" __________________
 
         for good_dct in dct[NAMES.goods]:
             amount = float(good_dct[NAMES.amount]) if good_dct[NAMES.amount] != '' else 1
             del good_dct[NAMES.price]
-            good_dct['Цена (без НДС)'] = good_dct['Сумма (без НДС)'] / amount
-            good_dct['Цена (с НДС)'] = good_dct['Сумма (с НДС)'] / amount
+            good_dct[NAMES.price_wo_nds] = good_dct[NAMES.sum_wo_nds] / amount
+            good_dct[NAMES.price_w_nds] = good_dct[NAMES.sum_w_nds] / amount
             if nds != 0:
                 nds_type = 'В т.ч.'
             else:
@@ -600,15 +599,15 @@ def check_sums(dct: dict) -> dict:
     # __________________ расчет "Сумм" на основе "Цена" и "Количество" __________________
     for good_dct in dct[NAMES.goods]:
         amount = float(good_dct[NAMES.amount]) if good_dct[NAMES.amount] != '' else 1
-        good_dct['Сумма (без НДС)'] = good_dct['Цена (без НДС)'] * amount
-        good_dct['Сумма (с НДС)'] = good_dct['Цена (с НДС)'] * amount
+        good_dct[NAMES.sum_wo_nds] = good_dct[NAMES.price_wo_nds] * amount
+        good_dct[NAMES.sum_w_nds] = good_dct[NAMES.price_w_nds] * amount
 
     # __________________ округляем все рассчитанные суммы и цены до 2 знаков __________________
     for good_dct in dct[NAMES.goods]:
-        good_dct['Цена (без НДС)'] = round(good_dct['Цена (без НДС)'], 2)
-        good_dct['Цена (с НДС)'] = round(good_dct['Цена (с НДС)'], 2)
-        good_dct['Сумма (без НДС)'] = round(good_dct['Сумма (без НДС)'], 2)
-        good_dct['Сумма (с НДС)'] = round(good_dct['Сумма (с НДС)'], 2)
+        good_dct[NAMES.price_wo_nds] = round(good_dct[NAMES.price_wo_nds], 2)
+        good_dct[NAMES.price_w_nds] = round(good_dct[NAMES.price_w_nds], 2)
+        good_dct[NAMES.sum_wo_nds] = round(good_dct[NAMES.sum_wo_nds], 2)
+        good_dct[NAMES.sum_w_nds] = round(good_dct[NAMES.sum_w_nds], 2)
 
     logger.print('--- end check_sums ---')
 
@@ -616,12 +615,10 @@ def check_sums(dct: dict) -> dict:
 
 
 def propagate_nds(dct: dict):
-
     nds = dct[NAMES.nds_percent]
     for good_dct in dct[NAMES.goods]:
         good_dct[NAMES.nds_percent] = nds
     dct.pop(NAMES.nds_percent)
-
     return dct
 
 
@@ -680,8 +677,8 @@ def one_good_split_by_containers(good: dict) -> list[dict]:
     num_containers = len(containers)
 
     # Исходные суммы позиции
-    old_sum_without_tax = float(good['Сумма (без НДС)'])
-    old_sum_with_tax = float(good['Сумма (с НДС)'])
+    old_sum_without_tax = float(good[NAMES.sum_wo_nds])
+    old_sum_with_tax = float(good[NAMES.sum_w_nds])
 
     # Разделение количественных данных
     quantity_per_container = float(good[NAMES.amount]) / num_containers
@@ -693,35 +690,10 @@ def one_good_split_by_containers(good: dict) -> list[dict]:
     for container in containers:
         new_obj = good.copy()  # Копирование исходного объекта
         new_obj[NAMES.cont] = container  # Присваивание одного контейнера
-        new_obj[NAMES.amount] = f"{quantity_per_container:.2f}"  # Новое количество
-        new_obj['Сумма (без НДС)'] = f"{sum_without_tax_per_container:.2f}"  # Новая сумма без НДС
-        new_obj['Сумма (с НДС)'] = f"{sum_with_tax_per_container:.2f}"  # Новая сумма с НДС
+        new_obj[NAMES.amount] = round(quantity_per_container, 2)  # Новое количество
+        new_obj[NAMES.sum_wo_nds] = round(sum_without_tax_per_container, 2)  # Новая сумма без НДС
+        new_obj[NAMES.sum_w_nds] = round(sum_with_tax_per_container, 2)  # Новая сумма с НДС
         split_objects.append(new_obj)
-
-    # # Проверка новых сумм
-    # new_sum_without_tax, new_sum_with_tax = 0, 0
-    # for split_good in split_objects:
-    #     new_sum_without_tax += split_good['Сумма (без НДС)']
-    #     new_sum_with_tax += split_good['Сумма (c НДС)']
-    #
-    # # Распределение остатков
-    # if old_sum_without_tax != new_sum_without_tax:
-    #     diff = round(old_sum_without_tax - new_sum_without_tax, 2)
-    #     for i in split_objects:
-    #         if diff == 0:
-    #             break
-    #         adjustment = round(diff / abs(diff) * (10 ** -2), 2)
-    #         i['Сумма (без НДС)'] += adjustment
-    #         diff -= adjustment
-    #
-    # if old_sum_with_tax != new_sum_with_tax:
-    #     diff = round(old_sum_with_tax - new_sum_with_tax, 2)
-    #     for i in split_objects:
-    #         if diff == 0:
-    #             break
-    #         adjustment = round(diff / abs(diff) * (10 ** -2), 2)
-    #         i['Сумма (с НДС)'] += adjustment
-    #         diff -= adjustment
 
     return split_objects
 
@@ -750,8 +722,8 @@ def one_good_split_by_conos(good: dict) -> list:
     num_conoses = len(conoses)
 
     # Исходные суммы позиции
-    old_sum_without_tax = float(good['Сумма (без НДС)'])
-    old_sum_with_tax = float(good['Сумма (с НДС)'])
+    old_sum_without_tax = float(good[NAMES.sum_wo_nds])
+    old_sum_with_tax = float(good[NAMES.sum_w_nds])
 
     # Разделение количественных данных
     quantity_per_conos = float(good[NAMES.amount]) / num_conoses
@@ -763,9 +735,9 @@ def one_good_split_by_conos(good: dict) -> list:
     for conos in conoses:
         new_obj = good.copy()  # Копирование исходного объекта
         new_obj[NAMES.local_conos] = conos  # Присваивание одного коносамента
-        new_obj[NAMES.amount] = f"{quantity_per_conos:.2f}"  # Новое количество
-        new_obj['Сумма (без НДС)'] = f"{sum_without_tax_per_conos:.2f}"  # Новая сумма без НДС
-        new_obj['Сумма (с НДС)'] = f"{sum_with_tax_per_conos:.2f}"  # Новая сумма с НДС
+        new_obj[NAMES.amount] = round(quantity_per_conos, 2)  # Новое количество
+        new_obj[NAMES.sum_wo_nds] = round(sum_without_tax_per_conos, 2)  # Новая сумма без НДС
+        new_obj[NAMES.sum_w_nds] = round(sum_with_tax_per_conos, 2)  # Новая сумма с НДС
         split_objects.append(new_obj)
 
     return split_objects
