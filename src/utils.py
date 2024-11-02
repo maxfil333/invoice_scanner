@@ -23,7 +23,7 @@ from PIL import Image, ImageDraw, ImageFont
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
 
-from config.config import config, NAMES
+from config.config import config, NAMES, current_file_params
 from src.logger import logger
 
 
@@ -671,6 +671,38 @@ def sort_transactions(transactions: list[str]) -> list:
         return transactions
 
 
+# _________ TRANSACTIONS (service_split) _________
+
+def balance_remainders(data: list[dict], key_name: str, target_sum: int | float, param_file: dict, precision=2) -> None:
+    """ Функция для распределения остатков. Используется в конце one_good_split_by... """
+
+    # Вычисляем текущую сумму всех цен в списке, округляя её до нужной точности
+    current_sum = round(sum(d[key_name] for d in data), precision)
+
+    # Рассчитываем разницу между целевой суммой и текущей суммой
+    difference = round(target_sum - current_sum, precision)
+    if not difference:
+        return
+
+    param_file['balance_fixes'] = True
+
+    # Определяем базовую корректировку для каждого элемента, распределяя разницу пропорционально
+    n = len(data)  # Количество элементов в списке
+    adjustment_per_item = round(difference / n, precision)  # Корректировка для каждого элемента
+    remainder = round(difference - (adjustment_per_item * n),
+                      precision)  # Оставшаяся часть разницы после равного распределения
+
+    # Применяем базовую корректировку к каждому элементу, округляя каждый результат до нужной точности
+    for i in range(n):
+        data[i][key_name] = round(data[i][key_name] + adjustment_per_item, precision)
+
+    # Распределяем оставшийся остаток по последним элементам списка, начиная с конца
+    for i in range(int(abs(remainder) * (10 ** precision))):
+        idx = n - 1 - i  # Индекс для обратного обхода списка
+        # Корректируем элемент, прибавляя либо +0.01, либо -0.01 в зависимости от знака remainder
+        data[idx][key_name] = round(data[idx][key_name] + (1 if remainder > 0 else -1) * (10 ** -precision), precision)
+
+
 def one_good_split_by_containers(good: dict) -> list[dict]:
     # Разделение строки контейнеров
     containers = good[NAMES.cont].split()
@@ -694,6 +726,11 @@ def one_good_split_by_containers(good: dict) -> list[dict]:
         new_obj[NAMES.sum_wo_nds] = round(sum_without_tax_per_container, 2)  # Новая сумма без НДС
         new_obj[NAMES.sum_w_nds] = round(sum_with_tax_per_container, 2)  # Новая сумма с НДС
         split_objects.append(new_obj)
+
+    # распределение остатков Сумма (с НДС)
+    balance_remainders(split_objects, NAMES.sum_w_nds, old_sum_with_tax, param_file=current_file_params)
+    # распределение остатков Сумма (без НДС)
+    balance_remainders(split_objects, NAMES.sum_wo_nds, old_sum_without_tax, param_file=current_file_params)
 
     return split_objects
 
@@ -739,6 +776,11 @@ def one_good_split_by_conos(good: dict) -> list:
         new_obj[NAMES.sum_wo_nds] = round(sum_without_tax_per_conos, 2)  # Новая сумма без НДС
         new_obj[NAMES.sum_w_nds] = round(sum_with_tax_per_conos, 2)  # Новая сумма с НДС
         split_objects.append(new_obj)
+
+    # распределение остатков Сумма (с НДС)
+    balance_remainders(split_objects, NAMES.sum_w_nds, old_sum_with_tax, param_file=current_file_params)
+    # распределение остатков Сумма (без НДС)
+    balance_remainders(split_objects, NAMES.sum_wo_nds, old_sum_without_tax, param_file=current_file_params)
 
     return split_objects
 
