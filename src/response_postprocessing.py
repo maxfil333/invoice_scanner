@@ -16,8 +16,9 @@ from src.logger import logger
 from config.config import config, NAMES, current_file_params
 from src.crop_tables import extract_text_from_image
 from src.connector import cup_http_request, response_to_deals
+from src.utils import chroma_similarity_search
 from src.utils import convert_json_values_to_strings, handling_openai_json
-from src.utils import chroma_get_relevant, get_stream_dotenv, check_sums, is_without_nds, propagate_nds, order_goods
+from src.utils import get_stream_dotenv, check_sums, is_without_nds, propagate_nds, order_goods
 from src.utils import replace_container_with_latin, replace_container_with_none, switch_to_latin, sort_transactions
 
 load_dotenv(stream=get_stream_dotenv())
@@ -97,22 +98,30 @@ def local_postprocessing(response, **kwargs) -> str | None:
         logger.print(f"--- DB response {i_ + 1} ---:")
 
         name_without_containers = replace_container_with_none(good_dct[NAMES.name], container_regex)
-        relevant_results = chroma_get_relevant(query=name_without_containers,
-                                               chroma_path=config['chroma_path'],
-                                               embedding_func=embedding_func,
-                                               k=1)
+        # спец символы влияют на смысл больше чем нужно, убираем
+        query = re.sub(r'[^\s\w]', '', name_without_containers)
+        logger.print(f"query:\n{query}")
+        relevant_results = chroma_similarity_search(query=query,
+                                                    chroma_path=config['chroma_path'],
+                                                    embedding_func=embedding_func,
+                                                    k=1)
         if relevant_results:
             # берем первый (наиболее вероятный) элемента из списка результатов поиска
             relevant_result = relevant_results[0]
-            comment_id, comment_content = relevant_result.metadata['id'], relevant_result.page_content
+            score = relevant_result[1]
+            if score < 0.84:
+                good_dct['Услуга1С'] = config['not_found_service']
+            else:
+                comment_id, comment_content = relevant_result[0].metadata['id'], relevant_result[0].page_content
 
-            # id в каждом словарике {id: .., comment: .., service_code: ..} совпадает с порядковым номером словарика
-            uniq_comments_dct_by_idx = config['unique_comments_dict'][comment_id]  # {id: , comment: , service_code: }
-            logger.print(f"response:\n{uniq_comments_dct_by_idx}")
+                # id в каждом словарике {id:.., comment:.., service_code:..} совпадает с порядковым номером словарика
+                uniq_comments_dct_by_idx = config['unique_comments_dict'][comment_id]  # {id:, comment:, service_code: }
+                logger.print(f"response:\n{uniq_comments_dct_by_idx}")
 
-            # берем первый "service#code#" в ключе "service_code" элемента словаря с индексом comment_id,
-            # заполняем поле "Услуга1С"
-            good_dct['Услуга1С'] = uniq_comments_dct_by_idx['service_code'][0]
+                # берем первый "service#code#" в ключе "service_code" элемента словаря с индексом comment_id,
+                # заполняем поле "Услуга1С"
+                good_dct['Услуга1С'] = uniq_comments_dct_by_idx['service_code'][0]
+            logger.print(f"score: {score} found service: {good_dct['Услуга1С']}")
 
         # 6. Добавить local_transaction, local_transactions_new, local_transaction_type
         good_dct[NAMES.transactions] = []
@@ -267,7 +276,7 @@ def get_transaction_number(json_formatted_str: str, connection: Union[None, Lite
                             good_dct[NAMES.transactions] = sort_transactions(list(deals_intersect))
                             good_dct[NAMES.transactions_type] = 'CONTAINER+CONOS'
                 # ______________________________________________________________________________________________________
-                
+
                 continue
 
         # ЕСЛИ нет контейнера, но есть коносамент, берем список сделок по нему и идем к следующей услуге
