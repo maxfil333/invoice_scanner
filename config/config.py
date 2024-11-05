@@ -69,11 +69,13 @@ except Exception as e:
 
 config['unique_comments_file'] = os.path.join(config['CONFIG'], 'unique_comments.json')
 config['unique_services'] = None  # to html <div id="services_dict..."
+config['not_found_service'] = 'Не найдено'
 try:
     with open(config['unique_comments_file'], 'r', encoding='utf-8') as f:
         dct = json.load(f)
         config['unique_comments_dict'] = dct
         config['unique_services'] = list(dict.fromkeys([code for lst_item in dct for code in lst_item['service_code']]))
+        config['unique_services'].append(config['not_found_service'])
 except FileNotFoundError:
     logger.print(f"!!! FILE {config['unique_comments_file']} NOT FOUND !!!")
     logger.save(config['CHECK_FOLDER'])
