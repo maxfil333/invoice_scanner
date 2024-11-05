@@ -805,6 +805,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
 document.addEventListener('DOMContentLoaded', highlight_one_service);
 
+
+// --------------------------------------------------------------------------------------------------------------------
+// Подсветить сделку зеленым если сделка всего одна
+
 function highlight_one_service() {
 
   // Ищем все элементы с классом Номерсделки
