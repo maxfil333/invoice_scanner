@@ -64,13 +64,13 @@ def main(dir_path: str = config['IN_FOLDER'], hide_logs=False, stop_when=-1):
                 images = []
                 if required_pages:
                     for page in required_pages:
-                        image = np.array(convert_from_path(main_file, first_page=page, last_page=page + 1, fmt='jpg',
+                        image = np.array(convert_from_path(main_file, first_page=page, last_page=page, fmt='jpg',
                                                            poppler_path=config["POPPLER_PATH"],
                                                            jpegopt={"quality": 100})[0])
                         images.append(image)
 
                 else:  # get first page in jpg
-                    image = np.array(convert_from_path(main_file, first_page=0, last_page=1, fmt='jpg',
+                    image = np.array(convert_from_path(main_file, first_page=1, last_page=1, fmt='jpg',
                                                        poppler_path=config["POPPLER_PATH"],
                                                        jpegopt={"quality": 100})[0])
                     images.append(image)
