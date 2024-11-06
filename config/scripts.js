@@ -442,7 +442,7 @@ function highlight_errors() {
         /^04\d{7}$/,         // bik
         /^30101\d{15}$/,     // ks
         /^(?:408|407|406|405)\d{17}$/, // rs
-        /^(20|20\.0+|0|0\.0+)$/ // nds
+        /^(20|20\.0+|0|0\.0+|без ндс)$/i // nds
     ];
 
     const inputs = form.querySelectorAll('input');
