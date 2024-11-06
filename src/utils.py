@@ -71,7 +71,7 @@ def group_files_by_name(file_list: list[str]) -> dict:
     return groups
 
 
-def convert_json_values_to_strings(obj):
+def convert_json_values_to_strings(obj) -> dict | list | str:
     if isinstance(obj, dict):
         return {k: convert_json_values_to_strings(v) for k, v in obj.items()}
     elif isinstance(obj, list):
