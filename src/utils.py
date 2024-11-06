@@ -186,6 +186,11 @@ def switch_to_latin(s: str, reverse: bool = False) -> str:
     return new
 
 
+def remove_dates(text: str) -> str:
+    date_pattern = r'\b\d{1,2}[-./]\d{1,2}[-./]\d{2,4}\b'
+    return re.sub(date_pattern, '', text)
+
+
 # _________ FOLDERS _________
 
 def rename_files_in_directory(directory_path: str, max_len: int = 45, hide_logs: bool = False) -> None:

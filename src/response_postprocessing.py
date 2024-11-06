@@ -18,8 +18,8 @@ from src.crop_tables import extract_text_from_image
 from src.connector import cup_http_request, response_to_deals
 from src.utils import chroma_similarity_search
 from src.utils import convert_json_values_to_strings, handling_openai_json
-from src.utils import get_stream_dotenv, check_sums, is_without_nds, propagate_nds, order_goods
-from src.utils import replace_container_with_latin, replace_container_with_none, switch_to_latin, sort_transactions
+from src.utils import replace_container_with_latin, replace_container_with_none, switch_to_latin, remove_dates
+from src.utils import get_stream_dotenv, check_sums, is_without_nds, propagate_nds, order_goods, sort_transactions
 
 load_dotenv(stream=get_stream_dotenv())
 
@@ -97,10 +97,11 @@ def local_postprocessing(response, **kwargs) -> str | None:
         # 5. заполнение 'Услуга1С'
         logger.print(f"--- DB response {i_ + 1} ---:")
 
-        name_without_containers = replace_container_with_none(good_dct[NAMES.name], container_regex)
-        # спец символы влияют на смысл больше чем нужно, убираем
-        query = re.sub(r'[^\s\w]', '', name_without_containers)
+        query = replace_container_with_none(good_dct[NAMES.name], container_regex)
+        query = remove_dates(query)
+        # query = re.sub(r'[^\s\w]', '', query)  # убираем спец символы: влияют на смысл больше чем нужно
         logger.print(f"query:\n{query}")
+
         relevant_results = chroma_similarity_search(query=query,
                                                     chroma_path=config['chroma_path'],
                                                     embedding_func=embedding_func,
