@@ -42,7 +42,8 @@ def main(dir_path: str = config['IN_FOLDER'], hide_logs=False, stop_when=-1):
         edited_folder = os.path.join(config['EDITED'], folder_name)
         main_save_path = os.path.join(edited_folder, main_base)
         os.makedirs(edited_folder, exist_ok=False)
-        main_local_files = []  # список главных файлов (без _TAB1, _TAB2)
+        main_local_files = []  # список главных изображений (без _TAB1, _TAB2);
+        # Если scannedPDF + required_pages, то len(main_local_files) может быть > 1
 
         # if digital pdf
         if (main_type.lower() == '.pdf') and (is_scanned_pdf(main_file, required_pages) is False):
