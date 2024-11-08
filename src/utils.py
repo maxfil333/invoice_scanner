@@ -357,13 +357,15 @@ def count_pages(file_path):
         return None
 
 
-def extract_text_with_fitz(pdf_path):
+def extract_text_with_fitz(pdf_path) -> list[str]:
+    """ return list of texts for every page """
+
     document = fitz.open(pdf_path)
-    text = ""
+    texts = []
     for page_num in range(len(document)):
         page = document.load_page(page_num)  # загружаем страницу
-        text += page.get_text()  # извлекаем текст
-    return text
+        texts.append(page.get_text())  # извлекаем текст
+    return texts
 
 
 def align_pdf_orientation(input_file: str | bytes, output_pdf_path: str) -> None:
@@ -512,7 +514,10 @@ def check_sums(dct: dict) -> dict:
     total_nds = float(dct[NAMES.total_nds]) if dct[NAMES.total_nds] != '' else None
     if total_nds is not None:  # если ВСЕГО НДС найдено
         total_without_nds = round(total_with_nds - total_nds, 2)  # ВСЕГО БЕЗ НДС =  ВСЕГО ВКЛЮЧАЯ НДС - ВСЕГО НДС
-        nds = round((total_nds / total_without_nds) * 100, 2)  # nds = ВСЕГО НДС / ВСЕГО БЕЗ НДС * 100
+        try:
+            nds = round((total_nds / total_without_nds) * 100, 2)  # nds = ВСЕГО НДС / ВСЕГО БЕЗ НДС * 100
+        except ZeroDivisionError:
+            nds = 0
     else:  # если ВСЕГО НДС не найдено: nds = 0, ВСЕГО НДС = 0
         logger.print('! total_nds not found ! nds = 0; total_nds = 0')
         nds = 0.0
@@ -593,8 +598,12 @@ def check_sums(dct: dict) -> dict:
         for good_dct in dct[NAMES.goods]:
             amount = float(good_dct[NAMES.amount]) if good_dct[NAMES.amount] != '' else 1
             del good_dct[NAMES.price]
-            good_dct[NAMES.price_wo_nds] = good_dct[NAMES.sum_wo_nds] / amount
-            good_dct[NAMES.price_w_nds] = good_dct[NAMES.sum_w_nds] / amount
+            try:
+                good_dct[NAMES.price_wo_nds] = good_dct[NAMES.sum_wo_nds] / amount
+                good_dct[NAMES.price_w_nds] = good_dct[NAMES.sum_w_nds] / amount
+            except ZeroDivisionError:
+                good_dct[NAMES.price_wo_nds] = 0
+                good_dct[NAMES.price_w_nds] = 0
             if nds != 0:
                 nds_type = 'В т.ч.'
             else:
@@ -647,6 +656,49 @@ def is_without_nds(text: str) -> bool:
             return True
         else:
             return False
+
+
+def is_invoice(text: str) -> bool | None:
+    """
+    :param text: text of the first page
+    :return: True or False or None if no info
+    """
+
+    no_regex_list = (r"\bуниверсальный\s{1,2}передаточный\s{1,2}документ|"
+                     r"\bсч[её]т-фактура|"
+                     r"\bакт.оказанных|"
+                     r"\bакт.выполненных|"
+                     r"\bакт.приема.передачи|"
+                     r"\bакт сдачи|"
+                     r"\bакт принципала|"
+                     r"\bакт\b№")
+
+    yes_regex_list = (r"invoice|"
+                      r"\bсч[её]т на оплату|"
+                      r"\bсч[её]т-оферта|"
+                      r"\bсч[её]т №?\s?.{2,14} от|"
+                      r"\bсч[её]т от \d|"
+                      r"^сч[её]т$")
+
+    stage1 = re.findall(no_regex_list, text, re.IGNORECASE | re.MULTILINE | re.DOTALL)
+    if len(stage1) > 0:
+        logger.print(f"is_invoice keywords: {stage1}")
+        return False
+
+    stage2 = re.findall(yes_regex_list, text, re.IGNORECASE | re.MULTILINE)
+    if len(stage2) > 0:
+        logger.print(f"is_invoice keywords: {stage2}")
+        return True
+
+    stage3 = re.findall(r"\bакт\b", text, re.IGNORECASE)
+    if len(stage3) > 0:
+        logger.print(f"is_invoice keywords: {stage3}")
+        return False
+
+    stage4 = re.findall(r"\bсч[её]т\b", text, re.IGNORECASE)
+    if len(stage4) > 0:
+        logger.print(f"is_invoice keywords: {stage4}")
+        return True
 
 
 # _________ TRANSACTIONS _________
