@@ -26,8 +26,8 @@ def run_chat(*file_paths: str, detail='high', text_mode=False) -> str:
     if text_mode:
         if len(file_paths) != 1:
             logger.print("ВНИМАНИЕ! На вход run_chat пришли pdf-файлы в количестве != 1")
-        content = extract_text_with_fitz(file_paths[0])
-        current_file_params['current_text'] = content
+        current_file_params['current_texts'] = extract_text_with_fitz(file_paths[0])
+        content = '\n'.join(current_file_params['current_texts'])
     else:
         content = []
         for img_path in file_paths:
@@ -62,8 +62,7 @@ def run_chat(*file_paths: str, detail='high', text_mode=False) -> str:
 # ___________________________ ASSISTANT ___________________________
 
 def run_assistant(file_path):
-    content = extract_text_with_fitz(file_path)
-    current_file_params['current_text'] = content
+    current_file_params['current_texts'] = extract_text_with_fitz(file_path)
 
     assistant = client.beta.assistants.retrieve(assistant_id=ASSISTANT_ID)
     message_file = client.files.create(file=open(file_path, "rb"), purpose="assistants")
