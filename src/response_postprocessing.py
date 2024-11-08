@@ -16,10 +16,10 @@ from src.logger import logger
 from config.config import config, NAMES, current_file_params
 from src.crop_tables import extract_text_from_image
 from src.connector import cup_http_request, response_to_deals
-from src.utils import chroma_similarity_search
+from src.utils import chroma_similarity_search, is_without_nds, is_invoice
 from src.utils import convert_json_values_to_strings, handling_openai_json
 from src.utils import replace_container_with_latin, replace_container_with_none, switch_to_latin, remove_dates
-from src.utils import get_stream_dotenv, check_sums, is_without_nds, propagate_nds, order_goods, sort_transactions
+from src.utils import get_stream_dotenv, check_sums, propagate_nds, order_goods, sort_transactions
 
 load_dotenv(stream=get_stream_dotenv())
 
@@ -46,6 +46,38 @@ def local_postprocessing(response, **kwargs) -> str | None:
     load_dotenv(stream=get_stream_dotenv())
     openai.api_key = os.environ.get("OPENAI_API_KEY")
     embedding_func = OpenAIEmbeddings()
+
+    # __________ CURRENT TEXT __________
+
+    # если текст был извлечен из PDF с помощью fitz в run_chat или в run_assistant
+    if current_file_params.get('current_texts', None):
+        texts = current_file_params['current_texts']
+        current_text = '\n'.join(texts)
+        current_text_page0 = texts[0]
+
+    # если из PDF нельзя извлечь (image OR scanned)
+    else:
+        edited_folder = kwargs.get('folder')
+        with open(os.path.join(edited_folder, 'params.json'), 'r', encoding='utf-8') as params_file:
+            params_dict = json.load(params_file)
+            main_local_files = params_dict['main_local_files']
+
+        current_text = ''
+        current_text_page0 = ''
+        for i, local_file in enumerate(main_local_files):
+            current_text += extract_text_from_image(np.array(Image.open(local_file)))
+            if i == 0:
+                current_text_page0 = current_text
+
+    # СЧЕТ / НЕ СЧЕТ
+    is_inv = is_invoice(current_text_page0)
+
+    if is_inv is True:
+        dct['Тип документа'] = 'Счет'
+    elif is_inv is False:
+        dct['Тип документа'] = 'Другое'
+    elif is_inv is None:
+        dct['Тип документа'] = 'Неизвестно'
 
     for i_, good_dct in enumerate(dct[NAMES.goods]):
 
@@ -135,9 +167,9 @@ def local_postprocessing(response, **kwargs) -> str | None:
     except Exception as error:
         dct[NAMES.nds_percent] = 0
         for good in dct[NAMES.goods]:
-            del good[NAMES.price]
-            del good[NAMES.sum_with]
-            del good[NAMES.sum_nds]
+            good.pop(NAMES.price, None)
+            good.pop(NAMES.sum_with, None)
+            good.pop(NAMES.sum_nds, None)
             good["Цена (без НДС)"] = ""
             good["Сумма (без НДС)"] = ""
             good["Цена (с НДС)"] = ""
@@ -147,20 +179,7 @@ def local_postprocessing(response, **kwargs) -> str | None:
 
     # 6.1. уточнение НДС (0.0 или "Без НДС")
     if float(dct[NAMES.total_nds]) == 0:
-        # current text
-        if current_file_params.get('current_text', None):
-            current_text = current_file_params['current_text']
-        else:
-            edited_folder = kwargs.get('folder')
-            with open(os.path.join(edited_folder, 'params.json'), 'r', encoding='utf-8') as params_file:
-                params_dict = json.load(params_file)
-                main_local_files = params_dict['main_local_files']
-            current_text = ''
-            for local_file in main_local_files:
-                current_text += extract_text_from_image(np.array(Image.open(local_file)))
-
-        # classify current text
-        if is_without_nds(current_text):
+        if is_without_nds(current_text):  # classify current text
             dct[NAMES.nds_percent] = NAMES.noNDS
 
     # 6.2. split nds
