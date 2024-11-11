@@ -215,12 +215,17 @@ def rename_files_in_directory(directory_path: str, max_len: int = 45, hide_logs:
         base = base[0:max_len]
         return base + ext
 
+    def lower_extension(filename: str) -> str:
+        base, ext = os.path.splitext(filename)
+        return base + ext.lower()
+
     for filename in os.listdir(directory_path):
         # если путь - директория
         if os.path.isdir(os.path.join(directory_path, filename)):
             rename_files_in_directory(os.path.join(directory_path, filename))
 
         new_filename = crop_filename(sanitize_filename(filename), max_len=max_len)
+        new_filename = lower_extension(new_filename)
         old_filepath = os.path.join(directory_path, filename)
         new_filepath = os.path.join(directory_path, new_filename)
         try:
