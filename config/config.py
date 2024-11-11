@@ -157,6 +157,9 @@ JSON_SCHEMA = {
             },
             "Номер счета": {"type": "string"},
             "Дата счета": {"type": "string", "description": "DD-MM-YYYY"},
+            "Валюта документа": {"type": "string",
+                                 "enum": ["РУБ", "USD", "EUR", "BYN", "CHF", "CNY", "GBP", "ILS", "INR",
+                                          "JPY", "KZT", "RSD", "TRY", "VND"]},
             "Услуги": {
                 "type": "array",
                 "items": {
@@ -193,6 +196,7 @@ JSON_SCHEMA = {
             "Банковские реквизиты покупателя",
             "Номер счета",
             "Дата счета",
+            "Валюта документа",
             "Услуги",
             "additional_info",
             "Всего к оплате включая НДС",
@@ -208,6 +212,10 @@ config['system_prompt'] = f"""
 Ты бот, анализирующий документы (счета).
 Если какой-то из параметров не найден, впиши значение ''.
 """.strip()
+
+config['currency_dict'] = {'BYN': 'BYN#933', 'CHF': 'CHF#756', 'CNY': 'CNY#156', 'EUR': 'EUR#978', 'GBP': 'GBP#826',
+                           'ILS': 'ILS#376', 'INR': 'INR#356', 'JPY': 'JPY#392', 'KZT': 'KZT#398', 'RSD': 'RSD#941',
+                           'TRY': 'TRY#949', 'USD': 'USD#840', 'VND': 'VND#704', 'РУБ': 'РУБ#643'}
 
 # if not getattr(sys, 'frozen', False):  # не в сборке
 #     params_path = os.path.join(config['BASE_DIR'], 'config', 'parameters.json')

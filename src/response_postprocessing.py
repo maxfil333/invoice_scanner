@@ -79,6 +79,11 @@ def local_postprocessing(response, **kwargs) -> str | None:
     elif is_inv is None:
         dct['Тип документа'] = 'Неизвестно'
 
+    # currency
+    currency = dct['Валюта документа']  # распознанная валюта
+    currency_dict = config['currency_dict']  # словарь валют с кодами
+    dct['Валюта документа'] = currency_dict[currency]  # распознанная валюта -> валюта с кодом
+
     for i_, good_dct in enumerate(dct[NAMES.goods]):
 
         original_name = good_dct[NAMES.name]  # Наименование

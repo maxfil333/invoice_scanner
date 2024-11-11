@@ -519,8 +519,9 @@ def insert_after_target(fixed_k: str, movable_k: str, dct: dict) -> dict:
 def order_keys(result_string: str) -> str:
     """ Сортировать ключи словаря """
     dct = json.loads(result_string)
-    sorted_dct = insert_after_target("Дата счета", "Тип документа", dct)
-    return json.dumps(sorted_dct, ensure_ascii=False, indent=4)
+    dct = insert_after_target("Дата счета", "Тип документа", dct)
+    dct = insert_after_target("Тип документа", "Валюта документа", dct)
+    return json.dumps(dct, ensure_ascii=False, indent=4)
 
 
 def check_sums(dct: dict) -> dict:
