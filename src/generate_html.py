@@ -9,6 +9,14 @@ from src.logger import logger
 
 
 def generate_input_html(key, val):
+    def generate_selection(key, char_key, select_list, value):
+        html = f'<select name="{escape(key)}" class="{escape(char_key)}">'
+        for option_value in select_list:
+            selected = 'selected' if value == option_value else ''
+            html += f'<option value="{escape(option_value)}" {selected}>{escape(option_value)}</option>'
+        html += '</select></div>\n'
+        return html
+
     char_key = re.sub(r'\W', '', str(key))
     input_type = "text"
 
@@ -24,15 +32,14 @@ def generate_input_html(key, val):
                     f'<label>{escape(key)}</label>\n')
 
     if key == NAMES.price_type:
-        select_options = {
-            "Сверху": "Сверху",
-            "В т.ч.": "В т.ч."
-        }
-        html_content += f'<select name="{escape(key)}" class="{escape(char_key)}">'
-        for option_value, option_label in select_options.items():
-            selected = 'selected' if val == option_value else ''
-            html_content += f'<option value="{escape(option_value)}" {selected}>{escape(option_label)}</option>'
-        html_content += '</select></div>\n'
+        html_content += generate_selection(key=key, char_key=char_key, select_list=NAMES.price_type_opts, value=val)
+
+    elif key == NAMES.type_of_document:
+        html_content += generate_selection(key=key, char_key=char_key, select_list=NAMES.type_of_document_opts,
+                                           value=val)
+
+    elif key == NAMES.currency:
+        html_content += generate_selection(key=key, char_key=char_key, select_list=NAMES.currency_opts, value=val)
 
     # создание дополнительного поля для суммирования по услугам рядом с "Всего к оплате включая НДС" и "Всего НДС"
     elif key in [NAMES.total_with, NAMES.total_nds]:
