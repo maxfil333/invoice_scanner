@@ -706,6 +706,7 @@ def is_invoice(text: str) -> bool | None:
                      r"\bакт\b№")
 
     yes_regex_list = (r"invoice|"
+                      r"i n v o i c e|"
                       r"\bсч[её]т на оплату|"
                       r"\bсч[её]т-оферта|"
                       r"\bсч[её]т №?\s?.{2,14} от|"
@@ -714,23 +715,26 @@ def is_invoice(text: str) -> bool | None:
 
     stage1 = re.findall(no_regex_list, text, re.IGNORECASE | re.MULTILINE | re.DOTALL)
     if len(stage1) > 0:
-        logger.print(f"is_invoice keywords: {stage1}")
+        logger.print(f"IS_INVOICE keywords: {stage1}")
         return False
 
     stage2 = re.findall(yes_regex_list, text, re.IGNORECASE | re.MULTILINE)
     if len(stage2) > 0:
-        logger.print(f"is_invoice keywords: {stage2}")
+        logger.print(f"IS_INVOICE keywords: {stage2}")
         return True
 
     stage3 = re.findall(r"\bакт\b", text, re.IGNORECASE)
     if len(stage3) > 0:
-        logger.print(f"is_invoice keywords: {stage3}")
+        logger.print(f"IS_INVOICE keywords: {stage3}")
         return False
 
     stage4 = re.findall(r"\bсч[её]т\b", text, re.IGNORECASE)
     if len(stage4) > 0:
-        logger.print(f"is_invoice keywords: {stage4}")
+        logger.print(f"IS_INVOICE keywords: {stage4}")
         return True
+
+    logger.print(f"IS_INVOICE keywords: not found")
+    return False
 
 
 # _________ TRANSACTIONS _________
