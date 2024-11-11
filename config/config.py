@@ -91,6 +91,10 @@ except FileNotFoundError as e:
         msvcrt.getch()
         sys.exit()
 
+config['currency_dict'] = {'BYN': 'BYN#933', 'CHF': 'CHF#756', 'CNY': 'CNY#156', 'EUR': 'EUR#978', 'GBP': 'GBP#826',
+                           'ILS': 'ILS#376', 'INR': 'INR#356', 'JPY': 'JPY#392', 'KZT': 'KZT#398', 'RSD': 'RSD#941',
+                           'TRY': 'TRY#949', 'USD': 'USD#840', 'VND': 'VND#704', 'РУБ': 'РУБ#643'}
+
 
 class ConfigNames:
     goods = 'Услуги'
@@ -107,15 +111,20 @@ class ConfigNames:
     total_with = 'Всего к оплате включая НДС'
     total_nds = 'Всего НДС'
     price_type = 'price_type'
+    price_type_opts = ['Сверху', 'В т.ч.']
     transactions = 'Номер сделки'
     transactions_new = 'Номер сделки (ввести свой)'
     transactions_type = 'Тип поиска сделки'
     nds_percent = 'nds (%)'
     noNDS = 'Без НДС'
-    sum_w_nds = "Сумма (с НДС)"
-    sum_wo_nds = "Сумма (без НДС)"
-    price_w_nds = "Цена (с НДС)"
-    price_wo_nds = "Цена (без НДС)"
+    sum_w_nds = 'Сумма (с НДС)'
+    sum_wo_nds = 'Сумма (без НДС)'
+    price_w_nds = 'Цена (с НДС)'
+    price_wo_nds = 'Цена (без НДС)'
+    type_of_document = 'Тип документа'
+    type_of_document_opts = ['Счет', 'Другое']
+    currency = 'Валюта документа'
+    currency_opts = list(config['currency_dict'].values())
 
 
 NAMES = ConfigNames()
@@ -158,8 +167,8 @@ JSON_SCHEMA = {
             "Номер счета": {"type": "string"},
             "Дата счета": {"type": "string", "description": "DD-MM-YYYY"},
             "Валюта документа": {"type": "string",
-                                 "enum": ["РУБ", "USD", "EUR", "BYN", "CHF", "CNY", "GBP", "ILS", "INR",
-                                          "JPY", "KZT", "RSD", "TRY", "VND"]},
+                                 "description": "РУБ, если не указано другое",
+                                 "enum": ["РУБ", "USD", "EUR"]},
             "Услуги": {
                 "type": "array",
                 "items": {
@@ -212,10 +221,6 @@ config['system_prompt'] = f"""
 Ты бот, анализирующий документы (счета).
 Если какой-то из параметров не найден, впиши значение ''.
 """.strip()
-
-config['currency_dict'] = {'BYN': 'BYN#933', 'CHF': 'CHF#756', 'CNY': 'CNY#156', 'EUR': 'EUR#978', 'GBP': 'GBP#826',
-                           'ILS': 'ILS#376', 'INR': 'INR#356', 'JPY': 'JPY#392', 'KZT': 'KZT#398', 'RSD': 'RSD#941',
-                           'TRY': 'TRY#949', 'USD': 'USD#840', 'VND': 'VND#704', 'РУБ': 'РУБ#643'}
 
 # if not getattr(sys, 'frozen', False):  # не в сборке
 #     params_path = os.path.join(config['BASE_DIR'], 'config', 'parameters.json')
