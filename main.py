@@ -17,7 +17,7 @@ from src.main_edit import main as main_edit
 from src.main_openai import run_chat, run_assistant
 from src.generate_html import create_html_form
 from src.utils import delete_all_files, create_date_folder_in_check, split_by_containers, split_by_conoses
-from src.utils import convert_json_values_to_strings
+from src.utils import convert_json_values_to_strings, order_keys
 from src.connector import create_connection
 from src.response_postprocessing import get_transaction_number, local_postprocessing
 
@@ -109,6 +109,9 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
 
             # _____________ CONVERT VALUES TO STRING _____________
             result = json.dumps(convert_json_values_to_strings(json.loads(result)), ensure_ascii=False, indent=4)
+
+            # _____________ ORDER RESULT JSON KEYS _____________
+            result = order_keys(result)
 
             # _____ * SAVE JSON FILE * _____
             local_check_folder = os.path.join(date_folder, text_or_scanned_folder, folder_name)

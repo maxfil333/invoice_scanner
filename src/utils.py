@@ -492,6 +492,32 @@ def order_goods(dct: dict, new_order: list[str]) -> dict | None:
     return dct
 
 
+def insert_after_target(fixed_k: str, movable_k: str, dct: dict) -> dict:
+    """ Изменить порядок ключей словаря, вставив movable ключ на позицию после fixed ключ"""
+
+    dct_keys = dct.keys()
+    if fixed_k == movable_k or fixed_k not in dct_keys or movable_k not in dct_keys:
+        logger.print(f"ERROR: insert_after_target. keys: {fixed_k}, {movable_k}")
+        return dct
+
+    new_order_keys = []
+    for k in dct_keys:
+        if k == movable_k:  # пропускаем перемещаемый ключ
+            continue
+        new_order_keys.append(k)  # добавляем обычный ключ в new_order_keys
+        if k == fixed_k:  # если этот ключ fixed, то
+            new_order_keys.append(movable_k)  # после него вставляем перемещаемый ключ
+
+    return {k: dct[k] for k in new_order_keys}
+
+
+def order_keys(result_string: str) -> str:
+    """ Сортировать ключи словаря """
+    dct = json.loads(result_string)
+    sorted_dct = insert_after_target("Дата счета", "Тип документа", dct)
+    return json.dumps(sorted_dct, ensure_ascii=False, indent=4)
+
+
 def check_sums(dct: dict) -> dict:
     """
     1. Если количество == '': принимается количество равное 1
