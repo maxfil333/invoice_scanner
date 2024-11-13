@@ -45,7 +45,7 @@ def local_postprocessing(response, **kwargs) -> str | None:
 
     load_dotenv(stream=get_stream_dotenv())
     openai.api_key = os.environ.get("OPENAI_API_KEY")
-    embedding_func = OpenAIEmbeddings()
+    embedding_func = OpenAIEmbeddings()  # TODO: CHANGE EMB MODEL TO 3gen
 
     # __________ CURRENT TEXT __________
 
@@ -147,7 +147,7 @@ def local_postprocessing(response, **kwargs) -> str | None:
             # берем первый (наиболее вероятный) элемента из списка результатов поиска
             relevant_result = relevant_results[0]
             score = relevant_result[1]
-            if score < 0.84:
+            if score < config['similarity_threshold']:
                 good_dct['Услуга1С'] = config['not_found_service']
             else:
                 comment_id, comment_content = relevant_result[0].metadata['id'], relevant_result[0].page_content
