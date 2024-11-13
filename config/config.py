@@ -2,11 +2,9 @@ import os
 import sys
 import json
 import msvcrt
-from dotenv import load_dotenv
 
 from src.logger import logger
 
-load_dotenv()
 
 # main.spec
 r"""
@@ -22,8 +20,6 @@ datas=[
 current_file_params = dict()
 
 config = dict()
-config['user_1C'] = os.getenv('user_1C')
-config['password_1C'] = os.getenv('password_1C')
 config['magick_opt'] = '-colorspace Gray -quality 100 -units PixelsPerInch -density 350'.split(' ')
 config['NAME_scanned'] = 'scannedPDFs'
 config['NAME_text'] = 'textPDFs'
@@ -94,6 +90,9 @@ except FileNotFoundError as e:
 config['currency_dict'] = {'BYN': 'BYN#933', 'CHF': 'CHF#756', 'CNY': 'CNY#156', 'EUR': 'EUR#978', 'GBP': 'GBP#826',
                            'ILS': 'ILS#376', 'INR': 'INR#356', 'JPY': 'JPY#392', 'KZT': 'KZT#398', 'RSD': 'RSD#941',
                            'TRY': 'TRY#949', 'USD': 'USD#840', 'VND': 'VND#704', 'РУБ': 'РУБ#643'}
+
+config['valid_ext'] = ['.pdf', '.jpg', '.jpeg', '.png']
+config['similarity_threshold'] = 0.82
 
 
 class ConfigNames:
