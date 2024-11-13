@@ -16,6 +16,10 @@ from src.utils import get_stream_dotenv
 load_dotenv(stream=get_stream_dotenv())
 
 
+config['user_1C'] = os.getenv('user_1C')
+config['password_1C'] = os.getenv('password_1C')
+
+
 # __________________ COM-OBJECT __________________
 
 def create_connection():
