@@ -16,7 +16,7 @@ from src.logger import logger
 from src.main_edit import main as main_edit
 from src.main_openai import run_chat, run_assistant
 from src.generate_html import create_html_form
-from src.utils import delete_all_files, create_date_folder_in_check, split_by_containers, split_by_conoses
+from src.utils import create_date_folder_in_check, split_by_containers, split_by_conoses
 from src.utils import convert_json_values_to_strings, order_keys
 from src.connector import create_connection
 from src.response_postprocessing import get_transaction_number, local_postprocessing
@@ -47,7 +47,6 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
 
     # _____  FILL IN_FOLDER_EDIT  _____
     if not use_existing:
-        delete_all_files(config['EDITED'])
         main_edit(hide_logs=hide_logs, stop_when=stop_when)
 
     c, stop = count(1), 0
