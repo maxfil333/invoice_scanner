@@ -7,7 +7,7 @@ from itertools import count
 from pdf2image import convert_from_path
 
 from config.config import config, NAMES
-from src.utils import is_scanned_pdf, count_pages, align_pdf_orientation, extract_pages
+from src.utils import is_scanned_pdf, count_pages, align_pdf_orientation, extract_pages, delete_all_files
 from src.utils import pack_folders, mark_get_required_pages, mark_get_main_file
 from src.utils import add_text_bar, image_upstanding, rename_files_in_directory
 from src.crop_tables import define_and_return
@@ -18,6 +18,8 @@ from src.logger import logger
 def main(dir_path: str = config['IN_FOLDER'], hide_logs=False, stop_when=-1):
     """ for folder in dir_path(IN), creates folder in EDITED, preprocess, extract additional and save to this folder """
 
+    # очистка EDITED
+    delete_all_files(config['EDITED'])
     # переименование файлов и папок
     rename_files_in_directory(dir_path, hide_logs=hide_logs)
     # упаковка одиночных файлов в папки
