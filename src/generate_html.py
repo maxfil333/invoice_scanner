@@ -124,7 +124,7 @@ def create_html_form(json_file, output_file, file_path):
     if file_extension == '.pdf':
         file_display = (f'<iframe src="{os.path.basename(file_path)}" '
                         f'width="100%" height="100%"></iframe>')
-    elif file_extension == '.jpg' or file_extension == '.jpeg':
+    elif file_extension in ['.jpg', '.jpeg', '.png']:
         file_display = (f'<img src="{os.path.basename(file_path)}" '
                         f'alt="Image" width="100%" height="100%" style="object-fit: contain;">')
     else:
