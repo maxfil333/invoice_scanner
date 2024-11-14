@@ -212,7 +212,7 @@ def rename_files_in_directory(directory_path: str, max_len: int = 45, hide_logs:
 
     def crop_filename(filename: str, max_len: int) -> str:
         base, ext = os.path.splitext(filename)
-        base = base[0:max_len]
+        base = base[-max_len:]
         return base + ext
 
     def lower_extension(filename: str) -> str:
@@ -958,10 +958,13 @@ def pack_folders(dir_path: str = config['IN_FOLDER']):
     """ Упаковка одиночных файлов в папки """
     for entry in os.scandir(dir_path):
         path = os.path.abspath(entry.path)
-        if not os.path.isdir(path):  # папки не обрабатываются
-            base, ext = tuple(os.path.basename(path).rsplit('.', 1))
+        if not os.path.isdir(path):  # папки пропускаются
+            base = os.path.basename(os.path.basename(path))
+            ext = os.path.splitext(os.path.basename(path))[-1]
+            if ext not in config['valid_ext']:  # недопустимые расширения пропускаются
+                continue
             counter = 1
-            folder_name = f'{base}({ext})'
+            folder_name = f'{os.path.splitext(base)[0]}({ext.strip(".")})'
             folder_path = os.path.join(dir_path, folder_name)
             while os.path.exists(folder_path):
                 folder_name = f'{base}({ext})({counter})'
@@ -979,7 +982,6 @@ def mark_get_required_pages(pdf_path: str) -> list[int] | None:
 
     num_pages = count_pages(pdf_path)
     if not num_pages:
-        logger.print(f'mark_get_required_pages. error reading {pdf_path}')
         return
     valid_pages = list(range(1, num_pages + 1))
     regex = r'(.*?)((?:@\d+)+)$'
