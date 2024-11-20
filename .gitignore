@@ -7,6 +7,7 @@ crypto.key
 *.exe
 *.xls
 *.xlsx
+*.json
 config/parameters.json
 config/ships.json
 config/freq_services.json
@@ -73,3 +74,4 @@ docker-compose.override.yml
 
 # Исключения
 !.gitignore
+!config/test.json
