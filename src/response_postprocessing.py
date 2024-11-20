@@ -45,7 +45,7 @@ def local_postprocessing(response, **kwargs) -> str | None:
 
     load_dotenv(stream=get_stream_dotenv())
     openai.api_key = os.environ.get("OPENAI_API_KEY")
-    embedding_func = OpenAIEmbeddings()  # TODO: CHANGE EMB MODEL TO 3gen
+    embedding_func = OpenAIEmbeddings(model=config['embedding_model'])
 
     # __________ CURRENT TEXT __________
 

@@ -48,6 +48,8 @@ config['GPTMODEL'] = 'gpt-4o-2024-08-06'
 # config['GPTMODEL'] = 'gpt-4o'
 # config['GPTMODEL'] = 'gpt-4o-mini'
 config['chroma_path'] = os.path.join(config['CONFIG'], 'chroma')
+config['embedding_model'] = "text-embedding-3-large"
+config['similarity_threshold'] = 0.2
 
 if not getattr(sys, 'frozen', False):  # не в сборке
     config['services_excel_file'] = os.path.join(config['CONFIG'], 'Услуги_поставщиков.xls')
@@ -111,7 +113,6 @@ config['currency_dict'] = {'BYN': 'BYN#933', 'CHF': 'CHF#756', 'CNY': 'CNY#156',
                            'TRY': 'TRY#949', 'USD': 'USD#840', 'VND': 'VND#704', 'РУБ': 'РУБ#643'}
 
 config['valid_ext'] = ['.pdf', '.jpg', '.jpeg', '.png']
-config['similarity_threshold'] = 0.82
 
 
 class ConfigNames:
