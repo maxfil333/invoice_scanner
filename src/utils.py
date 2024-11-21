@@ -796,46 +796,53 @@ def balance_remainders(data: list[dict], key_name: str, target_sum: int | float,
         data[idx][key_name] = round(data[idx][key_name] + (1 if remainder > 0 else -1) * (10 ** -precision), precision)
 
 
+def split_one_good(good: dict, field_name: str) -> list[dict]:
+    # Разделение строки по указанному полю
+    items = good[field_name].split()
+    num_items = len(items)
+
+    # Исходные суммы позиции
+    old_sum_without_tax = float(good[NAMES.sum_wo_nds])
+    old_sum_with_tax = float(good[NAMES.sum_w_nds])
+
+    # Разделение количественных данных
+    quantity_per_item = float(good[NAMES.amount]) / num_items
+    sum_without_tax_per_item = old_sum_without_tax / num_items
+    sum_with_tax_per_item = old_sum_with_tax / num_items
+
+    # Создание списка новых объектов
+    split_objects = []
+    for item in items:
+        new_obj = good.copy()  # Копирование исходного объекта
+        new_obj[field_name] = item  # Присваивание одного элемента (контейнер/коносамент)
+        new_obj[NAMES.amount] = round(quantity_per_item, 2)  # Новое количество
+        new_obj[NAMES.sum_wo_nds] = round(sum_without_tax_per_item, 2)  # Новая сумма без НДС
+        new_obj[NAMES.sum_w_nds] = round(sum_with_tax_per_item, 2)  # Новая сумма с НДС
+        split_objects.append(new_obj)
+
+    # Распределение остатков
+    balance_remainders(split_objects, NAMES.sum_w_nds, old_sum_with_tax, param_file=current_file_params)
+    balance_remainders(split_objects, NAMES.sum_wo_nds, old_sum_without_tax, param_file=current_file_params)
+
+    return split_objects
+
+
 def one_good_split_by_containers(good: dict) -> list[dict]:
-    # Разделение строки контейнеров
-    containers = good[NAMES.cont].split()
-    num_containers = len(containers)
-
-    # Исходные суммы позиции
-    old_sum_without_tax = float(good[NAMES.sum_wo_nds])
-    old_sum_with_tax = float(good[NAMES.sum_w_nds])
-
-    # Разделение количественных данных
-    quantity_per_container = float(good[NAMES.amount]) / num_containers
-    sum_without_tax_per_container = old_sum_without_tax / num_containers
-    sum_with_tax_per_container = old_sum_with_tax / num_containers
-
-    # Создание списка новых объектов
-    split_objects = []
-    for container in containers:
-        new_obj = good.copy()  # Копирование исходного объекта
-        new_obj[NAMES.cont] = container  # Присваивание одного контейнера
-        new_obj[NAMES.amount] = round(quantity_per_container, 2)  # Новое количество
-        new_obj[NAMES.sum_wo_nds] = round(sum_without_tax_per_container, 2)  # Новая сумма без НДС
-        new_obj[NAMES.sum_w_nds] = round(sum_with_tax_per_container, 2)  # Новая сумма с НДС
-        split_objects.append(new_obj)
-
-    # распределение остатков Сумма (с НДС)
-    balance_remainders(split_objects, NAMES.sum_w_nds, old_sum_with_tax, param_file=current_file_params)
-    # распределение остатков Сумма (без НДС)
-    balance_remainders(split_objects, NAMES.sum_wo_nds, old_sum_without_tax, param_file=current_file_params)
-
-    return split_objects
+    return split_one_good(good, NAMES.cont)
 
 
-def split_by_containers(json_formatted_str: str) -> tuple[str, bool]:
+def one_good_split_by_conoses(good: dict) -> list[dict]:
+    return split_one_good(good, NAMES.local_conos)
+
+
+def split_by_field(json_formatted_str: str, field_name: str, split_function) -> tuple[str, bool]:
     dct = json.loads(json_formatted_str)
     goods = dct[NAMES.goods]
     was_edited = False
     new_goods = []
     for good in goods:
-        if len(good[NAMES.cont].split()) > 1:
-            _new_goods = one_good_split_by_containers(good)
+        if len(good[field_name].split()) > 1:
+            _new_goods = split_function(good)
             new_goods.extend(_new_goods)
             was_edited = True
         else:
@@ -846,54 +853,12 @@ def split_by_containers(json_formatted_str: str) -> tuple[str, bool]:
     return json.dumps(dct, ensure_ascii=False), was_edited
 
 
-def one_good_split_by_conos(good: dict) -> list:
-    # Разделение строки коносаментов
-    conoses = good[NAMES.local_conos].split()
-    num_conoses = len(conoses)
-
-    # Исходные суммы позиции
-    old_sum_without_tax = float(good[NAMES.sum_wo_nds])
-    old_sum_with_tax = float(good[NAMES.sum_w_nds])
-
-    # Разделение количественных данных
-    quantity_per_conos = float(good[NAMES.amount]) / num_conoses
-    sum_without_tax_per_conos = old_sum_without_tax / num_conoses
-    sum_with_tax_per_conos = old_sum_with_tax / num_conoses
-
-    # Создание списка новых объектов
-    split_objects = []
-    for conos in conoses:
-        new_obj = good.copy()  # Копирование исходного объекта
-        new_obj[NAMES.local_conos] = conos  # Присваивание одного коносамента
-        new_obj[NAMES.amount] = round(quantity_per_conos, 2)  # Новое количество
-        new_obj[NAMES.sum_wo_nds] = round(sum_without_tax_per_conos, 2)  # Новая сумма без НДС
-        new_obj[NAMES.sum_w_nds] = round(sum_with_tax_per_conos, 2)  # Новая сумма с НДС
-        split_objects.append(new_obj)
-
-    # распределение остатков Сумма (с НДС)
-    balance_remainders(split_objects, NAMES.sum_w_nds, old_sum_with_tax, param_file=current_file_params)
-    # распределение остатков Сумма (без НДС)
-    balance_remainders(split_objects, NAMES.sum_wo_nds, old_sum_without_tax, param_file=current_file_params)
-
-    return split_objects
+def split_by_conoses(json_str: str) -> tuple[str, bool]:
+    return split_by_field(json_str, field_name=NAMES.local_conos, split_function=one_good_split_by_conoses)
 
 
-def split_by_conoses(json_formatted_str: str) -> tuple[str, bool]:
-    dct = json.loads(json_formatted_str)
-    goods = dct[NAMES.goods]
-    was_edited = False
-    new_goods = []
-    for good in goods:
-        if len(good[NAMES.local_conos].split()) > 1:
-            _new_goods = one_good_split_by_conos(good)
-            new_goods.extend(_new_goods)
-            was_edited = True
-        else:
-            new_goods.append(good)
-
-    dct[NAMES.goods] = new_goods
-
-    return json.dumps(dct, ensure_ascii=False), was_edited
+def split_by_containers(json_str: str) -> tuple[str, bool]:
+    return split_by_field(json_str, field_name=NAMES.cont, split_function=one_good_split_by_containers)
 
 
 # _________ CHROMA DATABASE (CREATE CHUNKS AND DB) _________
