@@ -70,7 +70,8 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
                 if test_mode:
                     with open(config['TESTFILE'], 'r', encoding='utf-8') as file:
                         result = file.read()
-                        result = local_postprocessing(result)
+                        from src.utils import extract_text_with_fitz
+                        current_file_params['current_texts'] = extract_text_with_fitz(files[0])
                 else:
                     if not text_to_assistant:
                         result = run_chat(files[0], detail='high', text_mode=True)
@@ -83,7 +84,6 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
                 if test_mode:
                     with open(config['TESTFILE'], 'r', encoding='utf-8') as file:
                         result = file.read()
-                        result = local_postprocessing(result)
                 else:
                     result = run_chat(*files, detail='high', text_mode=False)
 
