@@ -211,7 +211,7 @@ JSON_SCHEMA = {
                 "properties": {
                     "Коносаменты": {"type": "array", "items": {"type": "string"}, "description": "коносамент, к/с, кс"},
                     "Судно": {"type": "string", "description": "наименование судна, т/х"},
-                    "ДТ": {"type": "string", "description": "в формате \d{8}/\d{6}/\d{7}"}
+                    "ДТ": {"type": "array", "items": {"type": "string"}, "description": "в формате \d{8}/\d{6}/\d{7}"}
                 },
                 "required": ["Коносаменты", "Судно", "ДТ"],
                 "additionalProperties": False
