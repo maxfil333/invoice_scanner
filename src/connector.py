@@ -134,3 +134,7 @@ if __name__ == '__main__':
     print(cup_http_request(r'TransactionNumberFromContainer', r'VEZU2602114'))
     print(cup_http_request(r'TransactionNumberFromContainer', r'FENU2604371'))
     print(cup_http_request(r'TransactionNumberFromBillOfLading', r'ULDALYNVK000033'))
+
+    print("ДТ1:", cup_http_request(r'TransactionNumberFromGTD', "10228010/241024/5298812"))
+    print("ДТ2:", cup_http_request(r'TransactionNumberFromGTD', "10228010/231024/5298058"))
+    print("ДТ3:", cup_http_request(r'TransactionNumberFromGTD', "10228010/231024/5297337"))
