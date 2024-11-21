@@ -197,9 +197,19 @@ def local_postprocessing(response, **kwargs) -> str | None:
     dct['additional_info']['Номера_Авто'] = " ".join(am_plates_ru)
     dct['additional_info']['Номера_Прицепов'] = " ".join(am_trailer_plates_ru)
 
-    # 9. Коносаменты from list to string: ["RU0163 075", "CO-NC94999", "CONOS 88"] -> "CO-NC94999 CONOS88 RU0163075"
+    # 9. ДТ check regex
+    DT_copy = dct['additional_info']['ДТ'].copy()  # изначальный список ДТ (копия)
+    dt_regex = r'\d{8}/\d{6}/\d{7}'  # регулярка для проверки ДТ
+    for dt in DT_copy:
+        if not re.fullmatch(dt_regex, dt):
+            dct['additional_info']['ДТ'].remove(dt)
+
+    dct['additional_info']['ДТ'] = " ".join(dct['additional_info']['ДТ'])  # ДТ from list to string
+
+    # 10. Коносаменты from list to string: ["RU0163 075", "CO-NC94999", "CONOS 88"] -> "CO-NC94999 CONOS88 RU0163075"
     list_of_conos = list(set(map(lambda x: x.replace(' ', ''), dct['additional_info']['Коносаменты'])))
-    dct['additional_info']['Коносаменты'] = " ".join(list(filter(lambda x: x not in containers, list_of_conos)))
+    dct['additional_info']['Коносаменты'] = " ".join(list(filter(lambda x: x not in containers and x not in DT_copy,
+                                                                 list_of_conos)))
 
     for i_, good_dct in enumerate(dct[NAMES.goods]):
         original_name = good_dct[NAMES.name]  # Наименование
@@ -211,22 +221,14 @@ def local_postprocessing(response, **kwargs) -> str | None:
         else:
             good_dct[NAMES.local_conos] = ''
 
-    # 9. ДТ check regex
-    dt_regex = r'\d{8}/\d{6}/\d{7}'
-    if not re.fullmatch(dt_regex, dct['additional_info']['ДТ']):
-        dct['additional_info']['ДТ'] = ''
-    else:
-        if dct['additional_info']['ДТ'] == dct['additional_info']['Коносаменты']:
-            dct['additional_info']['Коносаменты'] = ''
-
-    # 10. Судно
+    # 11. Судно
     ship = dct['additional_info']['Судно']
     closest_match = difflib.get_close_matches(ship.upper(), config['ships'], n=1, cutoff=0.7)
     if closest_match:
         dct['additional_info']['Судно'] = closest_match[0]
         logger.print(f'find ship: {ship} --> {closest_match[0]}')
 
-    # 11. Идентификатор исходной позиции
+    # 12. Идентификатор исходной позиции
     initial_id_counter = 1
     for i_, good_dct in enumerate(dct[NAMES.goods]):
         good_dct['__исходный_айди'] = f"{initial_id_counter}|{good_dct['Сумма (без НДС)']}|{good_dct['Сумма (с НДС)']}"
@@ -335,24 +337,31 @@ def get_transaction_number(json_formatted_str: str, connection: Union[None, Lite
 
     else:  # если не было найдено никаких сделок
         # извлекаем ОБЩИЕ параметры, по которым будет выполняться поиск номеров сделок (общие для всех позиций)
-        DT = dct['additional_info']['ДТ']
         SHIP = dct['additional_info']['Судно']
-        AUTOS = dct['additional_info']['Номера_Авто'].split()  # предварительно отформатированы разделителем-пробелом
-        TRAILERS = dct['additional_info'][
-            'Номера_Прицепов'].split()  # предварительно отформатированы разделителем-пробелом
+        # предварительно отформатированы разделителем-пробелом:
+        DT = dct['additional_info']['ДТ'].split()
+        AUTOS = dct['additional_info']['Номера_Авто'].split()
+        TRAILERS = dct['additional_info']['Номера_Прицепов'].split()
 
         # ищем сделки
         common_deals = []
         transactions_type = ''
+
+        # поиск сделки по ДТ
         if DT:
-            if connection == 'http':
-                common_deals = cup_http_request(r'TransactionNumberFromGTD', DT)
-            else:
-                numbers_DT = connection.InteractionWithExternalApplications.TransactionNumberFromGTD(DT)
-                common_deals = response_to_deals(numbers_DT)
+            common_deals = []
+            for dt in DT:
+                if connection == 'http':
+                    deals_ = cup_http_request(r'TransactionNumberFromGTD', dt)
+                else:
+                    numbers_DT = connection.InteractionWithExternalApplications.TransactionNumberFromGTD(dt)
+                    deals_ = response_to_deals(numbers_DT)
+                if deals_:
+                    common_deals.extend(deals_)
             if common_deals:
                 transactions_type = 'DT'
 
+        # поиск сделки по ТХ
         if not common_deals and SHIP:
             if connection == 'http':
                 common_deals = cup_http_request(r'TransactionNumberFromShip', SHIP)
@@ -362,20 +371,21 @@ def get_transaction_number(json_formatted_str: str, connection: Union[None, Lite
             if common_deals:
                 transactions_type = 'SHIP'
 
+        # поиск сделки по номеру авто
         if not common_deals and AUTOS:
             common_deals = []
             for AUTO in AUTOS:
                 if connection == 'http':
                     deals_ = cup_http_request(r'TransactionNumberFromCar', AUTO)
                 else:
-                    numbers_AUTOS = connection.InteractionWithExternalApplications.TransactionNumberFromCar(
-                        AUTO)
+                    numbers_AUTOS = connection.InteractionWithExternalApplications.TransactionNumberFromCar(AUTO)
                     deals_ = response_to_deals(numbers_AUTOS)
                 if deals_:
                     common_deals.extend(deals_)
             if common_deals:
                 transactions_type = 'AUTO'
 
+        # поиск сделки по номеру прицепа
         if not common_deals and TRAILERS:
             common_deals = []
             for TRAILER in TRAILERS:
@@ -393,6 +403,6 @@ def get_transaction_number(json_formatted_str: str, connection: Union[None, Lite
         # для каждой услуги заполняем "Номер сделки" и "Тип сделки" (будут одинаковы для всех услуг)
         for good_dct in dct[NAMES.goods]:
             good_dct[NAMES.transactions] = sort_transactions(common_deals)  # список сделок = список общих сделок
-            good_dct[NAMES.transactions_type] = transactions_type  # список сделок = список общих сделок
+            good_dct[NAMES.transactions_type] = transactions_type
 
     return json.dumps(dct, ensure_ascii=False, indent=4)
