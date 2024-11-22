@@ -570,7 +570,7 @@ def check_sums(dct: dict) -> dict:
     # 2) сравниваем сумму (количество * цена) с ВСЕГО ВКЛЮЧАЯ НДС -> определяем *ТИП ЦЕН*
     # создание вместо старого "Цена", новых Цена (без НДС)/(с НДС)
     # исходя из того как в чеке записана цена (тип: без НДС / с НДС) выбирается nds_type
-    if round(cum_amount_and_price, 1) == round(total_with_nds, 1):  # с НДС -> В т.ч.
+    if round(cum_amount_and_price, 2) == round(total_with_nds, 2):  # с НДС -> В т.ч.
         nds_type = 'В т.ч.'
         for good_dct in dct[NAMES.goods]:
             old_price = float(good_dct.pop(NAMES.price))
@@ -579,7 +579,7 @@ def check_sums(dct: dict) -> dict:
             good_dct['price_type'] = nds_type
             del good_dct[NAMES.sum_with]
             del good_dct[NAMES.sum_nds]
-    elif round(cum_amount_and_price, 1) == round(total_without_nds, 1):  # без НДС -> Сверху
+    elif round(cum_amount_and_price, 2) == round(total_without_nds, 2):  # без НДС -> Сверху
         nds_type = 'Сверху'
         for good_dct in dct[NAMES.goods]:
             old_price = float(good_dct.pop(NAMES.price))
@@ -777,7 +777,7 @@ def balance_remainders(data: list[dict], key_name: str, target_sum: int | float,
     if not difference:
         return
 
-    param_file['balance_fixes'] = True
+    param_file['balance_fixes'] = True  # записываем в параметры файла, чтобы потом отключить автобаланс в html
 
     # Определяем базовую корректировку для каждого элемента, распределяя разницу пропорционально
     n = len(data)  # Количество элементов в списке
