@@ -103,6 +103,16 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
                 if json.loads(result)['additional_info']['Коносаменты']:
                     result, was_edited = split_by_conoses(result)
 
+            # _____________ SPLIT BY DT _____________
+            from src.utils import split_by_dt
+            if was_edited:  # если уже было распределение по контейнерам/коносаментам, ничего не делать
+                pass
+            else:
+                DT = json.loads(result)['additional_info']['ДТ']
+                if DT and len(DT.split()) > 1:  # если есть ДТ и их несколько
+                    # was_edited = True
+                    result = split_by_dt(result)
+
             # _____________ GET TRANS.NUMBER FROM 1C _____________
             result = get_transaction_number(result, connection=connection)
 

@@ -861,6 +861,50 @@ def split_by_containers(json_str: str) -> tuple[str, bool]:
     return split_by_field(json_str, field_name=NAMES.cont, split_function=one_good_split_by_containers)
 
 
+def split_by_dt(json_formatted_str: str) -> str:
+
+    def one_split_by_dt(good: dict, items, num_items) -> list[dict]:
+
+        # Исходные суммы позиции
+        old_sum_without_tax = float(good[NAMES.sum_wo_nds])
+        old_sum_with_tax = float(good[NAMES.sum_w_nds])
+        amount = float(good[NAMES.amount])
+
+        # Разделение количественных данных
+        quantity_per_item = float(good[NAMES.amount]) / num_items
+        sum_without_tax_per_item = old_sum_without_tax / num_items
+        sum_with_tax_per_item = old_sum_with_tax / num_items
+
+        # Создание списка новых объектов
+        split_objects = []
+        for item in items:
+            new_obj = good.copy()  # Копирование исходного объекта
+            new_obj[NAMES.local_dt] = item  # Присваивание одного элемента (контейнер/коносамент/ДТ)
+            new_obj[NAMES.amount] = round(quantity_per_item, 2)  # Новое количество
+            new_obj[NAMES.sum_wo_nds] = round(sum_without_tax_per_item, 2)  # Новая сумма без НДС
+            new_obj[NAMES.sum_w_nds] = round(sum_with_tax_per_item, 2)  # Новая сумма с НДС
+            split_objects.append(new_obj)
+
+        # Распределение остатков
+        balance_remainders(split_objects, NAMES.amount, amount, param_file=current_file_params)
+        balance_remainders(split_objects, NAMES.sum_w_nds, old_sum_with_tax, param_file=current_file_params)
+        balance_remainders(split_objects, NAMES.sum_wo_nds, old_sum_without_tax, param_file=current_file_params)
+
+        return split_objects
+
+    dct = json.loads(json_formatted_str)
+    items = dct['additional_info']['ДТ'].split()
+    num_items = len(items)
+    goods = dct[NAMES.goods]
+    new_goods = []
+    for good in goods:
+        _new_goods = one_split_by_dt(good=good, items=items, num_items=num_items)
+        new_goods.extend(_new_goods)
+
+    dct[NAMES.goods] = new_goods
+    return json.dumps(dct, ensure_ascii=False)
+
+
 # _________ CHROMA DATABASE (CREATE CHUNKS AND DB) _________
 
 def create_chunks_from_json(json_path: str, truncation=200) -> dict:
