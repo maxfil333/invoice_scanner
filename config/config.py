@@ -122,6 +122,7 @@ class ConfigNames:
     good1C_new = 'Услуга1С (новая)'
     cont = 'Контейнеры'  # 2
     local_conos = 'Коносаменты (для услуги)'
+    local_dt = 'ДТ (для услуги)'
     unit = 'Единица'  # 3
     amount = 'Количество'  # 4
     price = 'Цена'  # 5
@@ -152,7 +153,7 @@ NAMES = ConfigNames()
 # + (good1C + good1C_new + price_type)(3) + (tran, tran_new, tran_type)(3) + local_conos(1)
 # 15 = 7 - 3 + 4 + 3 + 3 + 1
 config['services_order'] = [NAMES.name, NAMES.good1C, NAMES.good1C_new,
-                            NAMES.cont, NAMES.local_conos, NAMES.unit, NAMES.amount,
+                            NAMES.cont, NAMES.local_conos, NAMES.local_dt, NAMES.unit, NAMES.amount,
                             'Цена (без НДС)', 'Сумма (без НДС)', 'Цена (с НДС)', 'Сумма (с НДС)', NAMES.price_type,
                             NAMES.transactions, NAMES.transactions_new, NAMES.transactions_type]
 
