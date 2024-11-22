@@ -265,12 +265,23 @@ def get_transaction_number(json_formatted_str: str, connection: Union[None, Lite
     common_deals = []  # список ОБЩИХ сделок (найденных по контейнерам и коносаментам во всех услугах)
     history = []  # список индексов услуг, которые пытались найти сделку по контейнеру или коносаменту
 
+    # проверяем можно ли получить сделки по ДТ
+    local_dt_list = [good_dct.get(NAMES.local_dt, '') for good_dct in dct[NAMES.goods]]
+    if all(local_dt_list):
+        for good_dct in dct[NAMES.goods]:
+            local_deals = cup_http_request(r'TransactionNumberFromGTD', good_dct[NAMES.local_dt])
+            if local_deals:
+                good_dct[NAMES.transactions] = sort_transactions(local_deals)
+                good_dct[NAMES.transactions_type] = 'DT'
+
+        logger.print('Сделки получены по ДТ')
+        return json.dumps(dct, ensure_ascii=False, indent=4)  # возврат
+
     # проходим по услугам, где есть контейнер или коносамент
     for i, good_dct in enumerate(dct[NAMES.goods]):
         local_deals = []
         local_container = good_dct[NAMES.cont]
         local_conos = good_dct[NAMES.local_conos]
-
         # ЕСЛИ есть контейнер, берем список сделок по нему и идем к следующей услуге
         if local_container:
             if connection == 'http':
