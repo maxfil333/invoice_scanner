@@ -51,7 +51,7 @@ def cache_http_requests(func):
     """ Декоратор для кэширования запросов на основе URL """
 
     cache = {}
-    max_cache_size = 20
+    max_cache_size = 40
 
     @wraps(func)
     def wrapper(function, *args, **kwargs):
