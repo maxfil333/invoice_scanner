@@ -146,6 +146,8 @@ class ConfigNames:
     currency = 'Валюта документа'
     currency_opts = list(config['currency_dict'].values())
 
+    extra_deals = 'Прочие_сделки'
+
 
 NAMES = ConfigNames()
 
