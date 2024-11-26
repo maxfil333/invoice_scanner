@@ -1,3 +1,4 @@
+import re
 import os
 import time
 import win32com.client
@@ -14,7 +15,6 @@ from config.config import config, NAMES
 from src.utils import get_stream_dotenv
 
 load_dotenv(stream=get_stream_dotenv())
-
 
 config['user_1C'] = os.getenv('user_1C')
 config['password_1C'] = os.getenv('password_1C')
@@ -126,6 +126,32 @@ def cup_http_request(function, *args, kappa=False) -> Union[list, dict, None]:
         return None
 
 
+def add_partner(response: Union[list, dict, None]):
+    if not isinstance(response, list):
+        return response
+
+    regex = r'(.*) (от) (.*)'
+    matches = [re.fullmatch(regex, deal, re.IGNORECASE) for deal in response]
+    if all(matches):
+        deals = [match.group(1) for match in matches]
+        partners = [cup_http_request(r'ValueByTransactionNumber', deal, 'Контрагент') for deal in deals]
+        partners = [p[0] if p else '' for p in partners]
+
+        new_response = []
+        for m, p in zip(matches, partners):
+            deal_and_partner = m.group() + f" | {p}"
+            new_response.append(deal_and_partner)
+        return new_response
+
+    else:
+        return response
+
+
+def cup_http_request_partner(function, *args, kappa=False) -> Union[list, dict, None]:
+    response = cup_http_request(function, *args, kappa=kappa)
+    return add_partner(response)
+
+
 if __name__ == '__main__':
     # from config.config import config
     # create_connection(config['V83_CONN_STRING'])
@@ -138,3 +164,5 @@ if __name__ == '__main__':
     print("ДТ1:", cup_http_request(r'TransactionNumberFromGTD', "10228010/241024/5298812"))
     print("ДТ2:", cup_http_request(r'TransactionNumberFromGTD', "10228010/231024/5298058"))
     print("ДТ3:", cup_http_request(r'TransactionNumberFromGTD', "10228010/231024/5297337"))
+    print('-------------------------------------------------------')
+    print("SHIP:", cup_http_request_partner(r'TransactionNumberFromShip', "MSC SHANNON III"))
