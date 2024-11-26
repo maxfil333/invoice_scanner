@@ -540,7 +540,7 @@ def check_sums(dct: dict) -> dict:
     total_with_nds = float(dct[NAMES.total_with]) if dct[NAMES.total_with] != '' else None
     if not total_with_nds:
         logger.print('!!! total_with_nds not found !!! total_with_nds = sum("Сумма включая НДС")')
-        total_with_nds = sum([x[NAMES.sum_with] for x in dct[NAMES.goods]])
+        total_with_nds = sum([float(x[NAMES.sum_with]) for x in dct[NAMES.goods]])
 
     # 2. Берем ВСЕГО НДС, вычисляем ВСЕГО БЕЗ НДС и ставку НДС
     total_nds = float(dct[NAMES.total_nds]) if dct[NAMES.total_nds] != '' else None
