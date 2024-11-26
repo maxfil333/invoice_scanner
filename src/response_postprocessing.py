@@ -6,6 +6,7 @@ import re
 import json
 import inspect
 import difflib
+import traceback
 import numpy as np
 from PIL import Image
 from dotenv import load_dotenv
@@ -180,7 +181,7 @@ def local_postprocessing(response, **kwargs) -> str | None:
             good["Цена (с НДС)"] = ""
             good["Сумма (с НДС)"] = ""
             good["price_type"] = ""
-        logger.print(f'!! ОШИБКА В CHECK_SUMS: {error} !!')
+        logger.print(f'!! ОШИБКА В CHECK_SUMS: {error} !!', traceback.format_exc())
 
     # 6.1. уточнение НДС (0.0 или "Без НДС")
     if float(dct[NAMES.total_nds]) == 0:
