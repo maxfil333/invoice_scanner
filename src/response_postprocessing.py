@@ -16,7 +16,7 @@ from win32com.client import CDispatch
 from src.logger import logger
 from config.config import config, NAMES, current_file_params
 from src.crop_tables import extract_text_from_image
-from src.connector import cup_http_request, response_to_deals
+from src.connector import cup_http_request, cup_http_request_partner
 from src.utils import chroma_similarity_search, is_without_nds, is_invoice
 from src.utils import convert_json_values_to_strings, handling_openai_json
 from src.utils import replace_container_with_latin, replace_container_with_none, switch_to_latin, remove_dates
@@ -260,7 +260,7 @@ def get_transaction_number(json_formatted_str: str, connection: Union[None, Lite
     def add_extra_deals(field_name: str, func_name: str) -> None:
         deals = []
         for field_item in dct['additional_info'][field_name].split():
-            deals_ = cup_http_request(func_name, field_item)
+            deals_ = cup_http_request_partner(func_name, field_item)
             deals_ = [f"{deal} - {field_item}" for deal in deals_]
             deals.extend(deals_)
         dct['additional_info'][NAMES.extra_deals] += ('\n' + '\n'.join(deals)) if deals else ''
@@ -282,7 +282,7 @@ def get_transaction_number(json_formatted_str: str, connection: Union[None, Lite
     if all(local_dt_list):
         logger.print('--- Все локальные ДТ заполнены. Получаем сделки по ДТ ---')
         for i, good_dct in enumerate(dct[NAMES.goods]):
-            local_deals = cup_http_request(r'TransactionNumberFromGTD', good_dct[NAMES.local_dt])
+            local_deals = cup_http_request_partner(r'TransactionNumberFromGTD', good_dct[NAMES.local_dt])
             if local_deals:
                 good_dct[NAMES.transactions] = sort_transactions(local_deals)
                 good_dct[NAMES.transactions_type] = 'DT'
@@ -312,7 +312,7 @@ def get_transaction_number(json_formatted_str: str, connection: Union[None, Lite
 
         # ЕСЛИ есть контейнер, берем список сделок по нему и идем к следующей услуге
         if local_container:
-            deals_ = cup_http_request(r'TransactionNumberFromContainer', local_container)
+            deals_ = cup_http_request_partner(r'TransactionNumberFromContainer', local_container)
             if deals_:
                 local_deals.extend(deals_)
                 common_deals.extend(deals_)
@@ -323,7 +323,7 @@ def get_transaction_number(json_formatted_str: str, connection: Union[None, Lite
                 # Если для данной позиции найдено сделок по контейнерам больше 1, и кол-во коносаментов = 1
                 if len(local_deals) > 1 and len(local_conos.split()) == 1:
                     # берем сделки по этому коносаменту (m_deals)
-                    m_deals_ = cup_http_request(r'TransactionNumberFromBillOfLading', local_conos)
+                    m_deals_ = cup_http_request_partner(r'TransactionNumberFromBillOfLading', local_conos)
                     # если нашли, находим общие со сделками по контейнерам, оставляем общие
                     if m_deals_:
                         deals_intersect = set(deals_).intersection(set(m_deals_))
@@ -335,7 +335,7 @@ def get_transaction_number(json_formatted_str: str, connection: Union[None, Lite
 
         # ЕСЛИ нет контейнера, но есть коносамент, берем список сделок по нему и идем к следующей услуге
         if not local_deals and local_conos:
-            deals_ = cup_http_request(r'TransactionNumberFromBillOfLading', local_conos)
+            deals_ = cup_http_request_partner(r'TransactionNumberFromBillOfLading', local_conos)
             if deals_:
                 local_deals.extend(deals_)
                 common_deals.extend(deals_)
@@ -374,7 +374,7 @@ def get_transaction_number(json_formatted_str: str, connection: Union[None, Lite
         if DT:
             common_deals = []
             for dt in DT:
-                deals_ = cup_http_request(r'TransactionNumberFromGTD', dt)
+                deals_ = cup_http_request_partner(r'TransactionNumberFromGTD', dt)
                 if deals_:
                     common_deals.extend(deals_)
             if common_deals:
@@ -384,7 +384,7 @@ def get_transaction_number(json_formatted_str: str, connection: Union[None, Lite
         if not common_deals and KS:
             common_deals = []
             for ks in KS:
-                deals_ = cup_http_request(r'TransactionNumberFromBillOfLading', ks)
+                deals_ = cup_http_request_partner(r'TransactionNumberFromBillOfLading', ks)
                 if deals_:
                     common_deals.extend(deals_)
             if common_deals:
@@ -392,7 +392,7 @@ def get_transaction_number(json_formatted_str: str, connection: Union[None, Lite
 
         # поиск сделки по ТХ
         if not common_deals and SHIP:
-            common_deals = cup_http_request(r'TransactionNumberFromShip', SHIP)
+            common_deals = cup_http_request_partner(r'TransactionNumberFromShip', SHIP)
             if common_deals:
                 transactions_type = 'SHIP'
 
@@ -400,7 +400,7 @@ def get_transaction_number(json_formatted_str: str, connection: Union[None, Lite
         if not common_deals and AUTOS:
             common_deals = []
             for AUTO in AUTOS:
-                deals_ = cup_http_request(r'TransactionNumberFromCar', AUTO)
+                deals_ = cup_http_request_partner(r'TransactionNumberFromCar', AUTO)
                 if deals_:
                     common_deals.extend(deals_)
             if common_deals:
@@ -410,7 +410,7 @@ def get_transaction_number(json_formatted_str: str, connection: Union[None, Lite
         if not common_deals and TRAILERS:
             common_deals = []
             for TRAILER in TRAILERS:
-                deals_ = cup_http_request(r'TransactionNumberFromCarTrailer', TRAILER)
+                deals_ = cup_http_request_partner(r'TransactionNumberFromCarTrailer', TRAILER)
                 if deals_:
                     common_deals.extend(deals_)
             if common_deals:
