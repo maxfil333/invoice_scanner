@@ -474,21 +474,26 @@ def order_goods(dct: dict, new_order: list[str]) -> dict | None:
     if not dct[NAMES.goods]:
         return dct
 
-    ordered_goods = []
-    for good_dct in dct[NAMES.goods]:  # цикл на случай если dct['Услуги'] == []
-        current_keys = list(good_dct)
-        missing_keys = set(new_order).difference(set(current_keys))
-        excess_keys = set(current_keys).difference(set(new_order))
+    ordered_goods = []  # упорядоченные услуги (список словариков)
 
-        for unknown_key in missing_keys:
-            good_dct[unknown_key] = ''
+    for good_dct in dct[NAMES.goods]:
+        current_keys = list(good_dct)  # все ключи словаря
+        
+        # Ошибочно попавшие в new_order ключи. (есть в new_order, но нет в словаре)
+        wrong_keys = set(new_order).difference(set(current_keys))
 
-        one_reordered_goods_dct = {}
+        # Прочие ключи. (есть в словаре, но нет указания на их порядок в new_order)
+        extra_keys = set(current_keys).difference(set(new_order))
 
+        one_reordered_goods_dct = {}  # одна услуга (словарик) с упорядоченными ключами
+
+        # сначала идут по порядку ключи хранящиеся в new_order
         for k in new_order:
-            one_reordered_goods_dct[k] = good_dct[k]
+            if k not in wrong_keys:
+                one_reordered_goods_dct[k] = good_dct[k]
 
-        for k in excess_keys:
+        # далее идут остальные ключи, не отраженные в new_order
+        for k in extra_keys:
             one_reordered_goods_dct[k] = good_dct[k]
 
         ordered_goods.append(one_reordered_goods_dct)
@@ -796,9 +801,9 @@ def balance_remainders(data: list[dict], key_name: str, target_sum: int | float,
         data[idx][key_name] = round(data[idx][key_name] + (1 if remainder > 0 else -1) * (10 ** -precision), precision)
 
 
-def split_one_good(good: dict, field_name: str) -> list[dict]:
+def split_one_good(good: dict, loc_field_name: str) -> list[dict]:
     # Разделение строки по указанному полю
-    items = good[field_name].split()
+    items = good[loc_field_name].split()  # разделение по local параметру
     num_items = len(items)
 
     # Исходные суммы позиции
@@ -814,7 +819,7 @@ def split_one_good(good: dict, field_name: str) -> list[dict]:
     split_objects = []
     for item in items:
         new_obj = good.copy()  # Копирование исходного объекта
-        new_obj[field_name] = item  # Присваивание одного элемента (контейнер/коносамент)
+        new_obj[loc_field_name] = item  # Присваивание одного элемента (контейнер/коносамент)
         new_obj[NAMES.amount] = round(quantity_per_item, 2)  # Новое количество
         new_obj[NAMES.sum_wo_nds] = round(sum_without_tax_per_item, 2)  # Новая сумма без НДС
         new_obj[NAMES.sum_w_nds] = round(sum_with_tax_per_item, 2)  # Новая сумма с НДС
@@ -850,7 +855,7 @@ def split_by_field(json_formatted_str: str, field_name: str, split_function) -> 
 
     dct[NAMES.goods] = new_goods
 
-    return json.dumps(dct, ensure_ascii=False), was_edited
+    return json.dumps(dct, ensure_ascii=False, indent=4), was_edited
 
 
 def split_by_conoses(json_str: str) -> tuple[str, bool]:
@@ -893,7 +898,7 @@ def split_by_dt(json_formatted_str: str) -> str:
         return split_objects
 
     dct = json.loads(json_formatted_str)
-    items = dct['additional_info']['ДТ'].split()
+    items = dct['additional_info']['ДТ'].split()  # разделение по global ДТ (из additional_info)
     num_items = len(items)
     goods = dct[NAMES.goods]
     new_goods = []
@@ -902,7 +907,7 @@ def split_by_dt(json_formatted_str: str) -> str:
         new_goods.extend(_new_goods)
 
     dct[NAMES.goods] = new_goods
-    return json.dumps(dct, ensure_ascii=False)
+    return json.dumps(dct, ensure_ascii=False, indent=4)
 
 
 # _________ CHROMA DATABASE (CREATE CHUNKS AND DB) _________
