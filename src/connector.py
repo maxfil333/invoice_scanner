@@ -2,7 +2,7 @@ import re
 import os
 import time
 import win32com.client
-from typing import Union
+from typing import Union, Callable
 from functools import wraps
 from dotenv import load_dotenv
 
@@ -77,7 +77,7 @@ def cache_http_requests(func):
 
 
 @cache_http_requests
-def cup_http_request(function, *args, kappa=False) -> Union[list, dict, None]:
+def cup_http_request(function, *args, kappa=False, encode_off=False) -> Union[list, dict, None]:
     user_1C = config['user_1C']
     password_1C = config['password_1C']
 
@@ -89,7 +89,12 @@ def cup_http_request(function, *args, kappa=False) -> Union[list, dict, None]:
         primary_base = r'http://10.10.0.10:81/ca/hs/interaction/'
         secondary_base = r'http://kappa5.group.ru:81/ca/hs/interaction/'
 
-    function_args = r'/'.join(map(lambda x: base64.urlsafe_b64encode(x.encode()).decode(), args))
+    if encode_off:
+        encode_func: Callable = lambda x: x
+    else:
+        encode_func: Callable = lambda x: base64.urlsafe_b64encode(x.encode()).decode()
+
+    function_args = r'/'.join(map(encode_func, args))
 
     try:
         # Формируем URL для первого сервера
@@ -147,8 +152,8 @@ def add_partner(response: Union[list, dict, None]):
         return response
 
 
-def cup_http_request_partner(function, *args, kappa=False) -> Union[list, dict, None]:
-    response = cup_http_request(function, *args, kappa=kappa)
+def cup_http_request_partner(function, *args, kappa=False, encode_off=False) -> Union[list, dict, None]:
+    response = cup_http_request(function, *args, kappa=kappa, encode_off=encode_off)
     return add_partner(response)
 
 
