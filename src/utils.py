@@ -686,7 +686,10 @@ def is_without_nds(text: str) -> bool:
         logger.print("nds regex matches:", matches)
         return False
     else:
-        without_nds_regex = r'без НДС|НДС не облагается|Без налога \(НДС\)|Услуги не подлежат начислению НДС'
+        # Как вариант для избежания попаданий (сумма без ндс) под рег-ку (без\s{0,4}НДС)
+        # вынести (без\s{0,4}НДС) в отдельную рег-ку; и если matches от нее больше 2
+        # (т.е. БЕЗ НДС в услугах) а не в шапке, то True (тут ошибка только если 1 позиция)
+        without_nds_regex = r'без\s{0,4}НДС|НДС не облагается|Без налога \(НДС\)|Услуги не подлежат начислению НДС'
         matches = re.findall(without_nds_regex, text, flags=re.IGNORECASE)
         if len(matches) >= 1:
             logger.print("nds regex matches:", matches)
