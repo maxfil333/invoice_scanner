@@ -217,9 +217,11 @@ JSON_SCHEMA = {
                     "Коносаменты": {"type": "array", "items": {"type": "string"}, "description": "коносамент, к/с, кс"},
                     "Судно": {"type": "string", "description": "наименование судна, т/х"},
                     "ДТ": {"type": "array", "items": {"type": "string"}, "description": "в формате \d{8}/\d{6}/\d{7}"},
-                    "Заключения": {"type": "array", "items": {"type": "string"}, "description": "в формате \d{6}-\d{3}-\d{2}"}
+                    "Заключения": {"type": "array", "items": {"type": "string"},
+                                   "description": "в формате \d{6}-\d{3}-\d{2}"},
+                    "Конвертация": {"type": "number", "description": "% конвертации валюты в РУБ. 0 если не указано"}
                 },
-                "required": ["Коносаменты", "Судно", "ДТ", "Заключения"],
+                "required": ["Коносаменты", "Судно", "ДТ", "Заключения", "Конвертация"],
                 "additionalProperties": False
             },
             "Всего к оплате включая НДС": {"type": "number"},
