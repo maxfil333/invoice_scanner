@@ -802,6 +802,8 @@ def balance_remainders(data: list[dict], key_name: str, target_sum: int | float,
 
 
 def split_one_good(good: dict, loc_field_name: str) -> list[dict]:
+    """ Вспомогательная функция для split_by_local_field """
+
     # Разделение строки по указанному полю
     items = good[loc_field_name].split()  # разделение по local параметру
     num_items = len(items)
@@ -819,6 +821,8 @@ def split_one_good(good: dict, loc_field_name: str) -> list[dict]:
     split_objects = []
     for item in items:
         new_obj = good.copy()  # Копирование исходного объекта
+
+        # INIT local_param
         new_obj[loc_field_name] = item  # Присваивание одного элемента (контейнер/коносамент)
         new_obj[NAMES.amount] = round(quantity_per_item, 2)  # Новое количество
         new_obj[NAMES.sum_wo_nds] = round(sum_without_tax_per_item, 2)  # Новая сумма без НДС
@@ -833,20 +837,29 @@ def split_one_good(good: dict, loc_field_name: str) -> list[dict]:
 
 
 def one_good_split_by_containers(good: dict) -> list[dict]:
+    """ Вспомогательная функция """
     return split_one_good(good, NAMES.cont)
 
 
 def one_good_split_by_conoses(good: dict) -> list[dict]:
+    """ Вспомогательная функция """
     return split_one_good(good, NAMES.local_conos)
 
 
-def split_by_field(json_formatted_str: str, field_name: str, split_function) -> tuple[str, bool]:
+def one_good_split_by_reports(good: dict) -> list[dict]:
+    """ Вспомогательная функция """
+    return split_one_good(good, NAMES.local_reports)
+
+
+def split_by_local_field(json_formatted_str: str, loc_field_name: str, split_function) -> tuple[str, bool]:
+    """ Разделяет услугу если в local_field несколько (конт/кс/закл.) """
+
     dct = json.loads(json_formatted_str)
     goods = dct[NAMES.goods]
     was_edited = False
     new_goods = []
     for good in goods:
-        if len(good[field_name].split()) > 1:
+        if len(good[loc_field_name].split()) > 1:
             _new_goods = split_function(good)
             new_goods.extend(_new_goods)
             was_edited = True
@@ -859,16 +872,20 @@ def split_by_field(json_formatted_str: str, field_name: str, split_function) -> 
 
 
 def split_by_conoses(json_str: str) -> tuple[str, bool]:
-    return split_by_field(json_str, field_name=NAMES.local_conos, split_function=one_good_split_by_conoses)
+    return split_by_local_field(json_str, loc_field_name=NAMES.local_conos, split_function=one_good_split_by_conoses)
 
 
 def split_by_containers(json_str: str) -> tuple[str, bool]:
-    return split_by_field(json_str, field_name=NAMES.cont, split_function=one_good_split_by_containers)
+    return split_by_local_field(json_str, loc_field_name=NAMES.cont, split_function=one_good_split_by_containers)
 
 
-def split_by_dt(json_formatted_str: str) -> str:
+def split_by_reports(json_str: str) -> tuple[str, bool]:
+    return split_by_local_field(json_str, loc_field_name=NAMES.local_reports, split_function=one_good_split_by_reports)
 
-    def one_split_by_dt(good: dict, items, num_items) -> list[dict]:
+
+def split_by_global_filed(json_formatted_str: str, global_field: str, local_field: str) -> str:
+
+    def one_split(good: dict, items) -> list[dict]:
 
         # Исходные суммы позиции
         old_sum_without_tax = float(good[NAMES.sum_wo_nds])
@@ -876,15 +893,17 @@ def split_by_dt(json_formatted_str: str) -> str:
         amount = float(good[NAMES.amount])
 
         # Разделение количественных данных
-        quantity_per_item = float(good[NAMES.amount]) / num_items
-        sum_without_tax_per_item = old_sum_without_tax / num_items
-        sum_with_tax_per_item = old_sum_with_tax / num_items
+        quantity_per_item = float(good[NAMES.amount]) / len(items)
+        sum_without_tax_per_item = old_sum_without_tax / len(items)
+        sum_with_tax_per_item = old_sum_with_tax / len(items)
 
         # Создание списка новых объектов
         split_objects = []
         for item in items:
             new_obj = good.copy()  # Копирование исходного объекта
-            new_obj[NAMES.local_dt] = item  # Присваивание одного элемента (контейнер/коносамент/ДТ)
+
+            # INIT local_field:
+            new_obj[local_field] = item
             new_obj[NAMES.amount] = round(quantity_per_item, 2)  # Новое количество
             new_obj[NAMES.sum_wo_nds] = round(sum_without_tax_per_item, 2)  # Новая сумма без НДС
             new_obj[NAMES.sum_w_nds] = round(sum_with_tax_per_item, 2)  # Новая сумма с НДС
@@ -898,16 +917,47 @@ def split_by_dt(json_formatted_str: str) -> str:
         return split_objects
 
     dct = json.loads(json_formatted_str)
-    items = dct['additional_info']['ДТ'].split()  # разделение по global ДТ (из additional_info)
-    num_items = len(items)
+    items = dct['additional_info'][global_field].split()  # разделение по global field (из additional_info)
     goods = dct[NAMES.goods]
     new_goods = []
     for good in goods:
-        _new_goods = one_split_by_dt(good=good, items=items, num_items=num_items)
+        _new_goods = one_split(good=good, items=items)
         new_goods.extend(_new_goods)
 
     dct[NAMES.goods] = new_goods
     return json.dumps(dct, ensure_ascii=False, indent=4)
+
+
+def split_by_dt(json_str: str) -> tuple[str, bool]:
+    """ split by global dt """
+
+    DT = json.loads(json_str)['additional_info']['ДТ']
+    if DT and len(DT.split()) > 1:  # если есть global ДТ и их несколько
+        result = split_by_global_filed(json_str, global_field='ДТ', local_field=NAMES.local_dt)
+        return result, True  # was_edited
+    else:
+        return json_str, False  # если нет, возвращаем без изменений
+
+
+def combined_split_by_reports(json_str: str) -> tuple[str, bool]:
+    # try to split by local_reports
+    result, was_edited = split_by_reports(json_str)
+
+    if was_edited:
+        return result, was_edited
+
+    # try to split by global reports
+    else:
+        # если все local_reports пустые, сплит по global reports
+        if not any([x.get(NAMES.local_reports) for x in json.loads(result)[NAMES.goods]]):
+            reports = json.loads(result)['additional_info']['Заключения']
+            if reports and len(reports.split()) > 1:  # если есть Заключения и их несколько
+                was_edited = True
+                result = split_by_global_filed(json_str, global_field='Заключения', local_field=NAMES.local_reports)
+                return result, was_edited
+
+        was_edited = False
+        return json_str, was_edited
 
 
 # _________ CHROMA DATABASE (CREATE CHUNKS AND DB) _________

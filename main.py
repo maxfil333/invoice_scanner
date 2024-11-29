@@ -11,14 +11,15 @@ from itertools import count
 from natsort import os_sorted
 from openai import PermissionDeniedError
 
-from config.config import config, current_file_params
+from config.config import config, current_file_params, NAMES
 from src.logger import logger
 from src.connector import create_connection
 from src.main_edit import main as main_edit
 from src.main_openai import run_chat, run_assistant
 from src.generate_html import create_html_form
-from src.response_postprocessing import get_transaction_number, local_postprocessing
-from src.utils import create_date_folder_in_check, split_by_containers, split_by_conoses, split_by_dt
+from src.response_postprocessing import local_postprocessing
+from src.transactions import get_transaction_number
+from src.utils import create_date_folder_in_check, split_by_containers, split_by_conoses, split_by_global_filed
 from src.utils import convert_json_values_to_strings, order_keys
 
 
@@ -90,7 +91,7 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
             # _____________________ LOGS _____________________
             logger.print('openai result:\n', repr(result))
             with open(os.path.join(config['CONFIG'], 'openai_response_log.json'), 'w', encoding='utf-8') as f:
-                json.dump(result, f, ensure_ascii=False, indent=4)
+                json.dump(json.loads(result), f, ensure_ascii=False, indent=4)
 
             # _____________ LOCAL POSTPROCESSING _____________
             result = local_postprocessing(result, hide_logs=hide_logs, folder=folder)
@@ -112,10 +113,16 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
             if was_edited:  # если уже было распределение по контейнерам/коносаментам, ничего не делать
                 pass
             else:
-                DT = json.loads(result)['additional_info']['ДТ']
-                if DT and len(DT.split()) > 1:  # если есть ДТ и их несколько
-                    # was_edited = True
-                    result = split_by_dt(result)
+                from src.utils import split_by_dt
+                result, was_edited = split_by_dt(result)
+
+            # _____________ SPLIT BY REPORT _____________
+            if was_edited:  # если уже было распределение по контейнерам/коносаментам/ДТ, ничего не делать
+                pass
+            else:
+                from src.utils import combined_split_by_reports
+                if json.loads(result)['additional_info'][NAMES.reports]:
+                    result, was_edited = combined_split_by_reports(result)
 
             # _____________ GET TRANS.NUMBER FROM 1C _____________
             result = get_transaction_number(result, connection=connection)
