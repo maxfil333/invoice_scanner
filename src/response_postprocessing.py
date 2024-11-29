@@ -16,7 +16,7 @@ from win32com.client import CDispatch
 from src.logger import logger
 from config.config import config, NAMES, current_file_params
 from src.crop_tables import extract_text_from_image
-from src.connector import cup_http_request, cup_http_request_partner
+from src.connector import cup_http_request_partner
 from src.utils import chroma_similarity_search, is_without_nds, is_invoice
 from src.utils import convert_json_values_to_strings, handling_openai_json
 from src.utils import replace_container_with_latin, replace_container_with_none, switch_to_latin, remove_dates
@@ -32,7 +32,6 @@ def local_postprocessing(response, **kwargs) -> str | None:
     if re_response is None:
         return None
     logger.print(f'function "{inspect.stack()[1].function}":')
-    logger.print('re_response:\n', repr(re_response))
     dct = json.loads(re_response)
     dct = convert_json_values_to_strings(dct)
 
@@ -208,21 +207,52 @@ def local_postprocessing(response, **kwargs) -> str | None:
     dct['additional_info']['ДТ'] = " ".join(dct['additional_info']['ДТ'])  # ДТ from list to string
 
     # 10. Коносаменты
-    # Коносаменты from list to string: ["RU0163 075", "CO-NC94999", "CONOS 88"] -> "CO-NC94999 CONOS88 RU0163075"
-    list_of_conos = list(set(map(lambda x: x.replace(' ', ''), dct['additional_info']['Коносаменты'])))
-    # Убираем из кс контейнеры и ДТ, которые могли случайно попасть в кс
-    dct['additional_info']['Коносаменты'] = " ".join(list(filter(lambda x: x not in containers and x not in DT_copy,
-                                                                 list_of_conos)))
-    # Заполняем "Коносаменты (для услуги)" на основе "Наименования"
-    for i_, good_dct in enumerate(dct[NAMES.goods]):
-        original_name = good_dct[NAMES.name]  # Наименование
-        conoses = dct['additional_info']['Коносаменты'].split()
-        conoses_regex = r'|'.join(conoses)  # регулярка формата 'RU1234|RU5678|...'
-        list_of_conos = list(set([x for x in re.findall(conoses_regex, original_name) if x]))
-        if list_of_conos:
-            good_dct[NAMES.local_conos] = " ".join(list(filter(lambda x: x not in containers, list_of_conos)))
-        else:
-            good_dct[NAMES.local_conos] = ''
+    if not dct['additional_info']['Коносаменты']:
+        dct['additional_info']['Коносаменты'] = ''
+    else:
+        # Коносаменты from list to string: ["RU0163 075", "CO-NC94999", "CONOS 88"] -> "CO-NC94999 CONOS88 RU0163075"
+        list_of_conos = list(set(map(lambda x: x.replace(' ', ''), dct['additional_info']['Коносаменты'])))
+        # Убираем из кс контейнеры и ДТ, которые могли случайно попасть в кс
+        dct['additional_info']['Коносаменты'] = " ".join(list(filter(lambda x: x not in containers and x not in DT_copy,
+                                                                     list_of_conos)))
+        # Заполняем "Коносаменты (для услуги)" на основе "Наименования"
+        for i_, good_dct in enumerate(dct[NAMES.goods]):
+            original_name = good_dct[NAMES.name]  # Наименование
+            conoses = dct['additional_info']['Коносаменты'].split()
+            conoses_regex = r'|'.join(conoses)  # регулярка формата 'RU1234|RU5678|...'
+            list_of_conos = list(set([x for x in re.findall(conoses_regex, original_name) if x]))
+
+            # INIT local_conos
+            if list_of_conos:
+                good_dct[NAMES.local_conos] = " ".join(list(filter(lambda x: x not in containers, list_of_conos)))
+            else:
+                good_dct[NAMES.local_conos] = ''
+
+    # 10.5 Заключения
+    if not dct['additional_info']['Заключения']:
+        dct['additional_info']['Заключения'] = ''
+    else:
+        dct['additional_info']['Заключения'] = list(set(map(lambda x: x.replace(' ', ''),
+                                                            dct['additional_info']['Заключения'])))
+        report_copy = dct['additional_info']['Заключения'].copy()  # изначальный список Заключений (копия)
+        report_regex = r'\d{6}-\d{3}-\d{2}'  # регулярка для проверки ДТ
+        for report in report_copy:
+            if not re.fullmatch(report_regex, report):
+                dct['additional_info']['Заключения'].remove(report)
+
+        dct['additional_info']['Заключения'] = " ".join(dct['additional_info']['Заключения'])  # from list to string
+        # Заполняем "Заключения (для услуги)" на основе "Наименования"
+        for i_, good_dct in enumerate(dct[NAMES.goods]):
+            original_name = good_dct[NAMES.name]  # Наименование
+            reports = dct['additional_info'][NAMES.reports].split()
+            reports_regex = r'|'.join(reports)  # регулярка формата 'FOO|BAR|...'
+            list_of_reports = list(set([x for x in re.findall(reports_regex, original_name) if x]))
+
+            # INIT local_reports
+            if list_of_reports:
+                good_dct[NAMES.local_reports] = " ".join(list_of_reports)
+            else:
+                good_dct[NAMES.local_reports] = ''
 
     # 11. Судно
     ship = dct['additional_info']['Судно']
@@ -239,186 +269,3 @@ def local_postprocessing(response, **kwargs) -> str | None:
 
     string_dictionary = convert_json_values_to_strings(dct)
     return json.dumps(string_dictionary, ensure_ascii=False, indent=4)
-
-
-# _____________________________________________ ADD TRANSACTIONS TO RESULT _____________________________________________
-
-def get_transaction_number(json_formatted_str: str, connection: Union[None, Literal['http'], CDispatch]) -> str:
-    dct = json.loads(json_formatted_str)
-
-    if not connection:
-        # если нет соединения возвращаем что было плюс:
-        # (1) dct['Номер сделки'] = []
-        # (2) dct['Номер сделки (ввести свой)'] = ''
-        # (3) dct['Тип поиска сделки'] = ''
-        return json.dumps(dct, ensure_ascii=False, indent=4)
-
-    # _____________________________________ Заполнение additional_info.extra_deals _____________________________________
-
-    dct['additional_info'][NAMES.extra_deals] = ''
-
-    def add_extra_deals(field_name: str, func_name: str) -> None:
-        deals = []
-        for field_item in dct['additional_info'][field_name].split():
-            deals_ = cup_http_request_partner(func_name, field_item)
-            deals_ = [f"{deal} - {field_item}" for deal in deals_]
-            deals.extend(deals_)
-        dct['additional_info'][NAMES.extra_deals] += ('\n' + '\n'.join(deals)) if deals else ''
-
-    # Вывести в доп.инфо список сделок для коносаментов
-    add_extra_deals('Коносаменты', 'TransactionNumberFromBillOfLading')
-    # Вывести в доп.инфо список сделок для ДТ
-    add_extra_deals('ДТ', 'TransactionNumberFromGTD')
-
-    # ________________________________________________ Основная логика ________________________________________________
-
-    history = []  # индексы услуг, которые нашли сделку по контейнеру / коносаменту / ДТ
-    common_deals = []  # список ОБЩИХ сделок (для наследования)
-
-    # ------------ 1. Проверяем можно ли получить сделки по local_dt (только если был split_by_dt) ------------
-    local_dt_list = [good_dct.get(NAMES.local_dt, '') for good_dct in dct[NAMES.goods]]
-
-    # Если все поля local_dt существуют, и они не пустые (т.е. была вызвана функция split_by_dt)
-    if all(local_dt_list):
-        logger.print('--- Все локальные ДТ заполнены. Получаем сделки по ДТ ---')
-        for i, good_dct in enumerate(dct[NAMES.goods]):
-            local_deals = cup_http_request_partner(r'TransactionNumberFromGTD', good_dct[NAMES.local_dt])
-            if local_deals:
-                good_dct[NAMES.transactions] = sort_transactions(local_deals)
-                good_dct[NAMES.transactions_type] = 'DT'
-                history.append(i)
-                common_deals.extend(good_dct[NAMES.transactions])
-
-        if len(history) == len(dct[NAMES.goods]):
-            logger.print('--- Все услуги были найдены по ДТ ---')
-            return json.dumps(dct, ensure_ascii=False, indent=4)
-        elif len(history) >= 1:
-            for i, good_dct in enumerate(dct[NAMES.goods]):
-                if i not in history:
-                    good_dct[NAMES.transactions] = sort_transactions(common_deals)
-                    good_dct[NAMES.transactions_type] = 'DT (наследуется)'
-            logger.print('--- Некоторые услуги были найдены по ДТ. Остальные наследуются ---')
-            return json.dumps(dct, ensure_ascii=False, indent=4)
-        else:
-            logger.print("Все запросы в ЦУП по всем ДТ ничего не вернули")  # Переходим к п.2
-    else:
-        pass  # Не все поля local_dt существуют/заполнены. Переходим к п.2
-
-    # ------------ 2. Проходим по услугам, где есть ЛОКАЛЬНЫЙ контейнер или ЛОКАЛЬНЫЙ коносамент ------------
-    for i, good_dct in enumerate(dct[NAMES.goods]):
-        local_deals = []
-        local_container = good_dct[NAMES.cont]
-        local_conos = good_dct[NAMES.local_conos]
-
-        # ЕСЛИ есть контейнер, берем список сделок по нему и идем к следующей услуге
-        if local_container:
-            deals_ = cup_http_request_partner(r'TransactionNumberFromContainer', local_container)
-            if deals_:
-                local_deals.extend(deals_)
-                common_deals.extend(deals_)
-                good_dct[NAMES.transactions] = sort_transactions(local_deals)
-                good_dct[NAMES.transactions_type] = 'CONTAINERS'
-                history.append(i)
-                # ______________ дополнительно смэтчим сделки от контейнеров со сделками от коносаментов ____________...
-                # Если для данной позиции найдено сделок по контейнерам больше 1, и кол-во коносаментов = 1
-                if len(local_deals) > 1 and len(local_conos.split()) == 1:
-                    # берем сделки по этому коносаменту (m_deals)
-                    m_deals_ = cup_http_request_partner(r'TransactionNumberFromBillOfLading', local_conos)
-                    # если нашли, находим общие со сделками по контейнерам, оставляем общие
-                    if m_deals_:
-                        deals_intersect = set(deals_).intersection(set(m_deals_))
-                        if deals_intersect:
-                            good_dct[NAMES.transactions] = sort_transactions(list(deals_intersect))
-                            good_dct[NAMES.transactions_type] = 'CONTAINER+CONOS'
-                # ...___________________________________________________________________________________________________
-                continue
-
-        # ЕСЛИ нет контейнера, но есть коносамент, берем список сделок по нему и идем к следующей услуге
-        if not local_deals and local_conos:
-            deals_ = cup_http_request_partner(r'TransactionNumberFromBillOfLading', local_conos)
-            if deals_:
-                local_deals.extend(deals_)
-                common_deals.extend(deals_)
-                good_dct[NAMES.transactions] = sort_transactions(local_deals)
-                good_dct[NAMES.transactions_type] = 'CONOS'
-                history.append(i)
-                continue
-
-    if len(history) == len(dct[NAMES.goods]):  # Все услуги были найдены по контейнерам и коносаментам
-        logger.print('Все услуги были найдены по контейнерам и коносаментам')
-
-    elif common_deals:  # если какие-то сделки по контейнерам/коносаментам уже найдены,
-        logger.print('Наследование некоторых сделок по КС/КОНТ')
-        for i, good_dct in enumerate(dct[NAMES.goods]):  # то для каждой услуги где:
-            if i not in history:  # не было контейнера или коносамента, или сделка не была найдена:
-                good_dct[NAMES.transactions] = sort_transactions(common_deals)  # сделки = общие сделки
-                good_dct[NAMES.transactions_type] = 'Нет конт./кс. или сделка не найдена: наследуется от найденных'
-
-    else:  # Если не было найдено никаких сделок по контейнерам и коносаментам. Переходим к п.3
-        logger.print('--- ИЗВЛЕЧЕНИЕ ОБЩИХ ПАРАМЕТРОВ (ДТ/ТХ/АВТО/ПРИЦЕП) ---')
-
-        # ------------------------ 3. Извлекаем ОБЩИЕ (для всего документа) параметры ------------------------
-
-        SHIP = dct['additional_info']['Судно']
-        # предварительно отформатированы разделителем-пробелом:
-        DT = dct['additional_info']['ДТ'].split()
-        KS = dct['additional_info']['Коносаменты'].split()
-        AUTOS = dct['additional_info']['Номера_Авто'].split()
-        TRAILERS = dct['additional_info']['Номера_Прицепов'].split()
-
-        # ищем сделки
-        common_deals = []
-        transactions_type = ''
-
-        # поиск сделки по ДТ
-        if DT:
-            common_deals = []
-            for dt in DT:
-                deals_ = cup_http_request_partner(r'TransactionNumberFromGTD', dt)
-                if deals_:
-                    common_deals.extend(deals_)
-            if common_deals:
-                transactions_type = 'DT'
-
-        # поиск сделки по КС (не локальному)
-        if not common_deals and KS:
-            common_deals = []
-            for ks in KS:
-                deals_ = cup_http_request_partner(r'TransactionNumberFromBillOfLading', ks)
-                if deals_:
-                    common_deals.extend(deals_)
-            if common_deals:
-                transactions_type = 'CONOS (общий)'
-
-        # поиск сделки по ТХ
-        if not common_deals and SHIP:
-            common_deals = cup_http_request_partner(r'TransactionNumberFromShip', SHIP)
-            if common_deals:
-                transactions_type = 'SHIP'
-
-        # поиск сделки по номеру авто
-        if not common_deals and AUTOS:
-            common_deals = []
-            for AUTO in AUTOS:
-                deals_ = cup_http_request_partner(r'TransactionNumberFromCar', AUTO)
-                if deals_:
-                    common_deals.extend(deals_)
-            if common_deals:
-                transactions_type = 'AUTO'
-
-        # поиск сделки по номеру прицепа
-        if not common_deals and TRAILERS:
-            common_deals = []
-            for TRAILER in TRAILERS:
-                deals_ = cup_http_request_partner(r'TransactionNumberFromCarTrailer', TRAILER)
-                if deals_:
-                    common_deals.extend(deals_)
-            if common_deals:
-                transactions_type = 'TRAILER'
-
-        # для каждой услуги заполняем "Номер сделки" и "Тип сделки" (будут одинаковы для всех услуг)
-        for good_dct in dct[NAMES.goods]:
-            good_dct[NAMES.transactions] = sort_transactions(common_deals)  # список сделок = список общих сделок
-            good_dct[NAMES.transactions_type] = transactions_type
-
-    return json.dumps(dct, ensure_ascii=False, indent=4)

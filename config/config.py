@@ -17,9 +17,9 @@ datas=[
 ],
 """
 
-current_file_params = dict()
+current_file_params: dict = dict()
 
-config = dict()
+config: dict = dict()
 config['magick_opt'] = '-colorspace Gray -quality 100 -units PixelsPerInch -density 350'.split(' ')
 config['NAME_scanned'] = 'scannedPDFs'
 config['NAME_text'] = 'textPDFs'
@@ -145,6 +145,8 @@ class ConfigNames:
     type_of_document_opts = ['Счет', 'Другое']
     currency = 'Валюта документа'
     currency_opts = list(config['currency_dict'].values())
+    reports = 'Заключения'
+    local_reports = 'Заключения (для услуги)'
 
     extra_deals = 'Прочие_сделки'
 
@@ -214,9 +216,10 @@ JSON_SCHEMA = {
                 "properties": {
                     "Коносаменты": {"type": "array", "items": {"type": "string"}, "description": "коносамент, к/с, кс"},
                     "Судно": {"type": "string", "description": "наименование судна, т/х"},
-                    "ДТ": {"type": "array", "items": {"type": "string"}, "description": "в формате \d{8}/\d{6}/\d{7}"}
+                    "ДТ": {"type": "array", "items": {"type": "string"}, "description": "в формате \d{8}/\d{6}/\d{7}"},
+                    "Заключения": {"type": "array", "items": {"type": "string"}, "description": "в формате \d{6}-\d{3}-\d{2}"}
                 },
-                "required": ["Коносаменты", "Судно", "ДТ"],
+                "required": ["Коносаменты", "Судно", "ДТ", "Заключения"],
                 "additionalProperties": False
             },
             "Всего к оплате включая НДС": {"type": "number"},
