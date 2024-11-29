@@ -24,6 +24,6 @@ def merge(file1: str, file2: str, out_file: str = "merged_unique_comments.json")
 
 if __name__ == '__main__':
     file1 = r'C:\Users\Filipp\PycharmProjects\Invoice_scanner\config\unique_comments.json'
-    file2 = r'C:\Users\Filipp\PycharmProjects\Invoice_scanner\src\services\new_unique_comments.json'
+    file2 = r'new_unique_comments.json'
 
     merge(file1, file2)
