@@ -84,6 +84,14 @@ def local_postprocessing(response, **kwargs) -> str | None:
     currency_dict = config['currency_dict']  # словарь валют с кодами
     dct['Валюта документа'] = currency_dict[currency]  # распознанная валюта -> валюта с кодом
 
+    # конвертация
+    if currency == "РУБ":
+        dct['additional_info']['Конвертация'] = 0
+    else:
+        dct['additional_info']['Конвертация'] = int(float(dct['additional_info']['Конвертация']))
+
+    # Услуги
+
     for i_, good_dct in enumerate(dct[NAMES.goods]):
 
         original_name = good_dct[NAMES.name]  # Наименование
@@ -189,9 +197,6 @@ def local_postprocessing(response, **kwargs) -> str | None:
 
     # 6.2. split nds
     dct = propagate_nds(dct)
-
-    # 7. order dct['Услуги']
-    dct = order_goods(dct, config['services_order'])
 
     # 8. AUTO | TRAILER
     dct['additional_info']['Номера_Авто'] = " ".join(am_plates_ru)
