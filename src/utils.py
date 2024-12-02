@@ -468,7 +468,7 @@ def update_assistant_system_prompt(new_prompt: str):
 
 # _________ LOCAL POSTPROCESSING _________
 
-def order_goods(dct: dict, new_order: list[str]) -> dict | None:
+def order_goods(dct: dict, new_order: list[str]) -> dict:
     """ Сортировка ключей Услуг """
 
     if not dct[NAMES.goods]:
@@ -527,6 +527,18 @@ def order_keys(result_string: str) -> str:
     dct = insert_after_target("Дата счета", "Тип документа", dct)
     dct = insert_after_target("Тип документа", "Валюта документа", dct)
     return json.dumps(dct, ensure_ascii=False, indent=4)
+
+
+def cleanup_empty_fields(dct: dict, fields_names: list[str]):
+    """ deletes empty extra keys in goods """
+    goods = dct[NAMES.goods]
+    for field in fields_names:
+        if any([good.get(field) for good in goods]) is False:  # удаляем только если все поля пустые
+            for good in goods:
+                value = good.get(field)
+                if value is not None and value == "":
+                    del good[field]
+    return dct
 
 
 def check_sums(dct: dict) -> dict:
@@ -862,7 +874,7 @@ def split_by_local_field(json_formatted_str: str, loc_field_name: str, split_fun
     was_edited = False
     new_goods = []
     for good in goods:
-        if len(good[loc_field_name].split()) > 1:
+        if len(good.get(loc_field_name, '').split()) > 1:
             _new_goods = split_function(good)
             new_goods.extend(_new_goods)
             was_edited = True

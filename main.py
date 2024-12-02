@@ -16,11 +16,11 @@ from src.logger import logger
 from src.connector import create_connection
 from src.main_edit import main as main_edit
 from src.main_openai import run_chat, run_assistant
-from src.generate_html import create_html_form
 from src.response_postprocessing import local_postprocessing
 from src.transactions import get_transaction_number
-from src.utils import create_date_folder_in_check, split_by_containers, split_by_conoses, split_by_global_filed
-from src.utils import convert_json_values_to_strings, order_keys
+from src.generate_html import create_html_form
+from src.utils import create_date_folder_in_check, split_by_containers, split_by_conoses
+from src.utils import convert_json_values_to_strings, order_keys, order_goods, cleanup_empty_fields
 
 
 def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text_to_assistant=False,
@@ -123,6 +123,12 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
                 from src.utils import combined_split_by_reports
                 if json.loads(result)['additional_info'][NAMES.reports]:
                     result, was_edited = combined_split_by_reports(result)
+
+            # order and cleanup
+            dct = json.loads(result)
+            dct = order_goods(dct, config['services_order'])
+            dct = cleanup_empty_fields(dct, config['extra_local_fields'])
+            result = json.dumps(dct, ensure_ascii=False, indent=4)
 
             # _____________ GET TRANS.NUMBER FROM 1C _____________
             result = get_transaction_number(result, connection=connection)
