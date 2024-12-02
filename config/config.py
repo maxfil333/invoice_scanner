@@ -156,10 +156,13 @@ NAMES = ConfigNames()
 # 15 = 7(prompt) - (price - sum_with - sum_nds)(3) + (2*Сумма + 2*Цена)(4)
 # + (good1C + good1C_new + price_type)(3) + (tran, tran_new, tran_type)(3) + local_conos(1)
 # 15 = 7 - 3 + 4 + 3 + 3 + 1
-config['services_order'] = [NAMES.name, NAMES.good1C, NAMES.good1C_new,
-                            NAMES.cont, NAMES.local_conos, NAMES.local_dt, NAMES.unit, NAMES.amount,
-                            'Цена (без НДС)', 'Сумма (без НДС)', 'Цена (с НДС)', 'Сумма (с НДС)', NAMES.price_type,
-                            NAMES.transactions, NAMES.transactions_new, NAMES.transactions_type]
+config['services_order'] = [NAMES.name, NAMES.good1C, NAMES.good1C_new, NAMES.cont,
+                            NAMES.local_conos, NAMES.local_dt, NAMES.local_reports,
+                            NAMES.unit, NAMES.amount,
+                            NAMES.price_wo_nds, NAMES.sum_wo_nds, NAMES.price_w_nds, NAMES.sum_w_nds, NAMES.price_type,
+                            NAMES.transactions, NAMES.transactions_new, NAMES.transactions_type, NAMES.nds_percent]
+
+config['extra_local_fields'] = [NAMES.local_conos, NAMES.local_dt, NAMES.local_reports]
 
 JSON_SCHEMA = {
     "name": "document",
