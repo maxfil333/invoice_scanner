@@ -645,14 +645,14 @@ def check_sums(dct: dict) -> dict:
         # __________________ Расчет "Цен (с/без)" на основе "Сумм (с/без)" __________________
 
         for good_dct in dct[NAMES.goods]:
-            amount = float(good_dct[NAMES.amount]) if good_dct[NAMES.amount] != '' else 1
+            if str(good_dct[NAMES.amount]) not in ['', '0']:
+                amount = float(good_dct[NAMES.amount])
+            else:
+                amount = 1
+                good_dct[NAMES.amount] = '1'
             del good_dct[NAMES.price]
-            try:
-                good_dct[NAMES.price_wo_nds] = good_dct[NAMES.sum_wo_nds] / amount
-                good_dct[NAMES.price_w_nds] = good_dct[NAMES.sum_w_nds] / amount
-            except ZeroDivisionError:
-                good_dct[NAMES.price_wo_nds] = 0
-                good_dct[NAMES.price_w_nds] = 0
+            good_dct[NAMES.price_wo_nds] = good_dct[NAMES.sum_wo_nds] / amount
+            good_dct[NAMES.price_w_nds] = good_dct[NAMES.sum_w_nds] / amount
             if nds != 0:
                 nds_type = 'В т.ч.'
             else:
@@ -760,13 +760,19 @@ def is_invoice(text: str) -> bool | None:
 # _________ TRANSACTIONS _________
 
 def sort_transactions(transactions: list[str]) -> list:
+    def sort_func(x):
+        regex = r'(.*) (от) (.*)'
+        match = re.fullmatch(regex, x)
+        if match:
+            match_date = match.group(3).split('|')[0].strip()
+            return datetime.strptime(match_date, '%d.%m.%Y').date()
+        else:
+            return datetime.fromtimestamp(0).date()
+
     try:
         if transactions:
-            regex = r'(.*) (от) (.*)'
             transactions = list(set(transactions))
-            transactions.sort(
-                key=lambda x: datetime.strptime(re.fullmatch(regex, x).group(3), '%d.%m.%Y').date() if re.fullmatch(
-                    regex, x) else datetime.fromtimestamp(0).date(), reverse=True)
+            transactions.sort(key=sort_func, reverse=True)
 
             # Сделки тб в конец списка
             broker_deals, other_deals = [], []
