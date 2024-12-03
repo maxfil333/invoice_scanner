@@ -383,3 +383,22 @@ input:checked + .slider:before {
   color: #333;
   vertical-align: middle;
 }
+
+/* Styles for the DETAILS HEADER */
+.details {
+    font-style: italic;
+    font-family: 'Roboto', sans-serif;
+    font-size: 14px;
+    border-radius: 8px;
+    background-color: #f0f0f0;
+    text-align: left;
+    padding: 25px;
+    margin-bottom: 10px;
+  border: 1px solid #ddd;
+}
+
+detailsLH1 {
+    font-weight: bold;
+    margin-bottom: 0.5em; /* Уменьшаем нижний отступ */
+    color: #4E995B; /* Цвет для заголовков */
+}
