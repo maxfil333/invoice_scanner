@@ -4,8 +4,9 @@ import json
 from html import escape
 from bs4 import BeautifulSoup
 
-from config.config import config, NAMES, current_file_params
 from src.logger import logger
+from config.config import config, NAMES, current_file_params
+from src.utils_html import generate_details
 
 
 def generate_input_html(key, val):
@@ -144,7 +145,10 @@ def create_html_form(json_file, output_file, file_path):
                 <form id="invoice-form" autocomplete="off">
                 
     '''
-
+    html_content += generate_details(data['Банковские реквизиты поставщика']['ИНН'],
+                                     data['Банковские реквизиты поставщика']['КПП'],
+                                     data['Банковские реквизиты покупателя']['ИНН'],
+                                     data['Дата счета'])
     html_content += generate_html_from_json(data)
 
     switch_checked_status = 'checked'  # по умолчанию включен Авто-расчет
