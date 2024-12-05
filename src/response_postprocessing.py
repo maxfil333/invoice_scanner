@@ -10,17 +10,14 @@ import traceback
 import numpy as np
 from PIL import Image
 from dotenv import load_dotenv
-from typing import Union, Literal
-from win32com.client import CDispatch
 
 from src.logger import logger
 from config.config import config, NAMES, current_file_params
 from src.crop_tables import extract_text_from_image
-from src.connector import cup_http_request_partner
-from src.utils import chroma_similarity_search, is_without_nds, is_invoice
+from src.utils import chroma_similarity_search, is_without_nds, is_invoice, perfect_similarity
 from src.utils import convert_json_values_to_strings, handling_openai_json
 from src.utils import replace_container_with_latin, replace_container_with_none, switch_to_latin, remove_dates
-from src.utils import get_stream_dotenv, check_sums, propagate_nds, order_goods, sort_transactions
+from src.utils import get_stream_dotenv, check_sums, propagate_nds
 
 load_dotenv(stream=get_stream_dotenv())
 
@@ -140,34 +137,50 @@ def local_postprocessing(response, **kwargs) -> str | None:
         good_dct[NAMES.good1C_new] = ''
 
         # 5. заполнение 'Услуга1С'
-        logger.print(f"--- DB response {i_ + 1} ---:")
+        logger.print(f"------ DB response {i_ + 1} ------:")
 
         query = replace_container_with_none(good_dct[NAMES.name], container_regex)
         query = remove_dates(query)
+        # TODO: добавить функцию удаления ТХ
         # query = re.sub(r'[^\s\w]', '', query)  # убираем спец символы: влияют на смысл больше чем нужно
         logger.print(f"query:\n{query}")
 
-        relevant_results = chroma_similarity_search(query=query,
-                                                    chroma_path=config['chroma_path'],
-                                                    embedding_func=embedding_func,
-                                                    k=1)
-        if relevant_results:
-            # берем первый (наиболее вероятный) элемента из списка результатов поиска
-            relevant_result = relevant_results[0]
-            score = relevant_result[1]
-            if score < config['similarity_threshold']:
-                good_dct['Услуга1С'] = config['not_found_service']
-            else:
-                comment_id, comment_content = relevant_result[0].metadata['id'], relevant_result[0].page_content
-
-                # id в каждом словарике {id:.., comment:.., service_code:..} совпадает с порядковым номером словарика
-                uniq_comments_dct_by_idx = config['unique_comments_dict'][comment_id]  # {id:, comment:, service_code: }
-                logger.print(f"response:\n{uniq_comments_dct_by_idx}")
-
-                # берем первый "service#code#" в ключе "service_code" элемента словаря с индексом comment_id,
+        # 5.0 DIFFLIB (PERFECT MATCH)
+        perfect_result = None
+        data = config.get('all_services_dict')
+        if data:
+            perfect_result = perfect_similarity(query, data)
+            if perfect_result:
+                service, code = perfect_result['service'], perfect_result['code']
                 # заполняем поле "Услуга1С"
-                good_dct['Услуга1С'] = uniq_comments_dct_by_idx['service_code'][0]
-            logger.print(f"score: {score} found service: {good_dct['Услуга1С']}")
+                good_dct['Услуга1С'] = f"{service}#{code}"
+                logger.print(f"--- perfect match ---")
+                logger.print(f"response:\n{perfect_result}")
+
+        # 5.5 CHROMA (FULL SEARCH)
+        if not perfect_result:
+            good_dct['Услуга1С'] = config['not_found_service']
+            relevant_results = chroma_similarity_search(query=query,
+                                                        chroma_path=config['chroma_path'],
+                                                        embedding_func=embedding_func,
+                                                        k=1)
+            if relevant_results:
+                # берем первый (наиболее вероятный) элемента из списка результатов поиска
+                relevant_result = relevant_results[0]
+                score = relevant_result[1]
+                if score >= config['similarity_threshold']:
+                    comment_id, comment_content = relevant_result[0].metadata['id'], relevant_result[0].page_content
+                    # id в каждом словарике {id:.., comment:.., service_code:..} совпадает с порядковым ном. словарика
+                    uniq_comments_dct_by_idx = config['unique_comments_dict'][comment_id]
+                    # > {id:, comment:, service_code: }
+                    logger.print(f"response:\n{uniq_comments_dct_by_idx}")
+
+                    # берем первый "service#code#" в ключе "service_code" элемента словаря с индексом comment_id,
+                    # заполняем поле "Услуга1С"
+                    good_dct['Услуга1С'] = uniq_comments_dct_by_idx['service_code'][0]
+                    logger.print(f"score: {score} found service: {good_dct['Услуга1С']}")
+                else:
+                    logger.print(f"THRESHOLD TRIMMED: score: {score} found service: {good_dct['Услуга1С']}")
 
         # 6. Добавить local_transaction, local_transactions_new, local_transaction_type
         good_dct[NAMES.transactions] = []

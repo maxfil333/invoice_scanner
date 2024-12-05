@@ -10,6 +10,7 @@ import msvcrt
 import base64
 import openai
 import hashlib
+import difflib
 import pytesseract
 import numpy as np
 from openai import OpenAI
@@ -1036,6 +1037,15 @@ def chroma_similarity_search(query, chroma_path, embedding_func, k=1, query_trun
         logger.print(f"!!! CHROMA: Unable to find matching results !!!")
         return
     return results
+
+
+# _________ ALL SERVICES DIFFLIB SIMILARITY SEARCH (PERFECT MATCH) _________
+
+def perfect_similarity(query: str, data: dict, cutoff: float = 0.95) -> dict | None:
+    close_service = difflib.get_close_matches(query, data, n=1, cutoff=cutoff)
+    if close_service:
+        close_service = close_service[0]  # берем единственный элемент списка
+        return {'service': close_service, 'code': data[close_service]}
 
 
 # _________ MAIN_EDIT _________

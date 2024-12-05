@@ -5,7 +5,6 @@ import msvcrt
 
 from src.logger import logger
 
-
 # main.spec
 r"""
 datas=[
@@ -51,6 +50,16 @@ config['chroma_path'] = os.path.join(config['CONFIG'], 'chroma')
 config['embedding_model'] = "text-embedding-3-large"
 config['similarity_threshold'] = 0.2
 
+try:
+    with open(os.path.join(config['CONFIG'], 'crypto.key'), 'r') as f:
+        config['crypto_key'] = f.read()
+except FileNotFoundError as e:
+    logger.print(e)
+    logger.print('Не найден crypto.key')
+    if getattr(sys, 'frozen', False):
+        msvcrt.getch()
+        sys.exit()
+
 if not getattr(sys, 'frozen', False):  # не в сборке
     config['services_excel_file'] = os.path.join(config['CONFIG'], 'Услуги_поставщиков.xls')
     config['ships_excel_file'] = os.path.join(config['CONFIG'], 'Список_судов.xls')
@@ -65,8 +74,8 @@ except Exception as e:
     logger.save(config['CHECK_FOLDER'])
     raise
 
-config['unique_comments_file'] = os.path.join(config['CONFIG'], 'unique_comments.json')
 
+# _____________________ list of services _____________________
 
 def reindex_unique_comments(unique_comments_file_path: str) -> None:
     """
@@ -82,16 +91,24 @@ def reindex_unique_comments(unique_comments_file_path: str) -> None:
         json.dump(dct, f, ensure_ascii=False, indent=4)
 
 
+# JSON файл, содержащий список словарей [ {id: 7, comment: Услуга, service_code: [Услуга1С#Код#, ..]} , {..} ]
+config['unique_comments_file'] = os.path.join(config['CONFIG'], 'unique_comments.json')
+
+# JSON файл, содержащий словарь {Услуга1С: Код, ..}
+config['all_services_file'] = os.path.join(config['CONFIG'], 'all_services.json')
+
 reindex_unique_comments(config['unique_comments_file'])
 
-
-config['unique_services'] = None  # to html <div id="services_dict..."
+config['unique_services'] = []
+config['all_services'] = []
 config['not_found_service'] = 'Не найдено'
+
 try:
     with open(config['unique_comments_file'], 'r', encoding='utf-8') as f:
         dct = json.load(f)
         config['unique_comments_dict'] = dct
-        config['unique_services'] = list(dict.fromkeys([code for lst_item in dct for code in lst_item['service_code']]))
+        # список уникальных Услуга1С#Код#
+        config['unique_services'] = list(dict.fromkeys([code for mini_dct in dct for code in mini_dct['service_code']]))
         config['unique_services'].append(config['not_found_service'])
 except FileNotFoundError:
     logger.print(f"!!! FILE {config['unique_comments_file']} NOT FOUND !!!")
@@ -99,19 +116,19 @@ except FileNotFoundError:
     raise
 
 try:
-    with open(os.path.join(config['CONFIG'], 'crypto.key'), 'r') as f:
-        config['crypto_key'] = f.read()
-except FileNotFoundError as e:
-    logger.print(e)
-    logger.print('Не найден crypto.key')
-    if getattr(sys, 'frozen', False):
-        msvcrt.getch()
-        sys.exit()
+    with open(config['all_services_file'], 'r', encoding='utf-8') as f:
+        config['all_services_dict'] = json.load(f)
+        # список уникальных Услуга1С#Код#
+        config['all_services'] = [f"{k}#{v}#" for k, v in config['all_services_dict'].items()]
+except FileNotFoundError:
+    logger.print(f"! FILE {config['all_services_file']} NOT FOUND !")
+
+# объединенный список уникальных Услуга1С#Код# (в html <div id="unique_services" hidden>)
+config['unique_services'] = list(set(config['unique_services'] + config['all_services']))
 
 config['currency_dict'] = {'BYN': 'BYN#933', 'CHF': 'CHF#756', 'CNY': 'CNY#156', 'EUR': 'EUR#978', 'GBP': 'GBP#826',
                            'ILS': 'ILS#376', 'INR': 'INR#356', 'JPY': 'JPY#392', 'KZT': 'KZT#398', 'RSD': 'RSD#941',
                            'TRY': 'TRY#949', 'USD': 'USD#840', 'VND': 'VND#704', 'РУБ': 'РУБ#643'}
-
 config['valid_ext'] = ['.pdf', '.jpg', '.jpeg', '.png']
 
 
@@ -260,7 +277,9 @@ config['system_prompt'] = f"""
 if __name__ == '__main__':
     print('sys.frozen:', getattr(sys, 'frozen', False))
     for k, v in config.items():
-        if k not in ['unique_comments_dict', 'unique_services', 'ships']:
+        if k not in ['unique_comments_dict', 'unique_services',
+                     'all_services_dict', 'all_services',
+                     'union_services', 'ships']:
             print('-' * 50)
             print(k)
             print(v)
