@@ -192,6 +192,15 @@ def remove_dates(text: str) -> str:
     return re.sub(date_pattern, '', text)
 
 
+def replace_conos_with_none(text: str, conoses: list[str]) -> str:
+    regex = r"|".join(conoses)
+    return re.sub(r'\s{2,}', ' ', (re.sub(regex, '', text)))
+
+
+def replace_ship_with_none(text: str, ship: str) -> str:
+    return re.sub(r'\s{2,}', ' ', (re.sub(ship, '', text, flags=re.IGNORECASE)))
+
+
 # _________ FOLDERS _________
 
 def rename_files_in_directory(directory_path: str, max_len: int = 45, hide_logs: bool = False) -> None:

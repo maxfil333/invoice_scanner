@@ -14,10 +14,10 @@ from dotenv import load_dotenv
 from src.logger import logger
 from config.config import config, NAMES, current_file_params
 from src.crop_tables import extract_text_from_image
-from src.utils import chroma_similarity_search, is_without_nds, is_invoice, perfect_similarity
+from src.utils import chroma_similarity_search, is_without_nds, is_invoice, perfect_similarity, switch_to_latin
 from src.utils import convert_json_values_to_strings, handling_openai_json
-from src.utils import replace_container_with_latin, replace_container_with_none, switch_to_latin, remove_dates
-from src.utils import get_stream_dotenv, check_sums, propagate_nds
+from src.utils import replace_container_with_latin, replace_container_with_none, remove_dates
+from src.utils import get_stream_dotenv, check_sums, propagate_nds, replace_conos_with_none, replace_ship_with_none
 
 load_dotenv(stream=get_stream_dotenv())
 
@@ -32,6 +32,7 @@ def local_postprocessing(response, **kwargs) -> str | None:
     dct = json.loads(re_response)
     dct = convert_json_values_to_strings(dct)
 
+    additional_info: dict = dct['additional_info']
     container_regex = r'[A-ZА-Я]{3}U\s?[0-9]{6}-?[0-9]'
     container_regex_lt = r'[A-Z]{3}U\s?[0-9]{6}-?[0-9]'
     am_plate_regex = r'[АВЕКМНОРСТУХABEKMHOPCTYX]{1}\s{0,3}\d{3}\s*[АВЕКМНОРСТУХABEKMHOPCTYX]{2}\s{0,3}\d{2,3}'
@@ -82,7 +83,6 @@ def local_postprocessing(response, **kwargs) -> str | None:
     dct['Валюта документа'] = currency_dict[currency]  # распознанная валюта -> валюта с кодом
 
     # конвертация
-    additional_info: dict = dct['additional_info']
     if currency == "РУБ":
         additional_info['Конвертация'] = 0
     else:
@@ -142,7 +142,9 @@ def local_postprocessing(response, **kwargs) -> str | None:
 
         query = replace_container_with_none(good_dct[NAMES.name], container_regex)
         query = remove_dates(query)
-        # TODO: добавить функцию удаления ТХ
+        query = replace_conos_with_none(query, additional_info['Коносаменты'])
+        query = replace_ship_with_none(query, additional_info['Судно'])
+
         # query = re.sub(r'[^\s\w]', '', query)  # убираем спец символы: влияют на смысл больше чем нужно
         logger.print(f"query:\n{query}")
 
