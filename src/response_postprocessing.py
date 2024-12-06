@@ -82,10 +82,11 @@ def local_postprocessing(response, **kwargs) -> str | None:
     dct['Валюта документа'] = currency_dict[currency]  # распознанная валюта -> валюта с кодом
 
     # конвертация
+    additional_info: dict = dct['additional_info']
     if currency == "РУБ":
-        dct['additional_info']['Конвертация'] = 0
+        additional_info['Конвертация'] = 0
     else:
-        dct['additional_info']['Конвертация'] = int(float(dct['additional_info']['Конвертация']))
+        additional_info['Конвертация'] = int(float(additional_info['Конвертация']))
 
     # Услуги
 
