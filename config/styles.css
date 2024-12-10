@@ -280,6 +280,10 @@ button[onclick="removeService(this)"]:active {
     background-color: #A5F0B0;
 }
 
+.lightgreen-background {
+    background-color: #edfcef;
+}
+
 option {
     background-color:  #ffffff;
 }
