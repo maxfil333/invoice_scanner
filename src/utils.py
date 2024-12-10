@@ -14,6 +14,7 @@ import difflib
 import pytesseract
 import numpy as np
 from openai import OpenAI
+from geotext import GeoText
 from datetime import datetime
 from dotenv import load_dotenv
 from io import BytesIO, StringIO
@@ -23,6 +24,7 @@ from cryptography.fernet import Fernet
 from PIL import Image, ImageDraw, ImageFont
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
+from natasha import Segmenter, NewsEmbedding, NewsNERTagger, Doc
 
 from config.config import config, NAMES, current_file_params
 from src.logger import logger
@@ -133,6 +135,8 @@ def handling_openai_json(response: str, hide_logs=False) -> str | None:
                 return None
 
 
+# _________ TEXT _________
+
 def replace_symbols_with_latin(match_obj):
     """ Замена кириллических символов на латиницу """
 
@@ -199,6 +203,29 @@ def replace_conos_with_none(text: str, conoses: list[str]) -> str:
 
 def replace_ship_with_none(text: str, ship: str) -> str:
     return re.sub(r'\s{2,}', ' ', (re.sub(ship, '', text, flags=re.IGNORECASE)))
+
+
+def delete_en_loc(text: str) -> str:
+    """ deletes en locations with geotext """
+    regex = r"|".join(GeoText(text).cities)
+    return re.sub(regex, '', text)
+
+
+segmenter = Segmenter()
+ner_tagger = NewsNERTagger(NewsEmbedding())
+
+
+def delete_NER(text: str, entities: tuple[str] = ('LOC',)) -> str:
+    doc = Doc(text)
+    doc.segment(segmenter)
+    doc.tag_ner(ner_tagger)
+    pass_index = []
+    loc_spans = [span for span in doc.spans if span.type in entities]
+    for d in loc_spans:
+        m = int(d.start)
+        n = int(d.stop)
+        pass_index.extend(list(range(m, n)))
+    return "".join([x for i, x in enumerate(text) if i not in pass_index])
 
 
 # _________ FOLDERS _________
@@ -488,7 +515,7 @@ def order_goods(dct: dict, new_order: list[str]) -> dict:
 
     for good_dct in dct[NAMES.goods]:
         current_keys = list(good_dct)  # все ключи словаря
-        
+
         # Ошибочно попавшие в new_order ключи. (есть в new_order, но нет в словаре)
         wrong_keys = set(new_order).difference(set(current_keys))
 
@@ -915,7 +942,6 @@ def split_by_reports(json_str: str) -> tuple[str, bool]:
 
 
 def split_by_global_filed(json_formatted_str: str, global_field: str, local_field: str) -> str:
-
     def one_split(good: dict, items) -> list[dict]:
 
         # Исходные суммы позиции

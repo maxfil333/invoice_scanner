@@ -18,6 +18,7 @@ from src.utils import chroma_similarity_search, is_without_nds, is_invoice, perf
 from src.utils import convert_json_values_to_strings, handling_openai_json
 from src.utils import replace_container_with_latin, replace_container_with_none, remove_dates
 from src.utils import get_stream_dotenv, check_sums, propagate_nds, replace_conos_with_none, replace_ship_with_none
+from src.utils import delete_NER, delete_en_loc
 
 load_dotenv(stream=get_stream_dotenv())
 
@@ -162,6 +163,19 @@ def local_postprocessing(response, **kwargs) -> str | None:
 
         # 5.5 CHROMA (FULL SEARCH)
         if not perfect_result:
+
+            def fill_in_service1c(good_dct: dict, prefix='') -> None:
+                comment_id, comment_content = relevant_result[0].metadata['id'], relevant_result[0].page_content
+                # id в каждом словарике {id:.., comment:.., service_code:..} совпадает с порядковым ном. словарика
+                uniq_comments_dct_by_idx = config['unique_comments_dict'][comment_id]
+                # > {id:, comment:, service_code: }
+                logger.print(f"{prefix}response:\n{uniq_comments_dct_by_idx}")
+
+                # берем первый "service#code#" в ключе "service_code" элемента словаря с индексом comment_id,
+                # заполняем поле "Услуга1С"
+                good_dct['Услуга1С'] = uniq_comments_dct_by_idx['service_code'][0]
+                logger.print(f"{prefix}score: {score} found service: {good_dct['Услуга1С']}")
+
             good_dct['Услуга1С'] = config['not_found_service']
             relevant_results = chroma_similarity_search(query=query,
                                                         chroma_path=config['chroma_path'],
@@ -171,19 +185,26 @@ def local_postprocessing(response, **kwargs) -> str | None:
                 # берем первый (наиболее вероятный) элемента из списка результатов поиска
                 relevant_result = relevant_results[0]
                 score = relevant_result[1]
-                if score >= config['similarity_threshold']:
-                    comment_id, comment_content = relevant_result[0].metadata['id'], relevant_result[0].page_content
-                    # id в каждом словарике {id:.., comment:.., service_code:..} совпадает с порядковым ном. словарика
-                    uniq_comments_dct_by_idx = config['unique_comments_dict'][comment_id]
-                    # > {id:, comment:, service_code: }
-                    logger.print(f"response:\n{uniq_comments_dct_by_idx}")
+                if score >= config['high_threshold']:
+                    fill_in_service1c(good_dct=good_dct)  # если высокая уверенность, заполняем Услуга1С сразу
 
-                    # берем первый "service#code#" в ключе "service_code" элемента словаря с индексом comment_id,
-                    # заполняем поле "Услуга1С"
-                    good_dct['Услуга1С'] = uniq_comments_dct_by_idx['service_code'][0]
-                    logger.print(f"score: {score} found service: {good_dct['Услуга1С']}")
+                elif config['low_threshold'] <= score < config['high_threshold']:
+                    ner_cleaned_query = delete_NER(delete_en_loc(query))
+                    logger.print(f"geoquery:\n{ner_cleaned_query}")
+                    relevant_results = chroma_similarity_search(query=ner_cleaned_query,
+                                                                chroma_path=config['chroma_path'],
+                                                                embedding_func=embedding_func,
+                                                                k=1)
+                    if relevant_results:
+                        # берем первый (наиболее вероятный) элемента из списка результатов поиска
+                        relevant_result = relevant_results[0]
+                        score = relevant_result[1]
+                        if score >= config['low_threshold']:
+                            fill_in_service1c(good_dct, prefix='geo')  # если средняя уверенность, убираем географию
+                        else:
+                            logger.print(f"geoTHRESHOLD TRIMMED: score: {score}")
                 else:
-                    logger.print(f"THRESHOLD TRIMMED: score: {score} found service: {good_dct['Услуга1С']}")
+                    logger.print(f"THRESHOLD TRIMMED: score: {score}")
 
         # 6. Добавить local_transaction, local_transactions_new, local_transaction_type
         good_dct[NAMES.transactions] = []

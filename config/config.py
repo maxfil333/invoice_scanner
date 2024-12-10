@@ -48,7 +48,9 @@ config['GPTMODEL'] = 'gpt-4o-2024-08-06'
 # config['GPTMODEL'] = 'gpt-4o-mini'
 config['chroma_path'] = os.path.join(config['CONFIG'], 'chroma')
 config['embedding_model'] = "text-embedding-3-large"
-config['similarity_threshold'] = 0.2
+
+config['low_threshold'] = 0.2
+config['high_threshold'] = 0.7
 
 try:
     with open(os.path.join(config['CONFIG'], 'crypto.key'), 'r') as f:
