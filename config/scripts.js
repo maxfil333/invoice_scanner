@@ -809,35 +809,23 @@ document.addEventListener('DOMContentLoaded', function() {
 document.addEventListener('DOMContentLoaded', highlight_one_service);
 
 function highlight_one_service() {
-
     // Ищем все элементы с классом Номерсделки
     const selectElements = document.querySelectorAll('.Номерсделки');
 
-    // Проверяем каждый <select>
     selectElements.forEach(select => {
+        // Проверяем условие для green-background
         if (select.options.length === 2) {
             select.classList.add('green-background');
-        }
-    });
-}
+        } else {
+            // Фильтруем элементы, исключая те, которые начинаются с "ТБ" или равны "Нет"
+            const filteredOptions = Array.from(select.options).filter(option => {
+                return !option.text.startsWith('ТБ') && option.text !== 'Нет';
+            });
 
-
-document.addEventListener('DOMContentLoaded',  lighthighlight_one_service);
-
-function lighthighlight_one_service() {
-    // Ищем все элементы с классом Номерсделки
-    const selectElements = document.querySelectorAll('.Номерсделки');
-
-    // Проверяем каждый <select>
-    selectElements.forEach(select => {
-        // Фильтруем элементы, исключая те, которые начинаются с "ТБ" или равны "Нет"
-        const filteredOptions = Array.from(select.options).filter(option => {
-            return !option.text.startsWith('ТБ') && option.text !== 'Нет';
-        });
-
-        // Проверяем, если количество оставшихся элементов равно 1
-        if (filteredOptions.length === 1) {
-            select.classList.add('lightgreen-background');
+            // Проверяем условие для lightgreen-background
+            if (filteredOptions.length === 1) {
+                select.classList.add('lightgreen-background');
+            }
         }
     });
 }
