@@ -240,7 +240,7 @@ def rename_files_in_directory(directory_path: str, max_len: int = 45, hide_logs:
 
     def sanitize_filename(filename: str) -> str:
         # Заменяем все недопустимые символы на пробелы
-        sanitized = re.sub(r'[<>/\"\\|?*]', ' ', filename)
+        sanitized = re.sub(r'[<>/\"\\|?*#]', ' ', filename)
         # Убираем пробелы в начале и конце строки
         sanitized = sanitized.strip()
         # Заменяем пробелы на "_"
@@ -261,8 +261,10 @@ def rename_files_in_directory(directory_path: str, max_len: int = 45, hide_logs:
         if os.path.isdir(os.path.join(directory_path, filename)):
             rename_files_in_directory(os.path.join(directory_path, filename))
 
-        new_filename = crop_filename(sanitize_filename(filename), max_len=max_len)
+        new_filename = sanitize_filename(filename)
+        new_filename = crop_filename(new_filename, max_len=max_len)
         new_filename = lower_extension(new_filename)
+
         old_filepath = os.path.join(directory_path, filename)
         new_filepath = os.path.join(directory_path, new_filename)
         try:
