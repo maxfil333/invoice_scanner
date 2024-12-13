@@ -104,7 +104,6 @@ reindex_unique_comments(config['unique_comments_file'])
 config['unique_services'] = []
 config['all_services'] = []
 config['not_found_service'] = 'Не найдено'
-config['not_found_deal'] = 'Сделка не найдена'
 
 try:
     with open(config['unique_comments_file'], 'r', encoding='utf-8') as f:
@@ -168,10 +167,14 @@ class ConfigNames:
     reports = 'Заключения'
     local_reports = 'Заключения (для услуги)'
 
-    extra_deals = 'Прочие_сделки'
+    extra_deals = 'Найденные сделки'
+    extra_deals_not = 'Ненайденные сделки'
 
 
 NAMES = ConfigNames()
+
+config['textarea_fields'] = [NAMES.name, NAMES.cont, NAMES.good1C, NAMES.good1C_new,
+                             NAMES.extra_deals, NAMES.extra_deals_not]
 
 # 15 = 7(prompt) - (price - sum_with - sum_nds)(3) + (2*Сумма + 2*Цена)(4)
 # + (good1C + good1C_new + price_type)(3) + (tran, tran_new, tran_type)(3) + local_conos(1)
