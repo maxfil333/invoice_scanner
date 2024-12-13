@@ -104,6 +104,7 @@ reindex_unique_comments(config['unique_comments_file'])
 config['unique_services'] = []
 config['all_services'] = []
 config['not_found_service'] = 'Не найдено'
+config['not_found_deal'] = 'Сделка не найдена'
 
 try:
     with open(config['unique_comments_file'], 'r', encoding='utf-8') as f:

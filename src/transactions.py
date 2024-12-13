@@ -4,7 +4,7 @@ from typing import Union, Literal
 from win32com.client import CDispatch
 
 from src.logger import logger
-from config.config import NAMES
+from config.config import NAMES, config
 from src.connector import cup_http_request_partner
 from src.utils import get_stream_dotenv, sort_transactions
 
@@ -29,7 +29,10 @@ def get_transaction_number(json_formatted_str: str, connection: Union[None, Lite
         deals = []
         for field_item in dct['additional_info'][field_name].split():
             deals_ = cup_http_request_partner(func_name, field_item, encode_off=encode_off)
-            deals_ = [f"{deal} - {field_item}" for deal in deals_]
+            if deals_:
+                deals_ = [f"{deal} - {field_item}" for deal in deals_]
+            else:
+                deals_ = [f"{config['not_found_deal']} - {field_item}"]
             deals.extend(deals_)
         dct['additional_info'][NAMES.extra_deals] += ('\n' + '\n'.join(deals)) if deals else ''
 
