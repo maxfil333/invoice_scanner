@@ -467,31 +467,15 @@ function highlight_errors() {
 }
 
 
-document.addEventListener('DOMContentLoaded', highlight_errors_extra_deals);
-
-function highlight_errors_extra_deals() {
-
-    const area = document.querySelector('.Прочие_сделки');
-    if (area.textContent.includes("Сделка не найдена")) {
-        area.classList.add('error');
-    }
-}
-
 document.addEventListener('DOMContentLoaded', processDealsAndHighlightErrors);
 
 function processDealsAndHighlightErrors() {
-    // Получить содержимое элемента класса "Прочие_сделки"
-    const dealsElement = document.querySelector('.Прочие_сделки');
+    // Получить содержимое элемента класса "Ненайденныесделки"
+    const dealsElement = document.querySelector('.Ненайденныесделки');
     if (!dealsElement) return; // Если элемент не найден, ничего не делаем
 
     // Разбить содержимое на список по разделителю переноса строки
-    const deals = dealsElement.textContent.split('\n');
-
-    // Выделить строки, начинающиеся с "Сделка не найдена - "
-    const ents = deals
-        .filter(deal => deal.startsWith("Сделка не найдена - "))
-        .map(deal => deal.replace("Сделка не найдена - ", "").trim());
-
+    const ents = dealsElement.textContent.split('\n');
     console.log(ents);
 
     // Пройти по всем элементам input класса service
