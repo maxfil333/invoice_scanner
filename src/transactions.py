@@ -36,6 +36,20 @@ def get_transaction_number(json_formatted_str: str, connection: Union[None, Lite
             deals.extend(deals_)
         dct['additional_info'][NAMES.extra_deals] += ('\n' + '\n'.join(deals)) if deals else ''
 
+    def add_extra_deals_conts(func_name: str) -> None:
+        deals = []
+        for cont in [good[NAMES.cont] for good in dct[NAMES.goods] if good[NAMES.cont]]:
+            deals_ = cup_http_request_partner(func_name, cont)
+            if deals_:
+                deals_ = [f"{deal} - {cont}" for deal in deals_]
+            else:
+                deals_ = [f"{config['not_found_deal']} - {cont}"]
+            deals.extend(deals_)
+        dct['additional_info'][NAMES.extra_deals] += ('\n' + '\n'.join(deals)) if deals else ''
+
+    # Вывести в доп.инфо список сделок для контейнеров
+    add_extra_deals_conts(r'TransactionNumberFromContainer')
+
     # Вывести в доп.инфо список сделок для коносаментов
     add_extra_deals('Коносаменты', 'TransactionNumberFromBillOfLading')
     # Вывести в доп.инфо список сделок для ДТ
