@@ -467,19 +467,21 @@ function highlight_errors() {
 }
 
 
+// Подсветить локальные поля в которых есть нераспознанные сущности
 document.addEventListener('DOMContentLoaded', processDealsAndHighlightErrors);
 
 function processDealsAndHighlightErrors() {
     // Получить содержимое элемента класса "Ненайденныесделки"
-    const dealsElement = document.querySelector('.Ненайденныесделки');
-    if (!dealsElement) return; // Если элемент не найден, ничего не делаем
+    const not_found_extra_field = document.querySelector('.Ненайденныесделки');
+    if (!not_found_extra_field) return; // Если элемент не найден, ничего не делаем
+    if (!not_found_extra_field.textContent.trim()) return; // Если элемент пустой, ничего не делаем
 
     // Разбить содержимое на список по разделителю переноса строки
-    const ents = dealsElement.textContent.split('\n');
-    console.log(ents);
+    const ents = not_found_extra_field.textContent.split('\n');
 
     // Пройти по всем элементам input класса service
     const serviceInputs = document.querySelectorAll('.service input, .service textarea');
+
     serviceInputs.forEach(input => {
         if (ents.includes(input.value)) {
             input.classList.add('error'); // Добавить класс error
@@ -487,6 +489,15 @@ function processDealsAndHighlightErrors() {
     });
 }
 
+// Подсветить additional_data.Нераспознанные_сделки
+document.addEventListener('DOMContentLoaded', HighlightNotFoundExtraField);
+
+function HighlightNotFoundExtraField() {
+    const not_found_extra_field = document.querySelector('.Ненайденныесделки');
+    if (not_found_extra_field.value.trim() !== "") {
+        not_found_extra_field.classList.add('error');
+    }
+}
 
 
 // --------------------------------------------------------------------------------------------------------------------
