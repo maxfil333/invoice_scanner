@@ -467,6 +467,16 @@ function highlight_errors() {
 }
 
 
+document.addEventListener('DOMContentLoaded', highlight_errors_extra_deals);
+
+function highlight_errors_extra_deals() {
+
+    const area = document.querySelector('.Прочие_сделки');
+    if (area.textContent.includes("Сделка не найдена")) {
+        area.classList.add('error');
+    }
+}
+
 // --------------------------------------------------------------------------------------------------------------------
 // Список Услуг1С
 
