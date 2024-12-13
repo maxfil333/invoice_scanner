@@ -24,28 +24,34 @@ def get_transaction_number(json_formatted_str: str, connection: Union[None, Lite
     # _____________________________________ Заполнение additional_info.extra_deals _____________________________________
 
     dct['additional_info'][NAMES.extra_deals] = ''
+    dct['additional_info'][NAMES.extra_deals_not] = ''
 
     def add_extra_deals(field_name: str, func_name: str, encode_off: bool = False) -> None:
         deals = []
+        deals_not = []
         for field_item in dct['additional_info'][field_name].split():
-            deals_ = cup_http_request_partner(func_name, field_item, encode_off=encode_off)
-            if deals_:
-                deals_ = [f"{deal} - {field_item}" for deal in deals_]
+            response = cup_http_request_partner(func_name, field_item, encode_off=encode_off)
+            if response:
+                deals_ = [f"{deal} - {field_item}" for deal in response]
+                deals.extend(deals_)
             else:
-                deals_ = [f"{config['not_found_deal']} - {field_item}"]
-            deals.extend(deals_)
+                deals_not.append(field_item)
+
         dct['additional_info'][NAMES.extra_deals] += ('\n' + '\n'.join(deals)) if deals else ''
+        dct['additional_info'][NAMES.extra_deals_not] += ('\n' + '\n'.join(deals_not)) if deals_not else ''
 
     def add_extra_deals_conts(func_name: str) -> None:
         deals = []
+        deals_not = []
         for cont in [good[NAMES.cont] for good in dct[NAMES.goods] if good[NAMES.cont]]:
-            deals_ = cup_http_request_partner(func_name, cont)
-            if deals_:
-                deals_ = [f"{deal} - {cont}" for deal in deals_]
+            response = cup_http_request_partner(func_name, cont)
+            if response:
+                deals_ = [f"{deal} - {cont}" for deal in response]
+                deals.extend(deals_)
             else:
-                deals_ = [f"{config['not_found_deal']} - {cont}"]
-            deals.extend(deals_)
+                deals_not.append(cont)
         dct['additional_info'][NAMES.extra_deals] += ('\n' + '\n'.join(deals)) if deals else ''
+        dct['additional_info'][NAMES.extra_deals_not] += ('\n' + '\n'.join(deals_not)) if deals_not else ''
 
     # Вывести в доп.инфо список сделок для контейнеров
     add_extra_deals_conts(r'TransactionNumberFromContainer')
