@@ -477,6 +477,34 @@ function highlight_errors_extra_deals() {
     }
 }
 
+document.addEventListener('DOMContentLoaded', processDealsAndHighlightErrors);
+
+function processDealsAndHighlightErrors() {
+    // Получить содержимое элемента класса "Прочие_сделки"
+    const dealsElement = document.querySelector('.Прочие_сделки');
+    if (!dealsElement) return; // Если элемент не найден, ничего не делаем
+
+    // Разбить содержимое на список по разделителю переноса строки
+    const deals = dealsElement.textContent.split('\n');
+
+    // Выделить строки, начинающиеся с "Сделка не найдена - "
+    const ents = deals
+        .filter(deal => deal.startsWith("Сделка не найдена - "))
+        .map(deal => deal.replace("Сделка не найдена - ", "").trim());
+
+    console.log(ents);
+
+    // Пройти по всем элементам input класса service
+    const serviceInputs = document.querySelectorAll('.service input, .service textarea');
+    serviceInputs.forEach(input => {
+        if (ents.includes(input.value)) {
+            input.classList.add('error'); // Добавить класс error
+        }
+    });
+}
+
+
+
 // --------------------------------------------------------------------------------------------------------------------
 // Список Услуг1С
 
