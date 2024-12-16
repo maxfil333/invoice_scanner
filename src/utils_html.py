@@ -22,15 +22,20 @@ def get_deal_details(post_inn: str, post_kpp: str, pok_inn: str, date: str) -> U
 
 def generate_details(post_inn: str, post_kpp: str, pok_inn: str, date: str):
     details = get_deal_details(post_inn, post_kpp, pok_inn, date)
-    details_html = dedent(f"""
-        <div class='details'>
-            <detailsLH1>Контрагент:</detailsLH1> {details['Контрагент']}<br>
-            <detailsLH1>Организация:</detailsLH1> {details['Организация']}<br>
-            <detailsLH1>Договор:</detailsLH1> {details['Договор']}<br>
-            <detailsLH1>Дата оплаты:</detailsLH1> {details['ДатаОплаты']}<br>
-        </div>
-    """).strip()
-    return details_html
+    if not details:
+        details = {}
+    content_ = ''
+    for i in ['Контрагент', 'Организация', 'Договор', 'ДатаОплаты']:
+        parameter = details.get(i, "")
+        content_ += dedent(f"""
+            <div class="input-group-details">
+                <label>{i}:</label>
+                <textarea name="{i}" class="{i}" rows="1" style="resize:none;"oninput="autoResize(this)">{parameter}</textarea>
+            </div>
+            """.strip())
+
+    content = f"<fieldset>{content_}</fieldset>"
+    return content
 
 
 if __name__ == '__main__':

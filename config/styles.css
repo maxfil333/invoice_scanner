@@ -406,3 +406,28 @@ detailsLH1 {
     margin-bottom: 0.5em; /* Уменьшаем нижний отступ */
     color: #4E995B; /* Цвет для заголовков */
 }
+
+
+
+.input-group-details {
+    display: flex;
+    align-items: flex-start; /* Выравнивание элементов по началу */
+    margin-bottom: 0.5em;
+    width: 100%;
+}
+
+.input-group-details label {
+    flex-shrink: 0; /* Запрещаем сжатие метки */
+    width: 100px; /* Ограничиваем ширину метки */
+    margin-right: 10px; /* Отступ между меткой и textarea */
+    text-align: left; /* Выравнивание текста метки по левой стороне */
+    white-space: nowrap; /* Убираем перенос текста */
+    line-height: 1.5; /* Делаем высоту строки комфортной */
+}
+
+.input-group-details textarea {
+    flex-grow: 1; /* Поле textarea растягивается, занимая оставшееся место */
+    background-color: AliceBlue;
+    width: auto; /* Убираем фиксированную ширину */
+    height: auto; /* Автоматическая высота */
+}
