@@ -183,10 +183,10 @@ def create_html_form(json_file, output_file, file_path):
     with open(output_file, 'w', encoding='utf-8') as f:
         f.write(prettified)
 
-    logger.print(f'HTML страница сгенерирована и сохранена в {output_file}')
+    logger.print(f'HTML страница сгенерирована и сохранена в \n{output_file}')
 
 
 if __name__ == '__main__':
-    create_html_form(r"C:\Users\Filipp\Desktop\0_DATA\Новая папка (4)\0.json",
-                     r"C:\Users\Filipp\Desktop\0_DATA\Новая папка (4)\0.html",
-                     r"C:\Users\Filipp\Desktop\0_DATA\Новая папка (4)\20_Содружество_Балтика-Транс.pdf")
+    create_html_form(r"C:\Users\Filipp\PycharmProjects\Invoice_scanner\data\__html_test\Новая папка\Новая папка\0.json",
+                     r"C:\Users\Filipp\PycharmProjects\Invoice_scanner\data\__html_test\Новая папка\Новая папка\0000.html",
+                     r"C:\Users\Filipp\PycharmProjects\Invoice_scanner\data\__html_test\Новая папка\Новая папка\20_Содружество_Балтика-Транс.pdf")
