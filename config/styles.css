@@ -10,7 +10,7 @@ body {
 }
 
 .dropdown {
-    width: 50%; /* Установить ширину в 80% от родительского элемента */
+    width: 50%; /* Установить ширину в % от родительского элемента */
     max-height: 340px; /* Ограничение по максимальной высоте, если необходимо */
     overflow-y: auto;
     border: 1px solid #ccc;
@@ -25,7 +25,6 @@ body {
     right: 0%; /* Настройте расположение по вашему усмотрению */
 }
 
-
 .dropdown-item {
     font-size: 14px;
     border: 1px solid #ddd;
@@ -38,7 +37,6 @@ body {
     }
 }
 
-
 .highlight {
     background-color: #DCEDDE !important;
     transition: background-color 0.1s;
@@ -48,8 +46,6 @@ body {
     position: relative;
     width: 300px;
 }
-
-
 
 .container {
     display: flex;
@@ -406,8 +402,6 @@ detailsLH1 {
     color: #4E995B; /* Цвет для заголовков */
 }
 
-
-
 .input-group-details {
     display: flex;
     align-items: center; /* Выравнивание элементов по началу */
@@ -460,7 +454,7 @@ detailsLH1 {
 
 .options {
   width: 90%;
-  max-height: 150px;
+  max-height: 300px;
   overflow-y: auto;
   border: 1px solid #ccc;
   border-radius: 4px;
