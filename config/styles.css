@@ -410,7 +410,7 @@ detailsLH1 {
 
 .input-group-details {
     display: flex;
-    align-items: flex-start; /* Выравнивание элементов по началу */
+    align-items: center; /* Выравнивание элементов по началу */
     margin-bottom: 0.5em;
     width: 100%;
 }
@@ -419,7 +419,7 @@ detailsLH1 {
     flex-shrink: 0; /* Запрещаем сжатие метки */
     width: 100px; /* Ограничиваем ширину метки */
     margin-right: 10px; /* Отступ между меткой и textarea */
-    text-align: left; /* Выравнивание текста метки по левой стороне */
+    text-align: right; /* Выравнивание текста метки по левой стороне */
     white-space: nowrap; /* Убираем перенос текста */
     line-height: 1.5; /* Делаем высоту строки комфортной */
 }
