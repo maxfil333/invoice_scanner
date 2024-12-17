@@ -20,6 +20,24 @@ def get_deal_details(post_inn: str, post_kpp: str, pok_inn: str, date: str) -> U
     return cup_http_request('GetContractByINN', post_inn, post_kpp, pok_inn, date, encode_off=True)
 
 
+def generate_contract(details) -> str:
+    content = ("""
+    <div class="input-group-details">
+        <label>Договор:</label>
+        <div class="custom-select">
+            <div class="select-display">Договор № 123-45</div>
+            <div class="options">
+                <div>Short text</div>
+                <div>Some longer text that might wrap to multiple lines</div>
+                <div>A very long piece of text that should adjust the height of the select element dynamically based on its length</div>
+            </div>
+        </div>
+    </div>
+    """).strip()
+
+    return content
+
+
 def generate_details(post_inn: str, post_kpp: str, pok_inn: str, date: str):
     details = get_deal_details(post_inn, post_kpp, pok_inn, date)
     if not details:
@@ -37,14 +55,7 @@ def generate_details(post_inn: str, post_kpp: str, pok_inn: str, date: str):
         parameter = details.get(i, "")
 
         if i == 'Договор':
-            content_ += dedent(f"""
-                <div class="input-group-details">
-                    <label>{i}:</label>
-                    <select class={i} name={i} style="width: 100%;>
-                        {options}
-                    </select>
-                </div>
-                """.strip())
+            content_ += generate_contract(details)
         elif i == "ДоговорИдентификатор":
             content_ += dedent(f"""
                 <div class="input-group-details" style="display: none;">

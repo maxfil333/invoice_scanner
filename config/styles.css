@@ -115,7 +115,7 @@ fieldset {
     margin-bottom: 0.5em; /* Уменьшаем внешний отступ */
     padding: 0.5em; /* Уменьшаем внутренний отступ */
     box-sizing: border-box;
-    overflow: hidden;
+    overflow: visible;
     background-color: #f9f9f9;
     position: relative; /* Добавить относительное позиционирование к родительскому элементу */
 }
@@ -434,4 +434,56 @@ detailsLH1 {
 .input-group-details select {
     background-color: AliceBlue;
     width: 100%; /* Убираем фиксированную ширину */
+}
+
+
+/* contract */
+
+.custom-select {
+  font-size: 13.3px;
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  background-color: AliceBlue;
+}
+
+.select-display {
+  padding: 5px;
+  box-sizing: border-box;
+  width: 100%;
+  cursor: pointer;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+.options {
+  width: 90%;
+  max-height: 150px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  display: none;
+  position: absolute;
+  background: white;
+  z-index: 100;
+  top: 100%;
+  left: 50%; /* Смещаем левый край блока на 50% от родителя */
+  transform: translateX(-50%); /* Сдвигаем блок на половину его ширины влево */
+}
+
+.options div {
+  border: 0.5px solid #ccc;
+  padding: 5px;
+  cursor: pointer;
+  white-space: normal;
+}
+
+.options div:hover {
+  background-color: #f0f0f0;
+}
+
+.custom-select.open .options {
+  display: block;
 }
