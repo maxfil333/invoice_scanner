@@ -24,15 +24,41 @@ def generate_details(post_inn: str, post_kpp: str, pok_inn: str, date: str):
     details = get_deal_details(post_inn, post_kpp, pok_inn, date)
     if not details:
         details = {}
+
+    options = ''
+    variants = details.get('Варианты')
+    if variants:
+        for variant in variants:
+            contract: str = variant['Договор']
+            options += f'<option value="{contract}">{contract}</option>'
+
     content_ = ''
-    for i in ['Контрагент', 'Организация', 'Договор', 'ДатаОплаты']:
+    for i in ['Контрагент', 'Организация', 'Договор', 'ДоговорИдентификатор', 'ДатаОплаты']:
         parameter = details.get(i, "")
-        content_ += dedent(f"""
-            <div class="input-group-details">
-                <label>{i}:</label>
-                <textarea name="{i}" class="{i}" rows="1" style="resize:none;"oninput="autoResize(this)">{parameter}</textarea>
-            </div>
-            """.strip())
+
+        if i == 'Договор':
+            content_ += dedent(f"""
+                <div class="input-group-details">
+                    <label>{i}:</label>
+                    <select class={i} name={i} style="width: 100%;>
+                        {options}
+                    </select>
+                </div>
+                """.strip())
+        elif i == "ДоговорИдентификатор":
+            content_ += dedent(f"""
+                <div class="input-group-details" style="display: none;">
+                    <label>{i}:</label>
+                    <textarea name="{i}" class="{i}" rows="1" style="resize:none;"oninput="autoResize(this)">{parameter}</textarea>
+                </div>
+                """.strip())
+        else:
+            content_ += dedent(f"""
+                <div class="input-group-details">
+                    <label>{i}:</label>
+                    <textarea name="{i}" class="{i}" rows="1" style="resize:none;"oninput="autoResize(this)">{parameter}</textarea>
+                </div>
+                """.strip())
 
     content = f"<fieldset>{content_}</fieldset>"
     return content

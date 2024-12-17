@@ -197,7 +197,6 @@ textarea:focus {
 }
 
 textarea {
-    font-family: Monaco, monospace; /* Устанавливаем шрифт monospace */
     height: auto;
     min-height: 20px;
     resize: none;
@@ -207,7 +206,6 @@ textarea {
 input[type="checkbox"] {
     margin-right: 0.5em;
 }
-
 
 
 /* Общие стили для кнопок */
@@ -288,6 +286,11 @@ option {
     background-color:  #ffffff;
 }
 
+.Типпоискасделки {
+    pointer-events: none;
+    background-color: #e9ecef; /* светло-серый цвет для индикации, что поле нередактируемо */
+}
+
 /* Адаптивные стили для мобильных устройств */
 @media (max-width: 600px) {
     .container {
@@ -319,10 +322,6 @@ option {
     }
 }
 
-.Типпоискасделки {
-    pointer-events: none;
-    background-color: #e9ecef; /* светло-серый цвет для индикации, что поле нередактируемо */
-}
 
 /* --- SWITCH --- */
 
@@ -430,4 +429,9 @@ detailsLH1 {
     background-color: AliceBlue;
     width: auto; /* Убираем фиксированную ширину */
     height: auto; /* Автоматическая высота */
+}
+
+.input-group-details select {
+    background-color: AliceBlue;
+    width: 100%; /* Убираем фиксированную ширину */
 }
