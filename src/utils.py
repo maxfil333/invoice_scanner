@@ -1,12 +1,10 @@
 import os
 import re
 import io
-import sys
 import json
 import fitz
 import shutil
 import PyPDF2
-import msvcrt
 import base64
 import openai
 import hashlib
@@ -17,20 +15,20 @@ from openai import OpenAI
 from geotext import GeoText
 from datetime import datetime
 from dotenv import load_dotenv
-from io import BytesIO, StringIO
+from io import BytesIO
 from collections import defaultdict
 from typing import Literal, Optional
-from cryptography.fernet import Fernet
 from PIL import Image, ImageDraw, ImageFont
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
 from natasha import Segmenter, NewsEmbedding, NewsNERTagger, Doc
 
-from config.config import config, NAMES, current_file_params
 from src.logger import logger
+from src.utils_config import get_stream_dotenv
+from config.config import config, NAMES, current_file_params
 
 
-# _________ ENCODERS _________
+# _____________________________________________________________________________________________________________ ENCODERS
 
 # Function to encode the image
 def base64_encode_image(image_path: str):
@@ -58,7 +56,7 @@ def calculate_hash(file_path):
     return md5_hash.hexdigest()
 
 
-# _________ COMMON _________
+# _______________________________________________________________________________________________________________ COMMON
 
 def group_files_by_name(file_list: list[str]) -> dict:
     groups = defaultdict(list)
@@ -83,27 +81,6 @@ def convert_json_values_to_strings(obj) -> dict | list | str:
         return ""
     else:
         return str(obj)
-
-
-def get_stream_dotenv():
-    """ uses crypto.key to decrypt encrypted environment.
-    returns StringIO (for load_dotenv(stream=...)"""
-
-    f = Fernet(config['crypto_key'])
-    try:
-        with open(config['crypto_env'], 'rb') as file:
-            encrypted_data = file.read()
-    except FileNotFoundError:
-        logger.print(f'Файл {config["crypto_env"]} не найден.')
-        if getattr(sys, 'frozen', False):
-            msvcrt.getch()
-            sys.exit()
-        else:
-            raise
-    decrypted_data = f.decrypt(encrypted_data)  # bytes
-    decrypted_data_str = decrypted_data.decode('utf-8')  # string
-    string_stream = StringIO(decrypted_data_str)
-    return string_stream
 
 
 def handling_openai_json(response: str, hide_logs=False) -> str | None:
@@ -135,7 +112,7 @@ def handling_openai_json(response: str, hide_logs=False) -> str | None:
                 return None
 
 
-# _________ TEXT _________
+# _________________________________________________________________________________________________________________ TEXT
 
 def replace_symbols_with_latin(match_obj):
     """ Замена кириллических символов на латиницу """
@@ -228,7 +205,7 @@ def delete_NER(text: str, entities: tuple[str] = ('LOC',)) -> str:
     return "".join([x for i, x in enumerate(text) if i not in pass_index])
 
 
-# _________ FOLDERS _________
+# ______________________________________________________________________________________________________________ FOLDERS
 
 def rename_files_in_directory(directory_path: str, max_len: int = 45, hide_logs: bool = False) -> None:
     def get_unique_filename(filepath):
@@ -301,7 +278,7 @@ def create_date_folder_in_check(root_dir):
     return folder_path
 
 
-# _________ IMAGES _________
+# _______________________________________________________________________________________________________________ IMAGES
 
 def add_text_bar(image: str | Image.Image, text, h=75, font_path='verdana.ttf', font_size=50):
     # Открыть изображение
@@ -353,7 +330,7 @@ def image_upstanding(img: np.ndarray) -> np.ndarray:
     return img
 
 
-# _________ PDF _________
+# __________________________________________________________________________________________________________________ PDF
 
 def is_scanned_pdf(file_path, pages_to_analyse=None) -> Optional[bool]:
     try:
@@ -477,7 +454,7 @@ def extract_pages(input_pdf_path, pages_to_keep, output_pdf_path=None) -> bytes:
             return output_buffer.getvalue()
 
 
-# _________ OPENAI _________
+# _______________________________________________________________________________________________________________ OPENAI
 
 def update_assistant(model: Literal['gpt-4o', 'gpt-4o-mini']):
     load_dotenv(stream=get_stream_dotenv())
@@ -505,7 +482,7 @@ def update_assistant_system_prompt(new_prompt: str):
     )
 
 
-# _________ LOCAL POSTPROCESSING _________
+# _________________________________________________________________________________________________ LOCAL POSTPROCESSING
 
 def order_goods(dct: dict, new_order: list[str]) -> dict:
     """ Сортировка ключей Услуг """
@@ -796,7 +773,7 @@ def is_invoice(text: str) -> bool | None:
     return False
 
 
-# _________ TRANSACTIONS _________
+# _________________________________________________________________________________________________________ TRANSACTIONS
 
 def sort_transactions(transactions: list[str]) -> list:
     def sort_func(x):
@@ -829,7 +806,7 @@ def sort_transactions(transactions: list[str]) -> list:
         return transactions
 
 
-# _________ TRANSACTIONS (service_split) _________
+# _________________________________________________________________________________________ TRANSACTIONS (service_split)
 
 def balance_remainders(data: list[dict], key_name: str, target_sum: int | float, param_file: dict, precision=2) -> None:
     """ Функция для распределения остатков. Используется в конце one_good_split_by... """

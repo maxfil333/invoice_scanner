@@ -17,7 +17,8 @@ from src.crop_tables import extract_text_from_image
 from src.utils import chroma_similarity_search, is_without_nds, is_invoice, perfect_similarity, switch_to_latin
 from src.utils import convert_json_values_to_strings, handling_openai_json
 from src.utils import replace_container_with_latin, replace_container_with_none, remove_dates
-from src.utils import get_stream_dotenv, check_sums, propagate_nds, replace_conos_with_none, replace_ship_with_none
+from src.utils import check_sums, propagate_nds, replace_conos_with_none, replace_ship_with_none
+from src.utils_config import get_stream_dotenv
 from src.utils import delete_NER, delete_en_loc
 
 load_dotenv(stream=get_stream_dotenv())

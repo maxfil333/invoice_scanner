@@ -11,8 +11,8 @@ import requests
 from requests.auth import HTTPBasicAuth
 
 from src.logger import logger
-from config.config import config, NAMES
-from src.utils import get_stream_dotenv
+from config.config import config
+from src.utils_config import get_stream_dotenv
 
 load_dotenv(stream=get_stream_dotenv())
 

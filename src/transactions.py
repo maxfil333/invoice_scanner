@@ -4,9 +4,10 @@ from typing import Union, Literal
 from win32com.client import CDispatch
 
 from src.logger import logger
-from config.config import NAMES, config
+from config.config import NAMES
 from src.connector import cup_http_request_partner
-from src.utils import get_stream_dotenv, sort_transactions
+from src.utils import sort_transactions
+from src.utils_config import get_stream_dotenv
 
 load_dotenv(stream=get_stream_dotenv())
 

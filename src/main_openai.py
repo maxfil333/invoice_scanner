@@ -8,8 +8,8 @@ from dotenv import load_dotenv
 
 from src.logger import logger
 from config.config import config, current_file_params
-from src.utils import extract_text_with_fitz, get_stream_dotenv, base64_encode_pil
-
+from src.utils import extract_text_with_fitz, base64_encode_pil
+from src.utils_config import get_stream_dotenv
 
 # ___________________________ general ___________________________
 
