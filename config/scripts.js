@@ -867,23 +867,24 @@ function highlight_one_service() {
 // contract
 
 document.addEventListener("DOMContentLoaded", function () {
-  const customSelect = document.querySelector(".custom-select");
-  const selectDisplay = customSelect.querySelector(".select-display");
-  const options = customSelect.querySelector(".options");
+    const customSelect = document.querySelector(".custom-select");
+    const selectDisplay = customSelect.querySelector(".select-display");
+    const options = customSelect.querySelector(".options");
 
-  selectDisplay.addEventListener("click", function (event) {
-    event.stopPropagation(); // Останавливаем всплытие
-    customSelect.classList.toggle("open");
-  });
+    selectDisplay.addEventListener("click", function (event) {
+        event.stopPropagation(); // Останавливаем всплытие
+        customSelect.classList.toggle("open");
+    });
 
-  options.addEventListener("click", function (event) {
-    if (event.target.tagName === "DIV") {
-      selectDisplay.textContent = event.target.textContent;
-      customSelect.classList.remove("open");
-    }
-  });
+    options.addEventListener("mousedown", function (event) {
+        if (event.target.tagName === "DIV") {
+            event.preventDefault(); // Предотвращаем выделение элементов
+            selectDisplay.textContent = event.target.textContent;
+            customSelect.classList.remove("open");
+        }
+    });
 
-  document.addEventListener("click", function () {
-    customSelect.classList.remove("open");
-  });
+    document.addEventListener("click", function () {
+        customSelect.classList.remove("open");
+    });
 });

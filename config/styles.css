@@ -433,6 +433,7 @@ detailsLH1 {
 
 /* contract */
 
+/* Родительский блок поля, в котором указан Договор */
 .custom-select {
   font-size: 13.3px;
   position: relative;
@@ -443,6 +444,7 @@ detailsLH1 {
   background-color: AliceBlue;
 }
 
+/* Поле, в котором указан Договор */
 .select-display {
   padding: 5px;
   box-sizing: border-box;
@@ -472,6 +474,7 @@ detailsLH1 {
   padding: 5px;
   cursor: pointer;
   white-space: normal;
+  user-select: none; /* Запрещаем выделение текста */
 }
 
 .options div:hover {
