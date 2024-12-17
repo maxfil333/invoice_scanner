@@ -21,15 +21,23 @@ def get_deal_details(post_inn: str, post_kpp: str, pok_inn: str, date: str) -> U
 
 
 def generate_contract(details) -> str:
-    content = ("""
+
+    main_contract: str = details.get('Договор', '')
+
+    options = ''
+    variants = details.get('Варианты')
+    if variants:
+        for variant in variants:
+            contract: str = variant['Договор']
+            options += f'<div>{contract}</div>\n'
+
+    content = (f"""
     <div class="input-group-details">
         <label>Договор:</label>
         <div class="custom-select">
-            <div class="select-display">Договор № 123-45</div>
+            <div class="select-display">{main_contract}</div>
             <div class="options">
-                <div>Short text</div>
-                <div>Some longer text that might wrap to multiple lines</div>
-                <div>A very long piece of text that should adjust the height of the select element dynamically based on its length</div>
+                {options}
             </div>
         </div>
     </div>
@@ -42,13 +50,6 @@ def generate_details(post_inn: str, post_kpp: str, pok_inn: str, date: str):
     details = get_deal_details(post_inn, post_kpp, pok_inn, date)
     if not details:
         details = {}
-
-    options = ''
-    variants = details.get('Варианты')
-    if variants:
-        for variant in variants:
-            contract: str = variant['Договор']
-            options += f'<option value="{contract}">{contract}</option>'
 
     content_ = ''
     for i in ['Контрагент', 'Организация', 'Договор', 'ДоговорИдентификатор', 'ДатаОплаты']:
