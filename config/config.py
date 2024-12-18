@@ -166,9 +166,9 @@ class ConfigNames:
     currency_opts = list(config['currency_dict'].values())
     reports = 'Заключения'
     local_reports = 'Заключения (для услуги)'
-
     extra_deals = 'Найденные сделки'
     extra_deals_not = 'Ненайденные сделки'
+    contract_details = "contract_details"
 
 
 NAMES = ConfigNames()
