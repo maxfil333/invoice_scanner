@@ -67,7 +67,7 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
             # _____________ RUN MAIN_OPENAI.PY _____________
             if os.path.splitext(files[0])[-1].lower() == '.pdf':  # достаточно проверить 1-й файл, чтобы определить .ext
                 text_or_scanned_folder = config['NAME_text']
-                # ___ RUN ASSISTANT (or CHAT in text_to_assistant is False) ___
+                # ___ RUN ASSISTANT (or CHAT, if text_to_assistant is False) ___
                 if test_mode:
                     with open(config['TESTFILE'], 'r', encoding='utf-8') as file:
                         result = file.read()
@@ -132,6 +132,12 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
 
             # _____________ GET TRANS.NUMBER FROM 1C _____________
             result = get_transaction_number(result, connection=connection)
+
+            # _____________ ADD DETAILS TO JSON _____________
+            from src.utils_html import result_add_details, details_from_result
+
+            details: dict | None = details_from_result(result)
+            result = result_add_details(result, details)
 
             # _____________ CONVERT VALUES TO STRING _____________
             result = json.dumps(convert_json_values_to_strings(json.loads(result)), ensure_ascii=False, indent=4)
