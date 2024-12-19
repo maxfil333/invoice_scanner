@@ -669,7 +669,7 @@ function getFormData() {
     }
 
     // Сохранить JSON в файл
-    const json = JSON.stringify(data, null, 2);
+    const json = JSON.stringify(data, null, 4);
     const blob = new Blob([json], {type: 'application/json'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
