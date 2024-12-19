@@ -662,6 +662,12 @@ function getFormData() {
         }
     });
 
+    // contract (contract_details Договор)
+    const selectDisplay = form.querySelector('#contract-selector');
+    if (selectDisplay) {
+        data['contract_details']['Договор'] = selectDisplay.textContent.trim();
+    }
+
     // Сохранить JSON в файл
     const json = JSON.stringify(data, null, 2);
     const blob = new Blob([json], {type: 'application/json'});
@@ -867,8 +873,8 @@ function highlight_one_service() {
 // contract
 
 document.addEventListener("DOMContentLoaded", function () {
-    const customSelect = document.querySelector(".custom-select");
-    const selectDisplay = customSelect.querySelector(".select-display");
+    const customSelect = document.querySelector("#contract-custom");
+    const selectDisplay = customSelect.querySelector("#contract-selector");
     const options = customSelect.querySelector(".options");
 
     selectDisplay.addEventListener("click", function (event) {
