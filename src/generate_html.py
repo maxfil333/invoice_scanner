@@ -6,10 +6,10 @@ from bs4 import BeautifulSoup
 
 from src.logger import logger
 from config.config import config, NAMES, current_file_params
-from src.utils_html import generate_details
+from src.utils_html import html_generate_details, details_from_result
 
 
-def generate_input_html(key, val):
+def generate_input_html(key, val) -> str:
     def generate_selection(key, char_key, select_list, value):
         html = f'<select name="{escape(key)}" class="{escape(char_key)}">'
         for option_value in select_list:
@@ -79,10 +79,8 @@ def generate_html_from_json(data, parent_key="", prefix=""):
     if isinstance(data, dict):
         for key, value in data.items():
             new_key = f'{parent_key}.{key}' if parent_key else key
-            display_key = key
             char_key = re.sub(r'\W', '', str(key))
             if isinstance(value, (dict, list)):
-
                 # номер сделки
                 if key == NAMES.transactions:
                     html_content += f'<div class="input-group">'
@@ -93,12 +91,16 @@ def generate_html_from_json(data, parent_key="", prefix=""):
                     html_content += f'<option value="Нет">Нет</option>'
                     html_content += f'</select>'
                     html_content += f'</div>'
+
+                elif key == NAMES.contract_details:
+                    continue
+
                 else:
-                    html_content += f'<fieldset><legend>{escape(display_key)}</legend>\n'
+                    html_content += f'<fieldset><legend>{escape(key)}</legend>\n'
                     html_content += generate_html_from_json(value, new_key, prefix)
                     html_content += '</fieldset>\n'
             else:
-                html_content += generate_input_html(display_key, value)
+                html_content += generate_input_html(key, value)
     elif isinstance(data, list):
         for i, item in enumerate(data):
             new_key = f'{parent_key}[{i}]'
@@ -144,10 +146,13 @@ def create_html_form(json_file, output_file, file_path):
                 <form id="invoice-form" autocomplete="off">
                 
     '''
-    html_content += generate_details(data['Банковские реквизиты поставщика']['ИНН'],
-                                     data['Банковские реквизиты поставщика']['КПП'],
-                                     data['Банковские реквизиты покупателя']['ИНН'],
-                                     data['Дата счета'])
+
+    details: dict = data[NAMES.contract_details]
+    # если запускаем не из main.py, надо сгенерировать details
+    if not details:
+        details = details_from_result(json.dumps(data))
+    html_content += html_generate_details(details)
+
     html_content += generate_html_from_json(data)
 
     switch_checked_status = 'checked'  # по умолчанию включен Авто-расчет
