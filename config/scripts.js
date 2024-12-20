@@ -876,6 +876,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const customSelect = document.querySelector("#contract-custom");
     const selectDisplay = customSelect.querySelector("#contract-selector");
     const options = customSelect.querySelector(".options");
+    const contractId = document.querySelector('.ДоговорИдентификатор')
 
     selectDisplay.addEventListener("click", function (event) {
         event.stopPropagation(); // Останавливаем всплытие
@@ -886,6 +887,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (event.target.tagName === "DIV") {
             event.preventDefault(); // Предотвращаем выделение элементов
             selectDisplay.textContent = event.target.textContent;
+            contractId.textContent = contract_get_id(selectDisplay.textContent)
             customSelect.classList.remove("open");
         }
     });
@@ -894,3 +896,13 @@ document.addEventListener("DOMContentLoaded", function () {
         customSelect.classList.remove("open");
     });
 });
+
+function contract_get_id(contract) {
+    const variants = JSON.parse(document.querySelector('.Варианты').textContent);
+    for (let variant of variants) {
+        if (variant['Договор'].trim() === contract.trim()) {
+            return variant['ДоговорИдентификатор'];
+        }
+    }
+    return null;
+}
