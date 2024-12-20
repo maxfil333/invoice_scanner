@@ -80,6 +80,8 @@ def generate_html_from_json(data, parent_key="", prefix=""):
         for key, value in data.items():
             new_key = f'{parent_key}.{key}' if parent_key else key
             char_key = re.sub(r'\W', '', str(key))
+
+            # для каждой пары ключ - значение:dict|list рекурсивно повторяем
             if isinstance(value, (dict, list)):
                 # номер сделки
                 if key == NAMES.transactions:
@@ -91,14 +93,16 @@ def generate_html_from_json(data, parent_key="", prefix=""):
                     html_content += f'<option value="Нет">Нет</option>'
                     html_content += f'</select>'
                     html_content += f'</div>'
-
+                # детали договора
                 elif key == NAMES.contract_details:
-                    continue
-
+                    html_content = html_generate_details(data[NAMES.contract_details]) + html_content
+                # общий случай (рекурсивно повторяем)
                 else:
                     html_content += f'<fieldset><legend>{escape(key)}</legend>\n'
                     html_content += generate_html_from_json(value, new_key, prefix)
                     html_content += '</fieldset>\n'
+
+            # для каждой пары ключ - значение:str создаем input
             else:
                 html_content += generate_input_html(key, value)
     elif isinstance(data, list):
@@ -146,12 +150,6 @@ def create_html_form(json_file, output_file, file_path):
                 <form id="invoice-form" autocomplete="off">
                 
     '''
-
-    details: dict = data[NAMES.contract_details]
-    # если запускаем не из main.py, надо сгенерировать details
-    if not details:
-        details = details_from_result(json.dumps(data))
-    html_content += html_generate_details(details)
 
     html_content += generate_html_from_json(data)
 
