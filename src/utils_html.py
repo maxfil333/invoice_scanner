@@ -64,10 +64,6 @@ def html_generate_contract(details: dict) -> str:
 
     if variants_string:
         variants = json.loads(variants_string)
-
-        print(variants)
-
-        print(type(variants))
         for variant in variants:
             contract: str = variant['Договор']
             options += f'<div>{contract}</div>\n'
@@ -133,7 +129,7 @@ if __name__ == '__main__':
     # date = '26-07-2024'
     # res = get_deal_details(post_inn, post_kpp, pok_inn, date)
     # print(res)
-    #
+
     # print()
     # content = generate_details(post_inn, post_kpp, pok_inn, date)
     # print(content)
