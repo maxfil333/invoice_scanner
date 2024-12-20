@@ -70,12 +70,10 @@ def html_generate_contract(details: dict) -> str:
 
     content = dedent(f"""
     <div class="input-group-details">
-        <label>Договор:</label>
+        <label>Договор</label>
         <div class="custom-select" id="contract-custom">
             <div class="select-display" id="contract-selector">{main_contract}</div>
-            <div class="options">
-                {options}
-            </div>
+            <div class="options">{options}</div>
         </div>
     </div>
     """).strip()
@@ -97,22 +95,22 @@ def html_generate_details(details: dict) -> str:
         elif i == "ДоговорИдентификатор":  # скрытое поле (регулируется js, добавляется в json для выгрузки)
             content_ += dedent(f"""
                 <div class="input-group-details" style="display: none;">
-                    <label>{i}:</label>
+                    <label>{i}</label>
                     <textarea name="{i}" class="{i}" rows="1" style="resize:none;"oninput="autoResize(this)">{parameter}</textarea>
                 </div>
                 """.strip())
         elif i == 'Варианты':  # скрытое поле, чтобы брать из него "ДоговорИдентификатор" к выбранному "Договору"
             content_ += dedent(f"""
                 <div class="input-group-details" style="display: none;">
-                    <label>{i}:</label>
+                    <label>{i}</label>
                     <textarea name="{i}" class="{i}" rows="1" style="resize:none;"oninput="autoResize(this)">{parameter}</textarea>
                 </div>
                 """.strip())
         else:
             content_ += dedent(f"""
                 <div class="input-group-details">
-                    <label>{i}:</label>
-                    <textarea name="{i}" class="{i}" rows="1" style="resize:none;"oninput="autoResize(this)">{parameter}</textarea>
+                    <label>{i}</label>
+                    <textarea name="{i}" class="{i}" rows="1" style="resize:none;"oninput="autoResize(this)" disabled="disabled">{parameter}</textarea>
                 </div>
                 """.strip())
 
