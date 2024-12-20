@@ -518,21 +518,23 @@ def order_goods(dct: dict, new_order: list[str]) -> dict:
     return dct
 
 
-def insert_after_target(fixed_k: str, movable_k: str, dct: dict) -> dict:
-    """ Изменить порядок ключей словаря, вставив movable ключ на позицию после fixed ключ"""
+def insert_key(fixed_k: str, movable_k: str, dct: dict, position: str = 'after') -> dict:
+    """Change the order of dictionary keys by inserting movable key after or before fixed key"""
 
     dct_keys = dct.keys()
     if fixed_k == movable_k or fixed_k not in dct_keys or movable_k not in dct_keys:
-        logger.print(f"ERROR: insert_after_target. keys: {fixed_k}, {movable_k}")
+        logger.print(f"ERROR: insert_key. keys: {fixed_k}, {movable_k}")
         return dct
 
     new_order_keys = []
     for k in dct_keys:
-        if k == movable_k:  # пропускаем перемещаемый ключ
+        if k == movable_k:  # skip the movable key
             continue
-        new_order_keys.append(k)  # добавляем обычный ключ в new_order_keys
-        if k == fixed_k:  # если этот ключ fixed, то
-            new_order_keys.append(movable_k)  # после него вставляем перемещаемый ключ
+        if position == 'before' and k == fixed_k:  # insert before fixed key
+            new_order_keys.append(movable_k)
+        new_order_keys.append(k)  # add the current key
+        if position == 'after' and k == fixed_k:  # insert after fixed key
+            new_order_keys.append(movable_k)
 
     return {k: dct[k] for k in new_order_keys}
 
@@ -540,8 +542,9 @@ def insert_after_target(fixed_k: str, movable_k: str, dct: dict) -> dict:
 def order_keys(result_string: str) -> str:
     """ Сортировать ключи словаря """
     dct = json.loads(result_string)
-    dct = insert_after_target("Дата счета", "Тип документа", dct)
-    dct = insert_after_target("Тип документа", "Валюта документа", dct)
+    dct = insert_key("Дата счета", "Тип документа", dct, position='after')
+    dct = insert_key("Тип документа", "Валюта документа", dct, position='after')
+    dct = insert_key("Банковские реквизиты поставщика", NAMES.contract_details, dct, position='before')
     return json.dumps(dct, ensure_ascii=False, indent=4)
 
 
