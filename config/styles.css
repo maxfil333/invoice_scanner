@@ -433,54 +433,63 @@ detailsLH1 {
 
 /* contract */
 
+#contract-selector {
+    border: 3px solid white;
+    border-radius: 3px;
+}
+
+#contract-selector:hover {
+    background-color: white;
+}
+
 /* Родительский блок поля, в котором указан Договор */
 .custom-select {
-  font-size: 13.3px;
-  position: relative;
-  display: inline-block;
-  width: 100%;
-  border: 1px solid #ced4da;
-  border-radius: 4px;
-  background-color: AliceBlue;
+    font-size: 13.3px;
+    position: relative;
+    display: inline-block;
+    width: 100%;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    background-color: AliceBlue;
 }
 
 /* Поле, в котором указан Договор */
 .select-display {
-  padding: 5px;
-  box-sizing: border-box;
-  width: 100%;
-  cursor: pointer;
-  white-space: normal;
-  overflow-wrap: break-word;
+    padding: 5px;
+    box-sizing: border-box;
+    width: 100%;
+    cursor: pointer;
+    white-space: normal;
+    overflow-wrap: break-word;
 }
 
 .options {
-  width: 90%;
-  max-height: 300px;
-  overflow-y: auto;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  display: none;
-  position: absolute;
-  background: white;
-  z-index: 100;
-  top: 100%;
-  left: 50%; /* Смещаем левый край блока на 50% от родителя */
-  transform: translateX(-50%); /* Сдвигаем блок на половину его ширины влево */
+    width: 90%;
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    display: none;
+    position: absolute;
+    background: white;
+    z-index: 100;
+    top: 100%;
+    left: 50%; /* Смещаем левый край блока на 50% от родителя */
+    transform: translateX(-50%); /* Сдвигаем блок на половину его ширины влево */
 }
 
 .options div {
-  border: 0.5px solid #ccc;
-  padding: 5px;
-  cursor: pointer;
-  white-space: normal;
-  user-select: none; /* Запрещаем выделение текста */
+    border: 1px solid #ccc;
+    padding: 5px;
+    cursor: pointer;
+    white-space: normal;
+    user-select: none; /* Запрещаем выделение текста */
 }
 
 .options div:hover {
-  background-color: #f0f0f0;
+    background-color: #f0f0f0;
 }
 
 .custom-select.open .options {
-  display: block;
+    display: block;
 }
