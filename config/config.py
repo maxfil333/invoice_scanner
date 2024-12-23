@@ -169,6 +169,9 @@ class ConfigNames:
     extra_deals = 'Найденные сделки'
     extra_deals_not = 'Ненайденные сделки'
     contract_details = "contract_details"
+    add_info = 'additional_info'
+    conversion = 'Конвертация'
+    init_id = "__исходный_айди"
 
 
 NAMES = ConfigNames()
