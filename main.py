@@ -124,6 +124,10 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
                 if json.loads(result)['additional_info'][NAMES.reports]:
                     result, was_edited = combined_split_by_reports(result)
 
+            # _____________ Распределение конвертации _____________
+            from src.utils import distribute_conversion
+            result = distribute_conversion(result)
+
             # order and cleanup
             dct = json.loads(result)
             dct = order_goods(dct, config['services_order'])
