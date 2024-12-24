@@ -19,8 +19,9 @@ from src.main_openai import run_chat, run_assistant
 from src.response_postprocessing import local_postprocessing
 from src.transactions import get_transaction_number
 from src.generate_html import create_html_form
-from src.utils import create_date_folder_in_check, split_by_containers, split_by_conoses
-from src.utils import convert_json_values_to_strings, order_keys, order_goods, cleanup_empty_fields
+from src.utils import split_by_containers, split_by_conoses, split_by_dt, combined_split_by_reports
+from src.utils import create_date_folder_in_check, distribute_conversion
+from src.utils import order_goods, cleanup_empty_fields, order_keys, convert_json_values_to_strings
 
 
 def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text_to_assistant=False,
@@ -103,32 +104,24 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
             result, was_edited = split_by_containers(result)
 
             # _____________ SPLIT BY CONOSES _____________
-            if was_edited:  # если уже было распределение по контейнерам, ничего не делать
-                pass
-            else:
+            if not was_edited:  # если уже было распределение по контейнерам, ничего не делать
                 if json.loads(result)['additional_info']['Коносаменты']:
                     result, was_edited = split_by_conoses(result)
 
             # _____________ SPLIT BY DT _____________
-            if was_edited:  # если уже было распределение по контейнерам/коносаментам, ничего не делать
-                pass
-            else:
-                from src.utils import split_by_dt
-                result, was_edited = split_by_dt(result)
+            if not was_edited:  # если уже было распределение по контейнерам/коносаментам, ничего не делать
+                if json.loads(result)['additional_info']['ДТ']:
+                    result, was_edited = split_by_dt(result)
 
             # _____________ SPLIT BY REPORT _____________
-            if was_edited:  # если уже было распределение по контейнерам/коносаментам/ДТ, ничего не делать
-                pass
-            else:
-                from src.utils import combined_split_by_reports
+            if not was_edited:  # если уже было распределение по контейнерам/коносаментам/ДТ, ничего не делать
                 if json.loads(result)['additional_info'][NAMES.reports]:
                     result, was_edited = combined_split_by_reports(result)
 
-            # _____________ Распределение конвертации _____________
-            from src.utils import distribute_conversion
+            # _____________ distribute_conversion _____________
             result = distribute_conversion(result)
 
-            # order and cleanup
+            # _____________ order and cleanup _____________
             dct = json.loads(result)
             dct = order_goods(dct, config['services_order'])
             dct = cleanup_empty_fields(dct, config['extra_local_fields'])
