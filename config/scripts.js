@@ -870,13 +870,13 @@ function highlight_one_service() {
 }
 
 
-// contract
+// ------------------------------------------------------------------------------------------------------------ CONTRACT
 
 document.addEventListener("DOMContentLoaded", function () {
     const customSelect = document.querySelector("#contract-custom");
     const selectDisplay = customSelect.querySelector("#contract-selector");
     const options = customSelect.querySelector(".options");
-    const contractId = document.querySelector('.ДоговорИдентификатор')
+    const contractId = document.querySelector('.ДоговорИдентификатор');
 
     selectDisplay.addEventListener("click", function (event) {
         event.stopPropagation(); // Останавливаем всплытие
@@ -884,10 +884,11 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     options.addEventListener("mousedown", function (event) {
-        if (event.target.tagName === "DIV") {
-            event.preventDefault(); // Предотвращаем выделение элементов
-            selectDisplay.textContent = event.target.textContent;
-            contractId.textContent = contract_get_id(selectDisplay.textContent)
+        // Проверяем, кликнули ли по дочернему элементу внутри .options
+        if (event.target && event.target.parentElement === options) {
+            event.preventDefault(); // Предотвращаем выделение текста
+            selectDisplay.textContent = event.target.textContent; // Обновляем текст
+            contractId.textContent = contract_get_id(event.target.textContent); // Получаем ID
             customSelect.classList.remove("open");
         }
     });
