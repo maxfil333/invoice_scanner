@@ -803,7 +803,8 @@ def distribute_conversion(result: str) -> str:
         return result
 
     if any([re.findall(r'конвертация|комиссия', x[NAMES.name], re.IGNORECASE) for x in dct[NAMES.goods]]):
-        return result
+        dct[NAMES.add_info][NAMES.conversion] = '0'
+        return json.dumps(dct, ensure_ascii=False, indent=4)
 
     sum_without_nds = sum(float(good[NAMES.sum_wo_nds]) for good in dct[NAMES.goods])
 
