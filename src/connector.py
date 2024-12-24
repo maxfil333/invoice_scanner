@@ -1,6 +1,7 @@
 import re
 import os
 import time
+import copy
 import win32com.client
 from typing import Union, Callable
 from functools import wraps
@@ -66,7 +67,7 @@ def cache_http_requests(func):
 
         # Выполняем запрос и сохраняем результат в кэше
         result = func(function, *args, **kwargs)
-        cache[url_cache_key] = result
+        cache[url_cache_key] = copy.deepcopy(result)
 
         if len(cache) > max_cache_size:
             cache.pop(next(iter(cache)))
