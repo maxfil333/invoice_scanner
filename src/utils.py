@@ -780,13 +780,10 @@ def is_invoice(text: str) -> bool | None:
 
 # _________________________________________________________________________ LOCAL POSTPROCESSING (distribute_conversion)
 
-# TODO: если конвертация уже в услугах: ничего не делать
-
 # Чтобы получить конвертацию в РУБ нужен текущий курс, поэтому передаем конвертацию в ЦУП только! в валюте.
 # В ЦУП встречаются случаи, когда конвертация записана как в USD, так и в РУБ.
 
 
-# обновить ВСЕГО
 def update_total(dct: dict, new_services: list):
     total = float(dct[NAMES.total_with])
     total_nds = float(dct[NAMES.total_nds])
@@ -803,6 +800,9 @@ def distribute_conversion(result: str) -> str:
     dct = json.loads(result)
 
     if float(dct[NAMES.add_info][NAMES.conversion]) == 0:
+        return result
+
+    if any([re.findall(r'конвертация|комиссия', x[NAMES.name], re.IGNORECASE) for x in dct[NAMES.goods]]):
         return result
 
     sum_without_nds = sum(float(good[NAMES.sum_wo_nds]) for good in dct[NAMES.goods])
