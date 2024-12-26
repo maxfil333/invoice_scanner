@@ -400,6 +400,8 @@ function addService(button) {
     // Проверка соответствия суммы "СуммасНДС" всех услуг значению "ВсегокоплатевключаяНДС"
     initListeners_validate_total_amount();
     validate_total_amount();
+    // замена запятой на точку
+    replaceCommaWithDot();
 }
 
 
@@ -906,4 +908,24 @@ function contract_get_id(contract) {
         }
     }
     return null;
+}
+
+// --------------------------------------------------------------------------------------------------------------------
+// Замена запятой на точку в числовых полях
+
+document.addEventListener('DOMContentLoaded', replaceCommaWithDot);
+
+function replaceCommaWithDot() {
+    const fieldsToWatch = ['.Количество', '.ЦенабезНДС', '.СуммабезНДС', '.ЦенасНДС', '.СуммасНДС'];
+
+    fieldsToWatch.forEach(selector => {
+        document.querySelectorAll(selector).forEach(input => {
+            input.addEventListener('input', function() {
+                this.value = this.value.replace(',', '.');
+            });
+            input.addEventListener('blur', function() {
+                this.value = isNaN(Number(this.value)) ? '' : this.value;
+            });
+        });
+    });
 }
