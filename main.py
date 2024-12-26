@@ -145,7 +145,7 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
             # _____ * SAVE JSON FILE * _____
             local_check_folder = os.path.join(date_folder, text_or_scanned_folder, folder_name)
             os.makedirs(local_check_folder, exist_ok=False)
-            json_path = os.path.join(local_check_folder, json_name)
+            json_path = os.path.join(date_folder, config['NAME_verified'], json_name)
             with open(json_path, 'w', encoding='utf-8') as file:
                 file.write(result)
 
