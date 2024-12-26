@@ -20,9 +20,9 @@ current_file_params: dict = dict()
 
 config: dict = dict()
 config['magick_opt'] = '-colorspace Gray -quality 100 -units PixelsPerInch -density 350'.split(' ')
-config['NAME_scanned'] = 'scannedPDFs'
-config['NAME_text'] = 'textPDFs'
-config['NAME_verified'] = 'verified'
+config['NAME_scanned'] = '0_scan'
+config['NAME_text'] = '1_text'
+config['NAME_verified'] = 'EXPORT'
 
 if getattr(sys, 'frozen', False):  # в сборке
     config['BASE_DIR'] = os.path.dirname(sys.executable)
