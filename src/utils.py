@@ -1241,18 +1241,23 @@ def mark_get_required_pages(pdf_path: str) -> list[int] | None:
 
 
 def mark_get_main_file(folder_path: str) -> str | None:
-    regex = r'(.*?)((?:@\d+)+)$'
+    regex = r'(.*?)((?:@\d+)+)$'  # ...@1@2@3
     files = os.listdir(folder_path)
     if not files:
         return
     extensions = ['.pdf', '.jpeg', '.jpg', '.png']
     filter_files = [f for f in files if os.path.splitext(f)[-1] in extensions]
     result = [f for f in filter_files if re.fullmatch(regex, os.path.splitext(f)[0])]
-    # logger.print(f'mark_get_main_file. detected files: {result}')
+
     if result:
         return result[0]
     else:
-        return files[0]
+        regex = r'(.*?)((?:@))$'  # ...@
+        result = [f for f in filter_files if re.fullmatch(regex, os.path.splitext(f)[0])]
+        if result:
+            return result[0]
+
+    return files[0]
 
 
 # _________ TEST _________
