@@ -1155,14 +1155,21 @@ def chroma_create_db_from_chunks(chroma_path: str, chunks_and_meta: dict, embedd
     Chroma.from_texts(texts=chunks, embedding=embedding_func, metadatas=ids, persist_directory=chroma_path)
 
 
-def create_vector_database(embedding_func) -> None:
+def create_chunks_and_db(embedding_func) -> None:
     """ create_chunks_from_json + chroma_create_db_from_chunks """
 
     chunks_and_meta = create_chunks_from_json(json_path=config['unique_comments_file'])
     chroma_create_db_from_chunks(chroma_path=config['chroma_path'],
                                  chunks_and_meta=chunks_and_meta,
                                  embedding_func=embedding_func)
-    print('БАЗА ДАННЫХ СОЗДАНА.')
+    logger.print('БАЗА ДАННЫХ СОЗДАНА.')
+
+
+def create_vector_database() -> None:
+    load_dotenv(stream=get_stream_dotenv())
+    openai.api_key = os.environ.get("OPENAI_API_KEY")
+    embedding_func = OpenAIEmbeddings(model=config['embedding_model'])
+    create_chunks_and_db(embedding_func)
 
 
 def chroma_get_relevant(query, chroma_path, embedding_func, k=1, query_truncate=600):
@@ -1263,8 +1270,5 @@ def mark_get_main_file(folder_path: str) -> str | None:
 # _________ TEST _________
 
 if __name__ == '__main__':
-    load_dotenv(stream=get_stream_dotenv())
-    openai.api_key = os.environ.get("OPENAI_API_KEY")
-    embedding_func = OpenAIEmbeddings(model=config['embedding_model'])
-    create_vector_database(embedding_func)
+    create_vector_database()
     pass
