@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import msvcrt
+from datetime import datetime
 
 from src.logger import logger
 
@@ -102,9 +103,8 @@ try:
     local_file_time = os.path.getmtime(config['all_services_file'])
     if server_file_time > local_file_time:
         config['all_services_file'] = config['all_services_file_server']
-        logger.print("*all_services_file* was taken from server")
-except Exception as error:
-    logger.print(error)
+except:
+    pass
 
 try:
     with open(config['all_services_file'], 'r', encoding='utf-8') as f:
@@ -117,6 +117,18 @@ except FileNotFoundError:
 
 # JSON файл, содержащий список словарей [ {id: 7, comment: Услуга, service_code: [Услуга1С#Код#, ..]} , {..} ]
 config['unique_comments_file'] = os.path.join(config['CONFIG'], 'unique_comments.json')
+
+try:
+    local_chroma_date = datetime.fromtimestamp(os.path.getmtime(config['chroma_path'])).date()
+    server_unique_date = datetime.fromtimestamp(os.path.getmtime(os.path.join(config['server_datas'], 'unique_comments.json'))).date()
+
+    # если файл unique_comments.json на сервере свежее более чем на 1 день чем config/chroma: обновляем config/chroma
+    if server_unique_date > local_chroma_date:
+        config['unique_comments_file'] = os.path.join(config['server_datas'], 'unique_comments.json')
+        current_file_params['update_chroma'] = True
+except:
+    pass
+
 reindex_unique_comments(config['unique_comments_file'])
 
 config['unique_services'] = []

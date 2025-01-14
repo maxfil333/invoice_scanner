@@ -19,6 +19,7 @@ from src.main_openai import run_chat, run_assistant
 from src.response_postprocessing import local_postprocessing
 from src.transactions import get_transaction_number
 from src.generate_html import create_html_form
+from src.utils import create_vector_database
 from src.utils import split_by_containers, split_by_conoses, split_by_dt, combined_split_by_reports
 from src.utils import create_date_folder_in_check, distribute_conversion
 from src.utils import order_goods, cleanup_empty_fields, order_keys, convert_json_values_to_strings
@@ -50,6 +51,11 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
     # _____  FILL IN_FOLDER_EDIT  _____
     if not use_existing:
         main_edit(hide_logs=hide_logs, stop_when=stop_when)
+
+    # _____  UPDATE CHROMA  _____
+    if current_file_params.get('update_chroma'):
+        logger.print("ОБНОВЛЕНИЕ БАЗЫ ДАННЫХ...")
+        create_vector_database()
 
     c, stop = count(1), 0
     for folder_ in os.scandir(config['EDITED']):
