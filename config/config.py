@@ -33,6 +33,7 @@ else:
     config['POPPLER_PATH'] = r'C:\Program Files\poppler-24.07.0\Library\bin'
     config['magick_exe'] = 'magick'  # или полный путь до ...magick.exe файла, если не добавлено в Path
 
+config['server_datas'] = os.path.normpath("\\\\10.10.0.3\\docs\\Transfer\\Filipp\\1_shared\\invoice_scanner")
 config['CONFIG'] = os.path.join(config['BASE_DIR'], 'config')
 config['IN_FOLDER'] = os.path.join(config['BASE_DIR'], 'IN')
 config['EDITED'] = os.path.join(config['BASE_DIR'], 'EDITED')
@@ -93,18 +94,33 @@ def reindex_unique_comments(unique_comments_file_path: str) -> None:
         json.dump(dct, f, ensure_ascii=False, indent=4)
 
 
-# JSON файл, содержащий список словарей [ {id: 7, comment: Услуга, service_code: [Услуга1С#Код#, ..]} , {..} ]
-config['unique_comments_file'] = os.path.join(config['CONFIG'], 'unique_comments.json')
-
 # JSON файл, содержащий словарь {Услуга1С: Код, ..}
 config['all_services_file'] = os.path.join(config['CONFIG'], 'all_services.json')
+config['all_services_file_server'] = os.path.join(config['server_datas'], 'all_services.json')
+try:
+    server_file_time = os.path.getmtime(config['all_services_file_server'])
+    local_file_time = os.path.getmtime(config['all_services_file'])
+    if server_file_time > local_file_time:
+        config['all_services_file'] = config['all_services_file_server']
+        logger.print("*all_services_file* was taken from server")
+except Exception as error:
+    logger.print(error)
 
+try:
+    with open(config['all_services_file'], 'r', encoding='utf-8') as f:
+        config['all_services_dict'] = json.load(f)
+        # список уникальных Услуга1С#Код#
+        config['all_services'] = [f"{k}#{v}#" for k, v in config['all_services_dict'].items()]
+except FileNotFoundError:
+    config['all_services'] = []
+    logger.print(f"! FILE {config['all_services_file']} NOT FOUND !")
+
+# JSON файл, содержащий список словарей [ {id: 7, comment: Услуга, service_code: [Услуга1С#Код#, ..]} , {..} ]
+config['unique_comments_file'] = os.path.join(config['CONFIG'], 'unique_comments.json')
 reindex_unique_comments(config['unique_comments_file'])
 
 config['unique_services'] = []
-config['all_services'] = []
 config['not_found_service'] = 'Не найдено'
-
 try:
     with open(config['unique_comments_file'], 'r', encoding='utf-8') as f:
         dct = json.load(f)
@@ -116,14 +132,6 @@ except FileNotFoundError:
     logger.print(f"!!! FILE {config['unique_comments_file']} NOT FOUND !!!")
     logger.save(config['CHECK_FOLDER'])
     raise
-
-try:
-    with open(config['all_services_file'], 'r', encoding='utf-8') as f:
-        config['all_services_dict'] = json.load(f)
-        # список уникальных Услуга1С#Код#
-        config['all_services'] = [f"{k}#{v}#" for k, v in config['all_services_dict'].items()]
-except FileNotFoundError:
-    logger.print(f"! FILE {config['all_services_file']} NOT FOUND !")
 
 # объединенный список уникальных Услуга1С#Код# (в html <div id="unique_services" hidden>)
 config['unique_services'] = list(set(config['unique_services'] + config['all_services']))
