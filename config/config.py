@@ -3,7 +3,6 @@ import sys
 import json
 import msvcrt
 import shutil
-from datetime import datetime
 
 from src.logger import logger
 
@@ -82,20 +81,6 @@ except Exception as e:
 
 # _____________________ list of services _____________________
 
-def reindex_unique_comments(unique_comments_file_path: str) -> None:
-    """
-    Если вручную добавлялись/удалялись услуги, unique_comments нужно переиндексировать,
-    так как id словарика должен быть равен его порядковому номеру.
-    """
-    with open(unique_comments_file_path, 'r', encoding='utf-8') as f:
-        dct = json.load(f)
-        for i, d, in enumerate(dct):
-            d['id'] = i
-
-    with open(unique_comments_file_path, 'w', encoding='utf-8') as f:
-        json.dump(dct, f, ensure_ascii=False, indent=4)
-
-
 # JSON файл, содержащий словарь {Услуга1С: Код, ..}
 config['all_services_file'] = os.path.join(config['CONFIG'], 'all_services.json')
 config['all_services_file_server'] = os.path.join(config['server_datas'], 'all_services.json')
@@ -103,7 +88,10 @@ try:
     server_file_time = os.path.getmtime(config['all_services_file_server'])
     local_file_time = os.path.getmtime(config['all_services_file'])
     if server_file_time > local_file_time:
-        config['all_services_file'] = config['all_services_file_server']
+        # копируем с сервера новый `all_services.json` в config
+        shutil.copy2(config['all_services_file_server'], config['all_services_file'])
+        # параметр для логов
+        config['update_all_services'] = True
 except:
     pass
 
@@ -118,21 +106,18 @@ except FileNotFoundError:
 
 # JSON файл, содержащий список словарей [ {id: 7, comment: Услуга, service_code: [Услуга1С#Код#, ..]} , {..} ]
 config['unique_comments_file'] = os.path.join(config['CONFIG'], 'unique_comments.json')
-
+config['unique_comments_file_server'] = os.path.join(config['server_datas'], 'unique_comments.json')
 try:
-    local_chroma_date = datetime.fromtimestamp(os.path.getmtime(config['chroma_path'])).date()
-    server_unique_date = datetime.fromtimestamp(
-        os.path.getmtime(os.path.join(config['server_datas'], 'unique_comments.json'))).date()
-    # если файл unique_comments.json на сервере свежее более чем на 1 день чем config/chroma
-    if server_unique_date > local_chroma_date:
-        # копируем с сервера в config новый `unique_comments.json`
-        shutil.copy2(os.path.join(config['server_datas'], 'unique_comments.json'), config['unique_comments_file'])
+    local_unique_date = os.path.getmtime(config['unique_comments_file'])
+    server_unique_date = os.path.getmtime(config['unique_comments_file_server'])
+    # если файл unique_comments.json на сервере свежее чем config/unique_comments.json
+    if server_unique_date > local_unique_date:
+        # копируем с сервера новый `unique_comments.json` в config
+        shutil.copy2(config['unique_comments_file_server'], config['unique_comments_file'])
         # добавляем параметр, по которому в main.py вызовется функция пересоздания базы chroma
-        current_file_params['update_chroma'] = True
+        config['update_chroma'] = True
 except:
     pass
-
-reindex_unique_comments(config['unique_comments_file'])
 
 config['unique_services'] = []
 config['not_found_service'] = 'Не найдено'

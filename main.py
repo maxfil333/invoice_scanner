@@ -53,9 +53,9 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
         main_edit(hide_logs=hide_logs, stop_when=stop_when)
 
     # _____  UPDATE CHROMA  _____
-    if current_file_params.get('update_chroma'):
-        logger.print("ОБНОВЛЕНИЕ БАЗЫ ДАННЫХ...")
+    if config.get('update_chroma'):
         create_vector_database()
+        del config['update_chroma']
 
     c, stop = count(1), 0
     for folder_ in os.scandir(config['EDITED']):
