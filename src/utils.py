@@ -1147,17 +1147,21 @@ def chroma_create_db_from_chunks(chroma_path: str, chunks_and_meta: dict, embedd
     load_dotenv(stream=get_stream_dotenv())
     openai.api_key = os.environ.get("OPENAI_API_KEY")
 
-    # Clear out the database first.
-    if os.path.exists(chroma_path):
-        shutil.rmtree(chroma_path)
+    try:
+        OpenAIEmbeddings(model=config['embedding_model']).embed_query('X')  # testing VPN connection before del CHROMA
+        # Clear out the database first.
+        if os.path.exists(chroma_path):
+            shutil.rmtree(chroma_path)
 
-    chunks, ids = chunks_and_meta['chunks'], chunks_and_meta['metadata_ids']
-    Chroma.from_texts(texts=chunks, embedding=embedding_func, metadatas=ids, persist_directory=chroma_path)
+        chunks, ids = chunks_and_meta['chunks'], chunks_and_meta['metadata_ids']
+        Chroma.from_texts(texts=chunks, embedding=embedding_func, metadatas=ids, persist_directory=chroma_path)
+    except:
+        raise
 
 
 def create_chunks_and_db(embedding_func) -> None:
     """ create_chunks_from_json + chroma_create_db_from_chunks """
-
+    logger.print("ОБНОВЛЕНИЕ БАЗЫ ДАННЫХ...")
     chunks_and_meta = create_chunks_from_json(json_path=config['unique_comments_file'])
     chroma_create_db_from_chunks(chroma_path=config['chroma_path'],
                                  chunks_and_meta=chunks_and_meta,
