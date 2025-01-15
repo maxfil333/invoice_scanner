@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import msvcrt
+import shutil
 from datetime import datetime
 
 from src.logger import logger
@@ -120,11 +121,13 @@ config['unique_comments_file'] = os.path.join(config['CONFIG'], 'unique_comments
 
 try:
     local_chroma_date = datetime.fromtimestamp(os.path.getmtime(config['chroma_path'])).date()
-    server_unique_date = datetime.fromtimestamp(os.path.getmtime(os.path.join(config['server_datas'], 'unique_comments.json'))).date()
-
-    # если файл unique_comments.json на сервере свежее более чем на 1 день чем config/chroma: обновляем config/chroma
+    server_unique_date = datetime.fromtimestamp(
+        os.path.getmtime(os.path.join(config['server_datas'], 'unique_comments.json'))).date()
+    # если файл unique_comments.json на сервере свежее более чем на 1 день чем config/chroma
     if server_unique_date > local_chroma_date:
-        config['unique_comments_file'] = os.path.join(config['server_datas'], 'unique_comments.json')
+        # копируем с сервера в config новый `unique_comments.json`
+        shutil.copy2(os.path.join(config['server_datas'], 'unique_comments.json'), config['unique_comments_file'])
+        # добавляем параметр, по которому в main.py вызовется функция пересоздания базы chroma
         current_file_params['update_chroma'] = True
 except:
     pass
@@ -303,18 +306,23 @@ config['system_prompt'] = f"""
 #     with open(params_path, 'w', encoding='utf-8') as f:
 #         json.dump(config, f, ensure_ascii=False, indent=4)
 
+
+logger.print("CONFIG INFO:")
+logger.print('sys.frozen:', getattr(sys, 'frozen', False))
+
+for k, v in config.items():
+    if k not in ['unique_comments_dict',
+                 'unique_services',
+                 'union_services',
+                 'all_services_dict',
+                 'all_services',
+                 'all_services_file_server',
+                 'ships', 'currency_dict',
+                 'services_order',
+                 'response_format',
+                 'system_prompt']:
+        logger.print(f"{k}: {v}")
+
+
 if __name__ == '__main__':
-    print('sys.frozen:', getattr(sys, 'frozen', False))
-    for k, v in config.items():
-        if k not in ['unique_comments_dict', 'unique_services',
-                     'all_services_dict', 'all_services',
-                     'union_services', 'ships']:
-            print('-' * 50)
-            print(k)
-            print(v)
-            if k == 'json_struct':
-                try:
-                    json.loads(v)
-                except json.decoder.JSONDecodeError:
-                    print("Нарушена структура json")
-                    break
+    pass
