@@ -63,7 +63,7 @@ def cache_http_requests(func):
         # Проверяем, есть ли результат в кэше для данного URL
         if url_cache_key in cache:
             logger.print("Получение результата из кэша...")
-            return cache[url_cache_key]
+            return copy.deepcopy(cache[url_cache_key])
 
         # Выполняем запрос и сохраняем результат в кэше
         result = func(function, *args, **kwargs)
