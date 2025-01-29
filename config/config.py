@@ -78,7 +78,6 @@ except Exception as e:
     logger.save(config['CHECK_FOLDER'])
     raise
 
-
 # _____________________ list of services _____________________
 
 # JSON файл, содержащий словарь {Услуга1С: Код, ..}
@@ -197,6 +196,14 @@ config['services_order'] = [NAMES.name, NAMES.good1C, NAMES.good1C_new, NAMES.co
                             NAMES.transactions, NAMES.transactions_new, NAMES.transactions_type, NAMES.nds_percent]
 
 config['extra_local_fields'] = [NAMES.local_conos, NAMES.local_dt, NAMES.local_reports]
+
+config['conversion_dict'] = {
+    1: "Конвертация#000000397#",
+    2: "Конвертация 2%#ТК-007260#",
+    3: "КОМИССИЯ +3%#ТК-009590#",
+    5: "Конвертация 5%#ТК-007499#",
+    'untitled': "Конвертация#000000397#"
+}
 
 JSON_SCHEMA = {
     "name": "document",

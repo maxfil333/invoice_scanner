@@ -783,7 +783,6 @@ def is_invoice(text: str) -> bool | None:
 # Чтобы получить конвертацию в РУБ нужен текущий курс, поэтому передаем конвертацию в ЦУП только! в валюте.
 # В ЦУП встречаются случаи, когда конвертация записана как в USD, так и в РУБ.
 
-
 def update_total(dct: dict, new_services: list):
     total = float(dct[NAMES.total_with])
     total_nds = float(dct[NAMES.total_nds])
@@ -794,7 +793,7 @@ def update_total(dct: dict, new_services: list):
     dct[NAMES.total_nds] = float(round(total_nds, 2))
 
 
-def distribute_conversion(result: str) -> str:
+def distribute_conversion(result: str):
     """Distribute conversion by containers or conoses"""
 
     dct = json.loads(result)
@@ -806,108 +805,80 @@ def distribute_conversion(result: str) -> str:
         dct[NAMES.add_info][NAMES.conversion] = '0'
         return json.dumps(dct, ensure_ascii=False, indent=4)
 
-    sum_without_nds = sum(float(good[NAMES.sum_wo_nds]) for good in dct[NAMES.goods])
+    goods = dct[NAMES.goods]
 
-    uniq_conts, uniq_conos = {}, {}
+    uniq_containers, uniq_conoses = {}, {}
     for i, good in enumerate(dct[NAMES.goods]):
         local_cont = good.get(NAMES.cont)
         local_conos = good.get(NAMES.local_conos)
-
         if local_cont:
-            uniq_conts.setdefault(local_cont, []).append(i)
+            uniq_containers.setdefault(local_cont, []).append(i)
         if local_conos:
-            uniq_conos.setdefault(local_conos, []).append(i)
-
-    field: Literal['1', 'cont', 'conos'] = '1' if len(uniq_conts) <= 1 and len(uniq_conos) <= 1 \
-        else 'cont' if len(uniq_conts) >= len(uniq_conos) else 'conos'
-
-    new_services = get_conversion_goods(dct, sum_without_nds, uniq_conts, uniq_conos, field=field)
-    dct[NAMES.goods].extend(new_services)
-    update_total(dct, new_services)
-
-    return json.dumps(dct, ensure_ascii=False, indent=4)
-
-
-def get_conversion_goods(dct: dict, sum_without_nds: float, uniq_conts: dict, uniq_conos: dict,
-                         field: Literal['1', 'cont', 'conos']) -> list[dict]:
-    """
-    Generate a list of conversion-goods dicts, based on the provided dictionary and parameters.
-    Args:
-        dct (dict): The original dictionary containing goods and additional information.
-        sum_without_nds (float): The total sum without NDS (tax).
-        uniq_conts (dict): A dictionary of unique containers.
-        uniq_conos (dict): A dictionary of unique consignment notes.
-        field (Literal['1', 'cont', 'conos']): The field to use for grouping ('1', 'cont', or 'conos').
-    Returns:
-        list[dict]: A list of dictionaries representing the conversion-goods.
-    """
-
-    goods = dct[NAMES.goods]
-    if not goods:
-        return [dct]
+            uniq_conoses.setdefault(local_conos, []).append(i)
+    distribute_type: Literal['single', 'cont', 'conos'] = 'single' if len(uniq_containers) <= 1 and len(
+        uniq_conoses) <= 1 \
+        else 'cont' if len(uniq_containers) >= len(uniq_conoses) else 'conos'
 
     conversion = int(dct[NAMES.add_info][NAMES.conversion])
-    nds = copy.copy(goods[0][NAMES.nds_percent])
-    float_nds = 0.0 if nds == NAMES.noNDS else float(nds) / 100
+    conversion_service = config['conversion_dict'].get(conversion, config['conversion_dict']['untitled'])
+    conversion_value_w_nds = float(dct[NAMES.total_with]) * (conversion / 100)
+    conversion_value_wo_nds = (float(dct[NAMES.total_with]) - float(dct[NAMES.total_nds])) * (conversion / 100)
+    conversion_services_num = {'single': 1, 'cont': len(uniq_containers), 'conos': len(uniq_conoses)}
 
-    def create_conversion_good(item: Optional[str] = None, indexes: Optional[list[int]] = None) -> dict:
+    new_conversion_services = []
 
-        """
-          Generate one conversion-good dict.
-          Args:
-              item (Optional[str]): The item to associate with the conversion-good.
-              indexes (Optional[list[int]]): The indexes of the goods to use for the conversion-good.
-          Returns:
-              dict: A dict representing the conversion-good.
-          """
+    sum_w_nds = round(float(dct[NAMES.total_with]) *
+                      (conversion / 100) / conversion_services_num[distribute_type], 2)
+    price_w_nds = sum_w_nds
 
-        service_dict = {
-            1: "Конвертация#000000397#",
-            2: "Конвертация 2%#ТК-007260#",
-            3: "КОМИССИЯ +3%#ТК-009590#",
-            5: "Конвертация 5%#ТК-007499#",
-            'untitled': "Конвертация#000000397#"
-        }
+    sum_wo_nds = round((float(dct[NAMES.total_with]) - float(dct[NAMES.total_nds])) *
+                       (conversion / 100) / conversion_services_num[distribute_type], 2)
+    price_wo_nds = sum_wo_nds
 
-        if indexes:  # копируем не первую услугу, а конкретную (чтобы получить соответствующий local_conos)
-            conversion_good = copy.deepcopy(goods[indexes[0]])
-        else:  # копируем первую услугу
-            conversion_good = copy.deepcopy(goods[0])
-
-        new_good = copy.deepcopy(conversion_good)
-        new_good.update({
+    if distribute_type == 'single':
+        new_conversion_service: dict = copy.deepcopy(goods[0])
+        new_conversion_service.update({
             NAMES.name: 'Конвертация',
-            NAMES.good1C: service_dict.get(conversion, service_dict['untitled']),
+            NAMES.good1C: conversion_service,
             NAMES.amount: 1,
             NAMES.unit: 'шт',
-            NAMES.sum_wo_nds: round(sum_without_nds * (conversion / 100), 2),
-            NAMES.price_wo_nds: round(sum_without_nds * (conversion / 100), 2),
-            NAMES.sum_w_nds: round(sum_without_nds * (conversion / 100) * (1 + float_nds), 2),
-            NAMES.price_w_nds: round(sum_without_nds * (conversion / 100) * (1 + float_nds), 2),
-            NAMES.nds_percent: nds,
-            NAMES.init_id: ''
+            NAMES.init_id: '',
+            NAMES.sum_w_nds: sum_w_nds,
+            NAMES.price_w_nds: price_w_nds,
+            NAMES.sum_wo_nds: sum_wo_nds,
+            NAMES.price_wo_nds: price_wo_nds
         })
-        if item:
-            new_good[NAMES.cont if field == 'cont' else NAMES.local_conos] = item
+        new_conversion_services.append(new_conversion_service)
+        goods.extend(new_conversion_services)
+        update_total(dct, new_conversion_services)
+        return json.dumps(dct, indent=4)
 
-        return new_good
+    if distribute_type in ['cont', 'conos']:
 
-    if field == '1':
-        return [create_conversion_good()]
+        uniq_c = uniq_containers if distribute_type == 'cont' else uniq_conoses
 
-    uniq_items = uniq_conts if field == 'cont' else uniq_conos
-    conversion_goods = []
-    for item, indexes in uniq_items.items():
-        cont_sum = sum(float(goods[idx][NAMES.sum_wo_nds]) for idx in indexes)
-        conversion_goods.append(create_conversion_good(item=item, indexes=indexes))
-        conversion_goods[-1].update({
-            NAMES.sum_wo_nds: round(cont_sum * (conversion / 100), 2),
-            NAMES.price_wo_nds: round(cont_sum * (conversion / 100), 2),
-            NAMES.sum_w_nds: round(cont_sum * (conversion / 100) * (1 + float_nds), 2),
-            NAMES.price_w_nds: round(cont_sum * (conversion / 100) * (1 + float_nds), 2)
-        })
+        for _, indexes in uniq_c.items():
+            new_conversion_service: dict = copy.deepcopy(goods[indexes[0]])
+            new_conversion_service.update({
+                NAMES.name: 'Конвертация',
+                NAMES.good1C: conversion_service,
+                NAMES.amount: 1,
+                NAMES.unit: 'шт',
+                NAMES.init_id: '',
+                NAMES.sum_w_nds: sum_w_nds,
+                NAMES.price_w_nds: price_w_nds,
+                NAMES.sum_wo_nds: sum_wo_nds,
+                NAMES.price_wo_nds: price_wo_nds
+            })
 
-    return conversion_goods
+            new_conversion_services.append(new_conversion_service)
+
+        balance_remainders(new_conversion_services, NAMES.sum_w_nds, conversion_value_w_nds, current_file_params)
+        balance_remainders(new_conversion_services, NAMES.sum_wo_nds, conversion_value_wo_nds, current_file_params)
+
+        goods.extend(new_conversion_services)
+        update_total(dct, new_conversion_services)
+        return json.dumps(dct, indent=4)
 
 
 # _________________________________________________________________________________________________________ TRANSACTIONS
