@@ -251,18 +251,18 @@ button[onclick="addService(this)"]:active {
 }
 
 /* Стили для кнопки "Удалить услугу" */
-button[onclick="removeService(this)"] {
+button[onclick="removeService()"] {
     font-family: 'Consolas', Courier, monospace;
     text-align: center;
     font-size: 18px;
     background-color: #AD747F; /* Красный фон */
 }
 
-button[onclick="removeService(this)"]:hover {
+button[onclick="removeService()"]:hover {
     opacity: 0.8; /* Снижение непрозрачности до 80% при наведении */
 }
 
-button[onclick="removeService(this)"]:active {
+button[onclick="removeService()"]:active {
     transform: scale(0.95); /* Легкое уменьшение при нажатии */
 }
 

@@ -117,7 +117,7 @@ def generate_html_from_json(data, parent_key="", prefix=""):
             html_content += '</fieldset>\n'
         if parent_key.endswith(NAMES.goods):
             html_content += '<button type="button" onclick="addService(this)">+</button>\n'
-            html_content += '<button type="button" onclick="removeService(this)">-</button>\n'
+            html_content += '<button type="button" onclick="removeService()">-</button>\n'
     return html_content
 
 

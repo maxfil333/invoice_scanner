@@ -405,18 +405,32 @@ function addService(button) {
 }
 
 
-// --------------------------------------------------------------------------------------------------------------------
-// Удалить последнюю услугу
+// --------------------------------------------------------------------------------------------------------removeService
+// Удалить услугу
 
-function removeService(button) {
-    var fieldset = button.parentElement;
-    var services = fieldset.querySelectorAll('fieldset');
+function removeService() {
+    let inputValue = prompt("Укажите номер услуги для удаления");
+    if (inputValue !== null) {
+        let fieldsets = document.querySelectorAll("fieldset.service");
 
-    if (services.length > 1) {
-        var lastService = services[services.length - 1];
-        fieldset.removeChild(lastService);
-    } else {
-        alert("Нельзя удалить единственную услугу.");
+        if (fieldsets.length <= 1) {
+            alert("Нельзя удалить единственную услугу.");
+            return;
+        }
+
+        let found = false;
+
+        fieldsets.forEach(fieldset => {
+            let legend = fieldset.querySelector("legend");
+            if (legend && legend.textContent.trim() === inputValue.trim()) {
+                fieldset.remove();
+                found = true;
+            }
+        });
+
+        if (!found) {
+            alert("Услуги с таким номером не найдено.");
+        }
     }
 
     // Вызов перерасчета значений цен, сумм от количества/НДС/цен
