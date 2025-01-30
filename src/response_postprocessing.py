@@ -240,14 +240,35 @@ def local_postprocessing(response, **kwargs) -> str | None:
     dct['additional_info']['Номера_Авто'] = " ".join(am_plates_ru)
     dct['additional_info']['Номера_Прицепов'] = " ".join(am_trailer_plates_ru)
 
-    # 9. ДТ check regex
-    DT_copy = dct['additional_info']['ДТ'].copy()  # изначальный список ДТ (копия)
+    # 9. ДТ
     dt_regex = r'\d{8}/\d{6}/\d{7}'  # регулярка для проверки ДТ
+    DT_copy = dct['additional_info']['ДТ'].copy()  # изначальный список ДТ (копия)
+    DT_true = []  # правильные ДТ
+    DT_true_indexes = []  # индексы правильных ДТ в result['add_inf...']['ДТ']
+    DT_buffer: list[str] = []  # не подошедшие под регулярку строки будут дополнительно проверены
     for dt in DT_copy:
-        if not re.fullmatch(dt_regex, dt):
-            dct['additional_info']['ДТ'].remove(dt)
+        if re.fullmatch(dt_regex, dt):
+            DT_true.append(dt)
+            DT_true_indexes.append(DT_copy.index(dt))
+        else:
+            DT_buffer.append(dt)
+    # проверка спорных ДТ:
+    # бывает что ДТ "10131010/270125/5028217,5011336" распознается как ["10131010/270125/5028217","5011336"]
+    if DT_true:
+        for dt_buffer in DT_buffer:
+            if dt_buffer.isdigit() and len(dt_buffer) == 7:
+                dt_buffer_index = DT_copy.index(dt_buffer)
+                if dt_buffer_index != 0:
+                    closest_smaller_dt_true_index = max([x for x in DT_true_indexes if x < dt_buffer_index])
+                    dt_buffer_base = DT_copy[closest_smaller_dt_true_index]
+                    if re.fullmatch(dt_regex, dt_buffer_base):
+                        dt_buffer_base_parts = dt_buffer_base.split(r'/')
+                        if len(dt_buffer_base_parts) == 3:
+                            new_dt = dt_buffer_base_parts[0] + r'/' + dt_buffer_base_parts[1] + r'/' + dt_buffer
+                            logger.print(f"created DT: {dt_buffer} -> {new_dt}")
+                            DT_true.append(new_dt)
 
-    dct['additional_info']['ДТ'] = " ".join(dct['additional_info']['ДТ'])  # ДТ from list to string
+    dct['additional_info']['ДТ'] = " ".join(DT_true)  # ДТ from list to string
 
     # 10. Коносаменты
     if not dct['additional_info']['Коносаменты']:
