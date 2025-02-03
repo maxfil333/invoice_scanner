@@ -236,7 +236,7 @@ JSON_SCHEMA = {
                 "additionalProperties": False
             },
             "Номер счета": {"type": "string"},
-            "Дата счета": {"type": "string", "description": "DD-MM-YYYY"},
+            "Дата счета": {"type": "string", "description": "DD.MM.YYYY"},
             "Валюта документа": {"type": "string",
                                  "description": "РУБ, если не указано другое",
                                  "enum": ["РУБ", "USD", "EUR"]},
