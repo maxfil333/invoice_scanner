@@ -10,6 +10,7 @@ import base64
 import openai
 import hashlib
 import difflib
+import traceback
 import pytesseract
 import numpy as np
 from openai import OpenAI
@@ -776,6 +777,48 @@ def is_invoice(text: str) -> bool | None:
 
     logger.print(f"IS_INVOICE keywords: not found")
     return False
+
+
+def extract_date_range(text: str) -> str:
+    pattern = r"(\d{1,2}[./]\d{1,2}(?:[./](?:\d{2}){1,2})?)(\s{0,2}(-|по|до)\s{0,2}\d{1,2}[./]\d{1,2}[./](?:\d{2}){1,2})+"
+    pattern_post = r"(\d{1,2}[./]\d{1,2}(?:[./](?:\d{2}){1,2})?)(\s{0,2}(-|по|до)\s{0,2}\d{1,2}[./]\d{1,2}[./](?:\d{2}){1,2})$"
+    pattern_single = r"\d{1,2}[./]\d{1,2}(?:[./](?:\d{2}){1,2})?"
+
+    match = re.search(pattern, text)
+    if not match:
+        return ''
+
+    match_post = re.search(pattern_post, match.group(0))
+    if not match_post:
+        return ''
+
+    match_single = re.findall(pattern_single, match_post.group(0))
+    if not match_single:
+        return ''
+
+    try:
+        slash_to_dot = [x.replace("/", ".") for x in match_single]
+
+        # 09.08 - 10.08.2025 -> ['09.08.2025', '10.08.2025']
+        add_year = [(x + "." + str(max(slash_to_dot, key=len)).split('.')[-1]) if len(x.split('.')) < 3 else x
+                    for x in slash_to_dot]
+
+        # 02.07.24 - 08.07.24 -> ['02.07.2024', '08.07.2024']
+        add_20_to_year = []
+        for date in add_year:
+            d, m, year = date.split('.')
+            if len(year) == 2:
+                year = '20' + year
+            new_date = ".".join([d, m, year])
+            add_20_to_year.append(new_date)
+
+        # 25.01.25-1.1.26 -> ['25.01.2025', '01.01.2026']
+        add_zeros = ['.'.join(map(lambda x: '0' + x if len(x) < 2 else x, i.split('.'))) for i in add_20_to_year]
+
+        return " ".join(add_zeros)
+    except Exception:
+        logger.print(traceback.format_exc())
+        return ''
 
 
 # _________________________________________________________________________ LOCAL POSTPROCESSING (distribute_conversion)

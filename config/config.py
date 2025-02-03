@@ -179,6 +179,7 @@ class ConfigNames:
     add_info = 'additional_info'
     conversion = 'Конвертация'
     init_id = "__исходный_айди"
+    date_range = "Даты"
 
 
 NAMES = ConfigNames()
@@ -191,7 +192,7 @@ config['textarea_fields'] = [NAMES.name, NAMES.cont, NAMES.good1C, NAMES.good1C_
 # 15 = 7 - 3 + 4 + 3 + 3 + 1
 config['services_order'] = [NAMES.name, NAMES.good1C, NAMES.good1C_new, NAMES.cont,
                             NAMES.local_conos, NAMES.local_dt, NAMES.local_reports,
-                            NAMES.unit, NAMES.amount,
+                            NAMES.date_range, NAMES.unit, NAMES.amount,
                             NAMES.price_wo_nds, NAMES.sum_wo_nds, NAMES.price_w_nds, NAMES.sum_w_nds, NAMES.price_type,
                             NAMES.transactions, NAMES.transactions_new, NAMES.transactions_type, NAMES.nds_percent]
 
