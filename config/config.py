@@ -206,6 +206,8 @@ config['conversion_dict'] = {
     'untitled': "Конвертация#000000397#"
 }
 
+config['placeholders'] = {'Даты': 'ДД.ММ.ГГГГ ДД.ММ.ГГГГ'}
+
 JSON_SCHEMA = {
     "name": "document",
     "strict": True,

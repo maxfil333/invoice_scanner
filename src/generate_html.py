@@ -69,6 +69,7 @@ def generate_input_html(key, val) -> str:
 
     else:
         html_content += (f'<input type="{input_type}" name="{escape(key)}" '
+                         f'placeholder="{escape(config["placeholders"].get(escape(char_key), ""))}" '
                          f'class="{escape(char_key)}" value="{escape(str(val))}"></div>\n')
 
     return html_content
