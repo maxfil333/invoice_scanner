@@ -943,3 +943,28 @@ function replaceCommaWithDot() {
         });
     });
 }
+
+// ---------------------------------------------------------------------------------------------------------------"Даты"
+// Проверка формата значения поля "Даты"
+
+document.addEventListener('DOMContentLoaded', clearInvalidDates);
+
+function clearInvalidDates() {
+    const dateFields = document.querySelectorAll('.Даты');
+    const dateRegex = /^\d{2}\.\d{2}\.\d{4} \d{2}\.\d{2}\.\d{4}$/; // Регулярное выражение
+
+    dateFields.forEach(field => {
+        if (field.value !== "" && !dateRegex.test(field.value)) {
+            field.value = "";
+        }
+    });
+}
+
+document.addEventListener('blur', (event) => {
+    if (event.target.classList.contains('Даты')) {
+        const dateRegex = /^\d{2}\.\d{2}\.\d{4} \d{2}\.\d{2}\.\d{4}$/;
+        if (event.target.value !== "" && !dateRegex.test(event.target.value)) {
+            event.target.value = "";
+        }
+    }
+}, true); // Используем `true`, чтобы событие срабатывало на всплытие (capture)
