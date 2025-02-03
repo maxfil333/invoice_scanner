@@ -266,7 +266,7 @@ JSON_SCHEMA = {
                     "ДТ": {"type": "array", "items": {"type": "string"}, "description": "в формате \d{8}/\d{6}/\d{7}"},
                     "Заключения": {"type": "array", "items": {"type": "string"},
                                    "description": "в формате \d{6}-\d{3}-\d{2}"},
-                    "Конвертация": {"type": "number", "description": "% конвертации валюты в РУБ. 0 если не указано"}
+                    "Конвертация": {"type": "number", "description": "% конвертации. Оплата в рублях по курсу ЦБ РФ + %. 0 если не указано"}
                 },
                 "required": ["Коносаменты", "Судно", "ДТ", "Заключения", "Конвертация"],
                 "additionalProperties": False
