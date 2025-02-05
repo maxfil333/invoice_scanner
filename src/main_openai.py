@@ -22,12 +22,11 @@ client = OpenAI()
 
 # ___________________________ CHAT ___________________________
 
-def run_chat(*file_paths: str, detail='high', text_mode=False) -> str:
-    if text_mode:
+def run_chat(*file_paths: str, detail='high', text_content: str | None = None) -> str:
+    if text_content:
         if len(file_paths) != 1:
             logger.print("ВНИМАНИЕ! На вход run_chat пришли pdf-файлы в количестве != 1")
-        current_file_params['current_texts'] = extract_text_with_fitz(file_paths[0])
-        content = '\n'.join(current_file_params['current_texts'])
+        content = '\n'.join(text_content)
     else:
         content = []
         for img_path in file_paths:
