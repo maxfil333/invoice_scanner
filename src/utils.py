@@ -2,6 +2,7 @@ import copy
 import os
 import re
 import io
+import glob
 import json
 import fitz
 import shutil
@@ -13,11 +14,12 @@ import difflib
 import traceback
 import pytesseract
 import numpy as np
+import pandas as pd
+from io import BytesIO
 from openai import OpenAI
 from geotext import GeoText
 from datetime import datetime
 from dotenv import load_dotenv
-from io import BytesIO
 from collections import defaultdict
 from typing import Literal, Optional
 from PIL import Image, ImageDraw, ImageFont
@@ -278,6 +280,61 @@ def create_date_folder_in_check(root_dir):
         subfolder_path = os.path.join(folder_path, subfolder)
         os.makedirs(subfolder_path, exist_ok=True)
     return folder_path
+
+
+def count_extensions(folder: Optional[str] = None, files: Optional[list[str]] = None) -> Optional[dict]:
+    """ returns {'.xls': 4, '.pdf': 1, '.xlsx': 12} like dict """
+    extensions = {}
+
+    if folder:
+        files = glob.glob(fr"{folder}/*")
+    elif files:
+        files = files
+    else:
+        return None
+
+    for file in files:
+        if not os.path.isdir(file):
+            ext = os.path.splitext(file)[-1]
+            extensions[ext] = extensions.setdefault(ext, 0) + 1
+    return extensions
+
+
+def extract_excel_text(file_path: str) -> str:
+    """Читает первую страницу Excel-файла (счет на оплату) и преобразует данные в текст."""
+    file_ext = os.path.splitext(file_path)[-1]
+    if file_ext in ['.xlsx', '.xltx']:
+        df = pd.read_excel(file_path, sheet_name=0, header=None, engine='openpyxl')  # Читаем без заголовков
+    else:
+        df = pd.read_excel(file_path, sheet_name=0, header=None, engine='xlrd')  # Читаем без заголовков
+
+    raw_lines = []  # Список всех строк без удаления пустых
+    table_start = None  # Индекс начала таблицы
+
+    # Перебираем строки, сохраняя пустые строки для корректного индекса
+    for i, row in df.iterrows():
+        row_values = [str(cell).strip() if pd.notna(cell) else "" for cell in row]  # Оставляем пустые ячейки
+        text_line = " | ".join(row_values).strip(" |")  # Убираем лишние разделители
+        raw_lines.append(text_line)
+
+    # Определяем начало таблицы – ищем первую строку, содержащую числа (например, цену, количество)
+    for i, row in enumerate(df.itertuples(index=False, name=None)):
+        row_values = [str(cell).strip() if pd.notna(cell) else "" for cell in row]
+        if any(cell.replace('.', '', 1).isdigit() for cell in row_values if cell):  # Проверяем, есть ли числа
+            if len(list(filter(bool, row_values))) >= 5:
+                table_start = i
+                break
+
+    # Разделяем "Шапку" и "Товары/услуги"
+    if table_start is not None:
+        header_text = "\n".join(raw_lines[:table_start]).strip()
+        table_text = "\n".join(raw_lines[table_start:]).strip()
+        formatted_text = f"*****\n{header_text}\n\n*****\n{table_text}"
+    else:
+        z = '\n'.join(raw_lines)
+        formatted_text = f"*****\n\n{z}"
+
+    return formatted_text
 
 
 # _______________________________________________________________________________________________________________ IMAGES
@@ -1265,24 +1322,28 @@ def mark_get_required_pages(pdf_path: str) -> list[int] | None:
     return sorted(list(set(pages)))
 
 
-def mark_get_main_file(folder_path: str) -> str | None:
-    regex = r'(.*?)((?:@\d+)+)$'  # ...@1@2@3
-    files = os.listdir(folder_path)
+def mark_get_main_file(dir_path: str) -> str | None:
+
+    # all files in dir
+    files = os.listdir(dir_path)
     if not files:
         return
-    extensions = ['.pdf', '.jpeg', '.jpg', '.png']
-    filter_files = [f for f in files if os.path.splitext(f)[-1] in extensions]
-    result = [f for f in filter_files if re.fullmatch(regex, os.path.splitext(f)[0])]
 
-    if result:
-        return result[0]
+    # pdf, jpg or png files
+    valid_files = [f for f in files if os.path.splitext(f)[-1] in config['valid_ext']]
+
+    regex1 = r'(.*?)((?:@\d+)+)$'  # ...@1@2@3
+    regex2 = r'(.*?)((?:@))$'  # ...@
+    regexes = [regex1, regex2]
+    for regex in regexes:
+        valid_files_matched = [f for f in valid_files if re.fullmatch(regex, os.path.splitext(f)[0])]
+        if valid_files_matched:
+            return valid_files_matched[0]
+
+    if valid_files:
+        return valid_files[0]
     else:
-        regex = r'(.*?)((?:@))$'  # ...@
-        result = [f for f in filter_files if re.fullmatch(regex, os.path.splitext(f)[0])]
-        if result:
-            return result[0]
-
-    return files[0]
+        return files[0]
 
 
 # _________ TEST _________
