@@ -20,6 +20,7 @@ from src.response_postprocessing import local_postprocessing
 from src.transactions import get_transaction_number
 from src.generate_html import create_html_form
 from src.utils import create_vector_database
+from src.utils import extract_text_with_fitz, extract_excel_text, count_extensions
 from src.utils import split_by_containers, split_by_conoses, split_by_dt, combined_split_by_reports
 from src.utils import create_date_folder_in_check, distribute_conversion
 from src.utils import order_goods, cleanup_empty_fields, order_keys, convert_json_values_to_strings
@@ -62,7 +63,12 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
         folder, folder_name = folder_.path, folder_.name
 
         files = os_sorted(glob(f"{folder}/*.*"))
-        files = [file for file in files if os.path.splitext(file)[-1] in ['.pdf', '.jpeg', '.jpg', '.png']]
+        files = [file for file in files if os.path.splitext(file)[-1] in config['valid_ext']]
+
+        with open(os.path.join(folder, 'params.json'), 'r', encoding='utf-8') as f:
+            params_dict = json.load(f)
+            original_file = params_dict['main_file']
+            extra_files = params_dict['extra_files']
 
         try:
             # _____  CREATE JSON  _____
@@ -72,19 +78,21 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
             json_name = folder_name + '_' + '0' * 11 + '.json'
 
             # _____________ RUN MAIN_OPENAI.PY _____________
+            # ___ pdf ___
             if os.path.splitext(files[0])[-1].lower() == '.pdf':  # достаточно проверить 1-й файл, чтобы определить .ext
                 text_or_scanned_folder = config['NAME_text']
                 # ___ RUN ASSISTANT (or CHAT, if text_to_assistant is False) ___
                 if test_mode:
                     with open(config['TESTFILE'], 'r', encoding='utf-8') as file:
                         result = file.read()
-                        from src.utils import extract_text_with_fitz
                         current_file_params['current_texts'] = extract_text_with_fitz(files[0])
                 else:
                     if not text_to_assistant:
-                        result = run_chat(files[0], detail='high', text_mode=True)
+                        current_file_params['current_texts'] = extract_text_with_fitz(files[0])
+                        result = run_chat(files[0], text_content=current_file_params['current_texts'])
                     else:
                         result = run_assistant(files[0])
+            # ___ not pdf ___
             else:
                 text_or_scanned_folder: str = config['NAME_scanned']
                 files.sort(reverse=True)
@@ -93,7 +101,28 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
                     with open(config['TESTFILE'], 'r', encoding='utf-8') as file:
                         result = file.read()
                 else:
-                    result = run_chat(*files, detail='high', text_mode=False)
+                    result = run_chat(*files, detail='high', text_content=None)
+
+            # _____________________ RUN MAIN_OPENAI.PY (EXCEL FILE) _____________________
+            excel_result = None
+            extra_files_extensions = count_extensions(files=extra_files)
+            if extra_files_extensions:
+                excel_ext_intersect = set(extra_files_extensions.keys()).intersection(set(config['excel_ext']))
+                if excel_ext_intersect:
+                    excel_files = list(filter(lambda x: os.path.splitext(x)[-1] in excel_ext_intersect, extra_files))
+                    if len(excel_files) > 1:
+                        logger.print("! Количество Excel файлов больше 1 !")
+                    if excel_files:
+                        excel_file = excel_files[0]
+                        excel_text = extract_excel_text(excel_file)
+                        if not test_mode:
+                            excel_result = run_chat('', text_content=excel_text)
+
+            if excel_result:
+                result_dct = json.loads(result)
+                excel_result_dct = json.loads(excel_result)
+                result_dct[NAMES.goods] = excel_result_dct[NAMES.goods]  # replace common-goods by excel-goods
+                result = json.dumps(result_dct, ensure_ascii=False)
 
             # _____________________ LOGS _____________________
             logger.print('openai result:\n', repr(result))
@@ -156,10 +185,6 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
                 file.write(result)
 
             # _____ * COPY ORIGINAL FILE | COPY EXTRA FILES * _____
-            with open(os.path.join(folder, 'params.json'), 'r', encoding='utf-8') as f:
-                params_dict = json.load(f)
-                original_file = params_dict['main_file']
-                extra_files = params_dict['extra_files']
             shutil.copy(original_file, os.path.join(local_check_folder, os.path.basename(original_file)))
 
             os.makedirs(os.path.join(local_check_folder, 'extra_files'), exist_ok=True)
