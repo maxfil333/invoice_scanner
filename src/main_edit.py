@@ -1,5 +1,6 @@
 import os
 import json
+import shutil
 import traceback
 import subprocess
 import numpy as np
@@ -8,12 +9,12 @@ from itertools import count
 from pdf2image import convert_from_path
 
 from config.config import config, NAMES
+from src.logger import logger
 from src.utils import is_scanned_pdf, count_pages, align_pdf_orientation, extract_pages, delete_all_files
-from src.utils import pack_folders, mark_get_required_pages, mark_get_main_file
+from src.utils import filtering_and_foldering_files, mark_get_required_pages, mark_get_main_file
 from src.utils import add_text_bar, image_upstanding, rename_files_in_directory
 from src.crop_tables import define_and_return
 from src.rotator import main as rotate
-from src.logger import logger
 
 
 def main(dir_path: str = config['IN_FOLDER'], hide_logs=False, stop_when=-1):
@@ -24,7 +25,7 @@ def main(dir_path: str = config['IN_FOLDER'], hide_logs=False, stop_when=-1):
     # переименование файлов и папок
     rename_files_in_directory(dir_path, hide_logs=hide_logs)
     # упаковка одиночных файлов в папки
-    pack_folders(dir_path)
+    filtering_and_foldering_files(dir_path)
 
     c = count(1)
 
@@ -39,7 +40,7 @@ def main(dir_path: str = config['IN_FOLDER'], hide_logs=False, stop_when=-1):
             continue
         main_base = os.path.basename(main_file)
         main_type = os.path.splitext(main_file)[-1]
-        if main_type not in config['valid_ext']:  # если недопустимое расширение -> пропускам
+        if main_type not in config['valid_ext'] + config['excel_ext']:  # если недопустимое расширение -> пропускам
             continue
         extra_files = [os.path.abspath(x.path) for x in os.scandir(folder) if x.is_dir() is False]
         extra_files.remove(main_file)
@@ -88,6 +89,9 @@ def main(dir_path: str = config['IN_FOLDER'], hide_logs=False, stop_when=-1):
                 # if file is image
                 elif main_type.lower() in ['.jpg', '.jpeg', '.png']:
                     images = [np.array(Image.open(main_file))]
+                elif main_type.lower() in config['excel_ext']:
+                    shutil.copy(main_file, main_save_path)
+                    images = []
                 else:
                     logger.print(f'main edit. ERROR IN: {main_file}')
                     continue
