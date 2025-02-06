@@ -63,7 +63,7 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
         folder, folder_name = folder_.path, folder_.name
 
         files = os_sorted(glob(f"{folder}/*.*"))
-        files = [file for file in files if os.path.splitext(file)[-1] in config['valid_ext']]
+        files = [file for file in files if os.path.splitext(file)[-1] in config['valid_ext'] + config['excel_ext']]
 
         with open(os.path.join(folder, 'params.json'), 'r', encoding='utf-8') as f:
             params_dict = json.load(f)
@@ -92,6 +92,18 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
                         result = run_chat(files[0], text_content=current_file_params['current_texts'])
                     else:
                         result = run_assistant(files[0])
+
+            elif os.path.splitext(files[0])[-1].lower() in config['excel_ext']:
+                text_or_scanned_folder: str = config['NAME_text']
+                excel_file = files[0]
+                excel_text = extract_excel_text(excel_file)
+                if test_mode:
+                    with open(config['TESTFILE'], 'r', encoding='utf-8') as file:
+                        result = file.read()
+                        current_file_params['current_texts'] = extract_text_with_fitz(files[0])
+                else:
+                    result = run_chat('', text_content=excel_text)
+
             # ___ not pdf ___
             else:
                 text_or_scanned_folder: str = config['NAME_scanned']
