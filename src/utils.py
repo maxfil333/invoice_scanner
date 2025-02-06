@@ -837,15 +837,15 @@ def is_invoice(text: str) -> bool | None:
 
 
 def extract_date_range(text: str) -> str:
-    pattern = r"(\d{1,2}[./]\d{1,2}(?:[./](?:\d{2}){1,2})?)(\s{0,2}(-|по|до)\s{0,2}\d{1,2}[./]\d{1,2}[./](?:\d{2}){1,2})+"
-    pattern_post = r"(\d{1,2}[./]\d{1,2}(?:[./](?:\d{2}){1,2})?)(\s{0,2}(-|по|до)\s{0,2}\d{1,2}[./]\d{1,2}[./](?:\d{2}){1,2})$"
+    pattern_init = r"(\d{1,2}[./]\d{1,2}(?:[./](?:\d{2}){1,2})?(:?(\s?г\.?)?))(\s{0,2}(-|по|до)\s{0,2}\d{1,2}[./]\d{1,2}[./](?:\d{2}){1,2}(:?(\s?г\.?)?))+"
+    pattern_last = pattern_init[0:-1] + r"$"
     pattern_single = r"\d{1,2}[./]\d{1,2}(?:[./](?:\d{2}){1,2})?"
 
-    match = re.search(pattern, text)
+    match = re.search(pattern_init, text)
     if not match:
         return ''
 
-    match_post = re.search(pattern_post, match.group(0))
+    match_post = re.search(pattern_last, match.group(0))
     if not match_post:
         return ''
 
