@@ -12,7 +12,7 @@ from PIL import Image
 from dotenv import load_dotenv
 
 from src.logger import logger
-from config.config import config, NAMES, current_file_params
+from config.config import config, NAMES, running_params
 from src.crop_tables import extract_text_from_image
 from src.utils import chroma_similarity_search, is_without_nds, is_invoice, perfect_similarity, switch_to_latin
 from src.utils import convert_json_values_to_strings, handling_openai_json
@@ -50,8 +50,8 @@ def local_postprocessing(response, **kwargs) -> str | None:
     # __________ CURRENT TEXT __________
 
     # если текст был извлечен из PDF с помощью fitz в run_chat или в run_assistant
-    if current_file_params.get('current_texts', None):
-        texts = current_file_params['current_texts']
+    if running_params.get('current_texts', None):
+        texts = running_params['current_texts']
         current_text = '\n'.join(texts)
         current_text_page0 = texts[0]
 

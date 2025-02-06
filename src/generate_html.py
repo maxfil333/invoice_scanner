@@ -5,7 +5,7 @@ from html import escape
 from bs4 import BeautifulSoup
 
 from src.logger import logger
-from config.config import config, NAMES, current_file_params
+from config.config import config, NAMES, running_params
 from src.utils_html import html_generate_details, details_from_result
 
 
@@ -155,7 +155,7 @@ def create_html_form(json_file, output_file, file_path):
     html_content += generate_html_from_json(data)
 
     switch_checked_status = 'checked'  # по умолчанию включен Авто-расчет
-    if current_file_params.get('balance_fixes', False):  # если были распределения остатков - выключаем
+    if running_params.get('balance_fixes', False):  # если были распределения остатков - выключаем
         switch_checked_status = ''
 
     html_content += f'''

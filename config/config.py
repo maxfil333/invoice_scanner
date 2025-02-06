@@ -17,7 +17,7 @@ datas=[
 ],
 """
 
-current_file_params: dict = dict()
+running_params: dict = dict()
 
 config: dict = dict()
 config['magick_opt'] = '-colorspace Gray -quality 100 -units PixelsPerInch -density 350'.split(' ')

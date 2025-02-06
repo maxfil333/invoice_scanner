@@ -29,7 +29,7 @@ from natasha import Segmenter, NewsEmbedding, NewsNERTagger, Doc
 
 from src.logger import logger
 from src.utils_config import get_stream_dotenv
-from config.config import config, NAMES, current_file_params
+from config.config import config, NAMES, running_params
 
 
 # _____________________________________________________________________________________________________________ ENCODERS
@@ -973,8 +973,8 @@ def distribute_conversion(result: str):
 
             new_conversion_services.append(new_conversion_service)
 
-        balance_remainders(new_conversion_services, NAMES.sum_w_nds, conversion_value_w_nds, current_file_params)
-        balance_remainders(new_conversion_services, NAMES.sum_wo_nds, conversion_value_wo_nds, current_file_params)
+        balance_remainders(new_conversion_services, NAMES.sum_w_nds, conversion_value_w_nds, running_params)
+        balance_remainders(new_conversion_services, NAMES.sum_wo_nds, conversion_value_wo_nds, running_params)
 
         goods.extend(new_conversion_services)
         update_total(dct, new_conversion_services)
@@ -1075,8 +1075,8 @@ def split_one_good(good: dict, loc_field_name: str) -> list[dict]:
         split_objects.append(new_obj)
 
     # Распределение остатков
-    balance_remainders(split_objects, NAMES.sum_w_nds, old_sum_with_tax, param_file=current_file_params)
-    balance_remainders(split_objects, NAMES.sum_wo_nds, old_sum_without_tax, param_file=current_file_params)
+    balance_remainders(split_objects, NAMES.sum_w_nds, old_sum_with_tax, param_file=running_params)
+    balance_remainders(split_objects, NAMES.sum_wo_nds, old_sum_without_tax, param_file=running_params)
 
     return split_objects
 
@@ -1154,9 +1154,9 @@ def split_by_global_filed(json_formatted_str: str, global_field: str, local_fiel
             split_objects.append(new_obj)
 
         # Распределение остатков
-        balance_remainders(split_objects, NAMES.amount, amount, param_file=current_file_params)
-        balance_remainders(split_objects, NAMES.sum_w_nds, old_sum_with_tax, param_file=current_file_params)
-        balance_remainders(split_objects, NAMES.sum_wo_nds, old_sum_without_tax, param_file=current_file_params)
+        balance_remainders(split_objects, NAMES.amount, amount, param_file=running_params)
+        balance_remainders(split_objects, NAMES.sum_w_nds, old_sum_with_tax, param_file=running_params)
+        balance_remainders(split_objects, NAMES.sum_wo_nds, old_sum_without_tax, param_file=running_params)
 
         return split_objects
 
