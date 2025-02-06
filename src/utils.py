@@ -1283,14 +1283,14 @@ def perfect_similarity(query: str, data: dict, cutoff: float = 0.95) -> dict | N
 
 # _________ MAIN_EDIT _________
 
-def pack_folders(dir_path: str = config['IN_FOLDER']):
-    """ Упаковка одиночных файлов в папки """
+def filtering_and_foldering_files(dir_path: str):
+    """ Фильтрация по расширению и упаковка одиночных файлов в папки """
     for entry in os.scandir(dir_path):
         path = os.path.abspath(entry.path)
         if not os.path.isdir(path):  # папки пропускаются
             base = os.path.basename(os.path.basename(path))
             ext = os.path.splitext(os.path.basename(path))[-1]
-            if ext not in config['valid_ext']:  # недопустимые расширения пропускаются
+            if ext not in config['valid_ext'] + config['excel_ext']:  # недопустимые расширения пропускаются
                 continue
             counter = 1
             folder_name = f'{os.path.splitext(base)[0]}({ext.strip(".")})'
@@ -1332,6 +1332,7 @@ def mark_get_main_file(dir_path: str) -> str | None:
     # pdf, jpg or png files
     valid_files = [f for f in files if os.path.splitext(f)[-1] in config['valid_ext']]
 
+    # 1. Главный файл .pdf или .jpg/.png + содержит @1 или @
     regex1 = r'(.*?)((?:@\d+)+)$'  # ...@1@2@3
     regex2 = r'(.*?)((?:@))$'  # ...@
     regexes = [regex1, regex2]
@@ -1340,9 +1341,9 @@ def mark_get_main_file(dir_path: str) -> str | None:
         if valid_files_matched:
             return valid_files_matched[0]
 
-    if valid_files:
+    if valid_files:  # 2. Главный файл .pdf или .jpg/.png
         return valid_files[0]
-    else:
+    else:  # 3. Главный файл - случайный
         return files[0]
 
 
