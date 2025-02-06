@@ -7,7 +7,7 @@ from time import perf_counter
 from dotenv import load_dotenv
 
 from src.logger import logger
-from config.config import config, current_file_params
+from config.config import config, running_params
 from src.utils import extract_text_with_fitz, base64_encode_pil
 from src.utils_config import get_stream_dotenv
 
@@ -61,7 +61,7 @@ def run_chat(*file_paths: str, detail='high', text_content: str | None = None) -
 # ___________________________ ASSISTANT ___________________________
 
 def run_assistant(file_path):
-    current_file_params['current_texts'] = extract_text_with_fitz(file_path)
+    running_params['current_texts'] = extract_text_with_fitz(file_path)
 
     assistant = client.beta.assistants.retrieve(assistant_id=ASSISTANT_ID)
     message_file = client.files.create(file=open(file_path, "rb"), purpose="assistants")
