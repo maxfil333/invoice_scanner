@@ -11,11 +11,11 @@ from itertools import count
 from natsort import os_sorted
 from openai import PermissionDeniedError
 
-from config.config import config, current_file_params, NAMES
+from config.config import config, running_params, NAMES
 from src.logger import logger
 from src.connector import create_connection
 from src.main_edit import main as main_edit
-from src.main_openai import run_chat, run_assistant
+from src.utils_openai import pdf_to_ai, excel_to_ai, images_to_ai, extra_excel_to_ai
 from src.response_postprocessing import local_postprocessing
 from src.transactions import get_transaction_number
 from src.generate_html import create_html_form
@@ -26,8 +26,12 @@ from src.utils import create_date_folder_in_check, distribute_conversion
 from src.utils import order_goods, cleanup_empty_fields, order_keys, convert_json_values_to_strings
 
 
-def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text_to_assistant=False,
-         use_com_connector=False, ignore_connection=False, stop_when=0):
+def main(date_folder: str,
+         hide_logs: bool = False,
+         test_mode: bool = False,
+         use_existing: bool = False,
+         text_to_assistant: bool = False,
+         use_com_connector: bool = False, ignore_connection: bool = False, stop_when: int = 0):
     """
     :param date_folder: folder for saving results
     :param hide_logs: run without logs
@@ -67,8 +71,8 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
 
         with open(os.path.join(folder, 'params.json'), 'r', encoding='utf-8') as f:
             params_dict = json.load(f)
-            original_file = params_dict['main_file']
-            extra_files = params_dict['extra_files']
+            original_file: str = params_dict['main_file']
+            extra_files: list = params_dict['extra_files']
 
         try:
             # _____  CREATE JSON  _____
@@ -78,63 +82,25 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
             json_name = folder_name + '_' + '0' * 11 + '.json'
 
             # _____________ RUN MAIN_OPENAI.PY _____________
-            # ___ pdf ___
             if os.path.splitext(files[0])[-1].lower() == '.pdf':  # достаточно проверить 1-й файл, чтобы определить .ext
-                text_or_scanned_folder = config['NAME_text']
-                # ___ RUN ASSISTANT (or CHAT, if text_to_assistant is False) ___
-                if test_mode:
-                    with open(config['TESTFILE'], 'r', encoding='utf-8') as file:
-                        result = file.read()
-                        current_file_params['current_texts'] = extract_text_with_fitz(files[0])
-                else:
-                    if not text_to_assistant:
-                        current_file_params['current_texts'] = extract_text_with_fitz(files[0])
-                        result = run_chat(files[0], text_content=current_file_params['current_texts'])
-                    else:
-                        result = run_assistant(files[0])
-
+                pdf_file = files[0]
+                result = pdf_to_ai(pdf_file, test_mode, text_to_assistant, config, running_params)
             elif os.path.splitext(files[0])[-1].lower() in config['excel_ext']:
-                text_or_scanned_folder: str = config['NAME_text']
                 excel_file = files[0]
-                excel_text = extract_excel_text(excel_file)
-                if test_mode:
-                    with open(config['TESTFILE'], 'r', encoding='utf-8') as file:
-                        result = file.read()
-                        current_file_params['current_texts'] = extract_text_with_fitz(files[0])
-                else:
-                    result = run_chat('', text_content=excel_text)
-
-            # ___ not pdf ___
+                result = excel_to_ai(excel_file, test_mode, text_to_assistant, config, running_params)
             else:
-                text_or_scanned_folder: str = config['NAME_scanned']
-                files.sort(reverse=True)
-                # ___ RUN CHAT ___
-                if test_mode:
-                    with open(config['TESTFILE'], 'r', encoding='utf-8') as file:
-                        result = file.read()
-                else:
-                    result = run_chat(*files, detail='high', text_content=None)
+                result = images_to_ai(files, test_mode, text_to_assistant, config, running_params)
 
             # _____________________ RUN MAIN_OPENAI.PY (EXCEL FILE) _____________________
-            excel_result = None
-            extra_files_extensions = count_extensions(files=extra_files)
-            if extra_files_extensions:
-                excel_ext_intersect = set(extra_files_extensions.keys()).intersection(set(config['excel_ext']))
-                if excel_ext_intersect:
-                    excel_files = list(filter(lambda x: os.path.splitext(x)[-1] in excel_ext_intersect, extra_files))
-                    if len(excel_files) > 1:
-                        logger.print("! Количество Excel файлов больше 1 !")
-                    if excel_files:
-                        excel_file = excel_files[0]
-                        excel_text = extract_excel_text(excel_file)
-                        if not test_mode:
-                            excel_result = run_chat('', text_content=excel_text)
-
-            if excel_result:
-                result_dct = json.loads(result)
-                excel_result_dct = json.loads(excel_result)
-                result_dct[NAMES.goods] = excel_result_dct[NAMES.goods]  # replace common-goods by excel-goods
-                result = json.dumps(result_dct, ensure_ascii=False)
+            # если основной файл не excel
+            if not os.path.splitext(files[0])[-1].lower() in config['excel_ext']:
+                extra_excel_result = extra_excel_to_ai(extra_files, test_mode, text_to_assistant, config, running_params)
+                if extra_excel_result:
+                    logger.print("REPLACING GOODS FROM EXCEL ...")
+                    result_dct = json.loads(result)
+                    excel_result_dct = json.loads(extra_excel_result)
+                    result_dct[NAMES.goods] = excel_result_dct[NAMES.goods]  # replace common-goods by excel-goods
+                    result = json.dumps(result_dct, ensure_ascii=False)
 
             # _____________________ LOGS _____________________
             logger.print('openai result:\n', repr(result))
@@ -190,7 +156,7 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
             result = order_keys(result)
 
             # _____ * SAVE JSON FILE * _____
-            local_check_folder = os.path.join(date_folder, text_or_scanned_folder, folder_name)
+            local_check_folder: str = os.path.join(date_folder, running_params['text_or_scanned_folder'], folder_name)
             os.makedirs(local_check_folder, exist_ok=False)
             json_path = os.path.join(date_folder, config['NAME_verified'], json_name)
             with open(json_path, 'w', encoding='utf-8') as file:
@@ -208,8 +174,8 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
             html_path = os.path.join(local_check_folder, html_name)
             create_html_form(json_path, html_path, original_file)
 
-            # _____ clear temp variable current_file_params _____
-            current_file_params.clear()
+            # _____ clear temp variable running_params _____
+            running_params.clear()
 
             # _____  STOP ITERATION  _____
             stop = next(c)
@@ -225,8 +191,8 @@ def main(date_folder, hide_logs=False, test_mode=False, use_existing=False, text
             continue
 
     # _____  RESULT MESSAGE  _____
-    return (f'Сохранено {stop} x 3 = {stop * 3} '
-            f'файлов в: \n{date_folder}')
+    return (f'Обработано счетов: {stop}'
+            f'\n{date_folder}')
 
 
 if __name__ == "__main__":
@@ -258,7 +224,7 @@ if __name__ == "__main__":
                               use_com_connector=args.use_com_connector,
                               ignore_connection=args.ignore_connection,
                               stop_when=args.stop_when)
-        logger.print(f'\nresult_message:\n{result_message}\n')
+        logger.print(f'\n{result_message}\n')
     except PermissionDeniedError:
         logger.print(traceback.format_exc())
         logger.print('ОШИБКА ВЫПОЛНЕНИЯ:\n!!! Включите VPN !!!')
