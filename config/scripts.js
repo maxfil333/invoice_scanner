@@ -409,28 +409,47 @@ function addService(button) {
 // Удалить услугу
 
 function removeService() {
-    let inputValue = prompt("Укажите номер услуги для удаления");
+    let inputValue = prompt("Укажите номера услуг для удаления (через пробел)");
     if (inputValue !== null) {
-        let fieldsets = document.querySelectorAll("fieldset.service");
+        let numbersToDelete = inputValue
+            .split(" ")
+            .map(num => num.trim())
+            .filter(num => num !== "");
 
-        if (fieldsets.length <= 1) {
+        // Преобразуем в набор уникальных номеров и обратно в массив
+        let uniqueNumbersToDelete = [...new Set(numbersToDelete)];
+
+        // Получаем список всех услуг
+        let fieldsets = Array.from(document.querySelectorAll("fieldset.service"));
+
+
+        // Ищем, какие из указанных номеров отсутствуют
+        let missingNumbers = uniqueNumbersToDelete.filter(number => {
+            return !fieldsets.some(fieldset => {
+                let legend = fieldset.querySelector("legend");
+                return legend && legend.textContent.trim() === number;
+            });
+        });
+
+        // Если хоть один номер не найден – показываем сообщение и прерываем выполнение
+        if (missingNumbers.length > 0) {
+            alert("Услуги с указанными номерами не найдены: " + missingNumbers.join(", "));
+            return;
+        }
+
+        // Проверяем, чтобы после удаления осталось хотя бы одна услуга
+        if (fieldsets.length - uniqueNumbersToDelete.length < 1) {
             alert("Нельзя удалить единственную услугу.");
             return;
         }
 
-        let found = false;
-
+        // Если все услуги найдены – удаляем их
         fieldsets.forEach(fieldset => {
             let legend = fieldset.querySelector("legend");
-            if (legend && legend.textContent.trim() === inputValue.trim()) {
+            if (legend && uniqueNumbersToDelete.includes(legend.textContent.trim())) {
                 fieldset.remove();
-                found = true;
             }
         });
-
-        if (!found) {
-            alert("Услуги с таким номером не найдено.");
-        }
     }
 
     // Вызов перерасчета значений цен, сумм от количества/НДС/цен
