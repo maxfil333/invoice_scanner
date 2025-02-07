@@ -20,9 +20,11 @@ from openai import OpenAI
 from geotext import GeoText
 from datetime import datetime
 from dotenv import load_dotenv
+from collections import Counter
 from collections import defaultdict
 from typing import Literal, Optional
 from PIL import Image, ImageDraw, ImageFont
+from decimal import Decimal, ROUND_HALF_DOWN
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
 from natasha import Segmenter, NewsEmbedding, NewsNERTagger, Doc
@@ -837,7 +839,9 @@ def is_invoice(text: str) -> bool | None:
 
 
 def extract_date_range(text: str) -> str:
-    pattern_init = r"(\d{1,2}[./]\d{1,2}(?:[./](?:\d{2}){1,2})?(:?(\s?г\.?)?))(\s{0,2}(-|по|до)\s{0,2}\d{1,2}[./]\d{1,2}[./](?:\d{2}){1,2}(:?(\s?г\.?)?))+"
+    pattern_init = (r"(\d{1,2}[./]\d{1,2}(?:[./](?:\d{2}){1,2})?(:?(\s?г\.?)?))"
+                    r"(\s{0,2}(-|по|до)\s{0,2}"
+                    r"\d{1,2}[./]\d{1,2}[./](?:\d{2}){1,2}(:?(\s?г\.?)?))+")
     pattern_last = pattern_init[0:-1] + r"$"
     pattern_single = r"\d{1,2}[./]\d{1,2}(?:[./](?:\d{2}){1,2})?"
 
@@ -1014,13 +1018,13 @@ def sort_transactions(transactions: list[str]) -> list:
         return transactions
 
 
-# _________________________________________________________________________________________ TRANSACTIONS (service_split)
+# ____________________________________________________________________________________________________ BALANCE_REMINDERS
 
 def balance_remainders(data: list[dict], key_name: str, target_sum: int | float, param_file: dict, precision=2) -> None:
     """ Функция для распределения остатков. Используется в конце one_good_split_by... """
 
     # Вычисляем текущую сумму всех цен в списке, округляя её до нужной точности
-    current_sum = round(sum(d[key_name] for d in data), precision)
+    current_sum = round(sum(float(d[key_name]) for d in data), precision)
 
     # Рассчитываем разницу между целевой суммой и текущей суммой
     difference = round(target_sum - current_sum, precision)
@@ -1031,21 +1035,49 @@ def balance_remainders(data: list[dict], key_name: str, target_sum: int | float,
 
     # Определяем базовую корректировку для каждого элемента, распределяя разницу пропорционально
     n = len(data)  # Количество элементов в списке
-    adjustment_per_item = round(difference / n, precision)  # Корректировка для каждого элемента
-    remainder = round(difference - (adjustment_per_item * n),
-                      precision)  # Оставшаяся часть разницы после равного распределения
+    difference_for_decimal = Decimal(str(difference / n))
+
+    # Корректировка для каждого элемента
+    adjustment_per_item = float(difference_for_decimal.quantize(Decimal('0.01'), rounding=ROUND_HALF_DOWN))
+    # Оставшаяся часть разницы после равного распределения
+    remainder = round(difference - (adjustment_per_item * n), precision)
 
     # Применяем базовую корректировку к каждому элементу, округляя каждый результат до нужной точности
     for i in range(n):
-        data[i][key_name] = round(data[i][key_name] + adjustment_per_item, precision)
+        data[i][key_name] = round(float(data[i][key_name]) + adjustment_per_item, precision)
 
     # Распределяем оставшийся остаток по последним элементам списка, начиная с конца
     for i in range(int(abs(remainder) * (10 ** precision))):
         idx = n - 1 - i  # Индекс для обратного обхода списка
         # Корректируем элемент, прибавляя либо +0.01, либо -0.01 в зависимости от знака remainder
-        data[idx][key_name] = round(data[idx][key_name] + (1 if remainder > 0 else -1) * (10 ** -precision), precision)
+        data[idx][key_name] = round(float(data[idx][key_name]) + (1 if remainder > 0 else -1) * (10 ** -precision),
+                                    precision)
 
 
+def balance_remainders_intact(result: str) -> str:
+    result_dct = json.loads(result)
+
+    goods = result_dct[NAMES.goods]
+    init_ids = [good[NAMES.init_id].split("|")[0] for good in goods]
+    intact_init_ids = [k for k, v in dict(Counter(init_ids)).items() if v == 1]  # ['1', '2' ...]
+
+    intact_total = float(result_dct[NAMES.total_with])
+    intact_total_nds = float(result_dct[NAMES.total_nds])
+    intact_goods = []
+    for good in goods:
+        init_id = good[NAMES.init_id].split("|")[0]
+        if init_id in intact_init_ids:
+            intact_goods.append(good)
+        else:
+            intact_total -= float(good[NAMES.sum_w_nds])
+            intact_total_nds -= float(good[NAMES.sum_w_nds]) - float(good[NAMES.sum_wo_nds])
+
+    balance_remainders(intact_goods, NAMES.sum_w_nds, intact_total, param_file=running_params)
+    balance_remainders(intact_goods, NAMES.sum_wo_nds, intact_total - intact_total_nds, param_file=running_params)
+    return json.dumps(result_dct, ensure_ascii=False)
+
+
+# _________________________________________________________________________________________ TRANSACTIONS (service_split)
 def split_one_good(good: dict, loc_field_name: str) -> list[dict]:
     """ Вспомогательная функция для split_by_local_field """
 
@@ -1323,7 +1355,6 @@ def mark_get_required_pages(pdf_path: str) -> list[int] | None:
 
 
 def mark_get_main_file(dir_path: str) -> str | None:
-
     # all files in dir
     files = os.listdir(dir_path)
     if not files:

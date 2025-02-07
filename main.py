@@ -19,8 +19,7 @@ from src.utils_openai import pdf_to_ai, excel_to_ai, images_to_ai, extra_excel_t
 from src.response_postprocessing import local_postprocessing
 from src.transactions import get_transaction_number
 from src.generate_html import create_html_form
-from src.utils import create_vector_database
-from src.utils import extract_text_with_fitz, extract_excel_text, count_extensions
+from src.utils import create_vector_database, balance_remainders_intact
 from src.utils import split_by_containers, split_by_conoses, split_by_dt, combined_split_by_reports
 from src.utils import create_date_folder_in_check, distribute_conversion
 from src.utils import order_goods, cleanup_empty_fields, order_keys, convert_json_values_to_strings
@@ -130,6 +129,9 @@ def main(date_folder: str,
             if not was_edited:  # если уже было распределение по контейнерам/коносаментам/ДТ, ничего не делать
                 if json.loads(result)['additional_info'][NAMES.reports]:
                     result, was_edited = combined_split_by_reports(result)
+
+            # _____________ BALANCE REMAINDERS _____________
+            result = balance_remainders_intact(result)
 
             # _____________ distribute_conversion _____________
             result = distribute_conversion(result)
