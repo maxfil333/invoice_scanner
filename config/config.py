@@ -310,6 +310,7 @@ for k, v in config.items():
     if k not in ['unique_comments_dict',
                  'unique_services',
                  'union_services',
+                 'crypto_key',
                  'all_services_dict',
                  'all_services',
                  'all_services_file_server',
