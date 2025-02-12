@@ -931,15 +931,15 @@ def distribute_conversion(result: str):
 
     new_conversion_services = []
 
-    sum_w_nds = round(float(dct[NAMES.total_with]) *
-                      (conversion / 100) / conversion_services_num[distribute_type], 2)
-    price_w_nds = sum_w_nds
-
-    sum_wo_nds = round((float(dct[NAMES.total_with]) - float(dct[NAMES.total_nds])) *
-                       (conversion / 100) / conversion_services_num[distribute_type], 2)
-    price_wo_nds = sum_wo_nds
-
     if distribute_type == 'single':
+        sum_w_nds = round(float(dct[NAMES.total_with]) *
+                          (conversion / 100) / conversion_services_num[distribute_type], 2)
+        price_w_nds = sum_w_nds
+
+        sum_wo_nds = round((float(dct[NAMES.total_with]) - float(dct[NAMES.total_nds])) *
+                           (conversion / 100) / conversion_services_num[distribute_type], 2)
+        price_wo_nds = sum_wo_nds
+
         new_conversion_service: dict = copy.deepcopy(goods[0])
         new_conversion_service.update({
             NAMES.name: 'Конвертация',
@@ -957,32 +957,50 @@ def distribute_conversion(result: str):
         update_total(dct, new_conversion_services)
         return json.dumps(dct, indent=4)
 
-    if distribute_type in ['cont', 'conos']:
+    # {'ABCU1234567': {'Сумма (без НДС)': 6000, 'Сумма (c НДС)': 7000}, 'DFGU1234567': {... }}
+    conv_part_for_service = {}
+    proportion_indexes_taken = []
+    uniq_c = uniq_containers if distribute_type == 'cont' else uniq_conoses
+    for c, indexes in uniq_c.items():
+        for index in indexes:
+            conv_part_for_service.setdefault(c, {})
+            conv_part_for_service[c].setdefault(NAMES.sum_w_nds, 0)
+            conv_part_for_service[c][NAMES.sum_w_nds] += float(goods[index][NAMES.sum_w_nds])
+            conv_part_for_service[c].setdefault(NAMES.sum_wo_nds, 0)
+            conv_part_for_service[c][NAMES.sum_wo_nds] += float(goods[index][NAMES.sum_wo_nds])
+            proportion_indexes_taken.append(index)
 
-        uniq_c = uniq_containers if distribute_type == 'cont' else uniq_conoses
+    indexes_without_c = [i for i in range(len(goods)) if i not in proportion_indexes_taken]
+    indexes_without_c_sum_w = sum([float(goods[i][NAMES.sum_w_nds]) for i in indexes_without_c])
+    indexes_without_c_sum_wo = sum([float(goods[i][NAMES.sum_wo_nds]) for i in indexes_without_c])
+    indexes_without_c_sum_w_per_c = round(indexes_without_c_sum_w / len(uniq_c), 2)
+    indexes_without_c_sum_wo_per_c = round(indexes_without_c_sum_wo / len(uniq_c), 2)
+    for c, d in conv_part_for_service.items():
+        conv_part_for_service[c][NAMES.sum_w_nds] += indexes_without_c_sum_w_per_c
+        conv_part_for_service[c][NAMES.sum_wo_nds] += indexes_without_c_sum_wo_per_c
 
-        for _, indexes in uniq_c.items():
-            new_conversion_service: dict = copy.deepcopy(goods[indexes[0]])
-            new_conversion_service.update({
-                NAMES.name: 'Конвертация',
-                NAMES.good1C: conversion_service,
-                NAMES.amount: 1,
-                NAMES.unit: 'шт',
-                NAMES.init_id: '',
-                NAMES.sum_w_nds: sum_w_nds,
-                NAMES.price_w_nds: price_w_nds,
-                NAMES.sum_wo_nds: sum_wo_nds,
-                NAMES.price_wo_nds: price_wo_nds
-            })
+    for c, indexes in uniq_c.items():
+        new_conversion_service: dict = copy.deepcopy(goods[indexes[0]])
+        new_conversion_service.update({
+            NAMES.name: 'Конвертация',
+            NAMES.good1C: conversion_service,
+            NAMES.amount: 1,
+            NAMES.unit: 'шт',
+            NAMES.init_id: '',
+            NAMES.sum_w_nds: round(conv_part_for_service[c][NAMES.sum_w_nds] * float((conversion / 100)), 2),
+            NAMES.price_w_nds: round(conv_part_for_service[c][NAMES.sum_w_nds] * float((conversion / 100)), 2),
+            NAMES.sum_wo_nds: round(conv_part_for_service[c][NAMES.sum_wo_nds] * float((conversion / 100)), 2),
+            NAMES.price_wo_nds: round(conv_part_for_service[c][NAMES.sum_wo_nds] * float((conversion / 100)), 2)
+        })
 
-            new_conversion_services.append(new_conversion_service)
+        new_conversion_services.append(new_conversion_service)
 
-        balance_remainders(new_conversion_services, NAMES.sum_w_nds, conversion_value_w_nds, running_params)
-        balance_remainders(new_conversion_services, NAMES.sum_wo_nds, conversion_value_wo_nds, running_params)
+    balance_remainders(new_conversion_services, NAMES.sum_w_nds, conversion_value_w_nds, running_params)
+    balance_remainders(new_conversion_services, NAMES.sum_wo_nds, conversion_value_wo_nds, running_params)
 
-        goods.extend(new_conversion_services)
-        update_total(dct, new_conversion_services)
-        return json.dumps(dct, indent=4)
+    goods.extend(new_conversion_services)
+    update_total(dct, new_conversion_services)
+    return json.dumps(dct, indent=4)
 
 
 # _________________________________________________________________________________________________________ TRANSACTIONS
