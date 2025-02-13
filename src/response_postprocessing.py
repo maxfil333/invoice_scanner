@@ -9,6 +9,7 @@ import difflib
 import traceback
 import numpy as np
 from PIL import Image
+from glob import glob
 from dotenv import load_dotenv
 
 from src.logger import logger
@@ -47,10 +48,17 @@ def local_postprocessing(response, **kwargs) -> str | None:
     openai.api_key = os.environ.get("OPENAI_API_KEY")
     embedding_func = OpenAIEmbeddings(model=config['embedding_model'])
 
-    # __________ CURRENT TEXT __________
+    # __________ CURRENT TEXTS __________
+    current_text_page0 = None
+
+    # если есть титул
+    if running_params.get('title_page_texts', None):
+        texts = running_params['title_page_texts']
+        current_text = '\n'.join(texts)
+        current_text_page0 = texts[0]
 
     # если текст был извлечен из PDF с помощью fitz в run_chat или в run_assistant
-    if running_params.get('current_texts', None):
+    elif running_params.get('current_texts', None):
         texts = running_params['current_texts']
         current_text = '\n'.join(texts)
         current_text_page0 = texts[0]
@@ -58,15 +66,20 @@ def local_postprocessing(response, **kwargs) -> str | None:
     # если из PDF нельзя извлечь (image OR scanned)
     else:
         edited_folder = kwargs.get('folder')
+
+        # если есть титул заполняем current_text_page0
+        if os.path.exists(os.path.join(edited_folder, config['EDITED_title_page'])):
+            title_file = glob(f"{os.path.join(edited_folder, config['EDITED_title_page'])}/*")[0]
+            current_text_page0 = extract_text_from_image(np.array(Image.open(title_file)))
+
         with open(os.path.join(edited_folder, 'params.json'), 'r', encoding='utf-8') as params_file:
             params_dict = json.load(params_file)
             main_local_files = params_dict['main_local_files']
 
         current_text = ''
-        current_text_page0 = ''
         for i, local_file in enumerate(main_local_files):
             current_text += extract_text_from_image(np.array(Image.open(local_file)))
-            if i == 0:
+            if i == 0 and current_text_page0 is None:
                 current_text_page0 = current_text
 
     # СЧЕТ / НЕ СЧЕТ
