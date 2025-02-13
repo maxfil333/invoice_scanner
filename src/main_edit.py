@@ -11,10 +11,9 @@ from pdf2image import convert_from_path
 from config.config import config, NAMES
 from src.logger import logger
 from src.utils import is_scanned_pdf, count_pages, align_pdf_orientation, extract_pages, delete_all_files
-from src.utils import filtering_and_foldering_files, mark_get_required_pages, mark_get_main_file
-from src.utils import add_text_bar, image_upstanding, rename_files_in_directory
+from src.utils import filtering_and_foldering_files, mark_get_required_pages, mark_get_main_file, mark_get_title
+from src.utils import add_text_bar, image_upstanding_and_rotate, rename_files_in_directory
 from src.crop_tables import define_and_return
-from src.rotator import main as rotate
 
 
 def main(dir_path: str = config['IN_FOLDER'], hide_logs=False, stop_when=-1):
@@ -45,7 +44,12 @@ def main(dir_path: str = config['IN_FOLDER'], hide_logs=False, stop_when=-1):
         extra_files = [os.path.abspath(x.path) for x in os.scandir(folder) if x.is_dir() is False]
         extra_files.remove(main_file)
         required_pages = mark_get_required_pages(main_file)
+        title_page = mark_get_title(main_file)
+        if title_page:
+            required_pages.remove(title_page)
+
         print('main_file:', main_file)
+        print('title_page:', title_page)
         print('required_pages:', required_pages)
         print('extra_files:', extra_files)
 
@@ -53,7 +57,8 @@ def main(dir_path: str = config['IN_FOLDER'], hide_logs=False, stop_when=-1):
         main_save_path = os.path.join(edited_folder, main_base)
         os.makedirs(edited_folder, exist_ok=False)
         main_local_files = []  # список главных изображений (без _TAB1, _TAB2);
-        # Если scannedPDF + required_pages, то len(main_local_files) может быть > 1
+        # если scannedPDF + required_pages, то len(main_local_files) может быть > 1
+
         try:
             # if digital pdf
             if (main_type.lower() == '.pdf') and (is_scanned_pdf(main_file, required_pages) is False):
@@ -61,6 +66,11 @@ def main(dir_path: str = config['IN_FOLDER'], hide_logs=False, stop_when=-1):
                 if required_pages:
                     pdf_bytes = extract_pages(main_file, pages_to_keep=required_pages)
                     align_pdf_orientation(pdf_bytes, main_save_path)
+                    if title_page:
+                        pdf_bytes = extract_pages(main_file, pages_to_keep=[title_page])
+                        os.makedirs(os.path.join(edited_folder, 'title_page'))
+                        align_pdf_orientation(pdf_bytes, os.path.join(edited_folder, 'title_page', main_base))
+
                 else:
                     if count_pages(main_file) > 7:
                         logger.print(f'page limit exceeded in {main_file}')
@@ -79,6 +89,16 @@ def main(dir_path: str = config['IN_FOLDER'], hide_logs=False, stop_when=-1):
                                                                poppler_path=config["POPPLER_PATH"],
                                                                jpegopt={"quality": 100})[0])
                             images.append(image)
+                        if title_page:
+                            image = np.array(convert_from_path(main_file, first_page=title_page, last_page=title_page,
+                                                               fmt='jpg',
+                                                               poppler_path=config["POPPLER_PATH"],
+                                                               jpegopt={"quality": 100})[0])
+                            os.makedirs(os.path.join(edited_folder, 'title_page'))
+                            rotated = image_upstanding_and_rotate(image)
+                            save_path = os.path.join(edited_folder, 'title_page', 'title.jpg')
+                            rotated.save(save_path, quality=100)
+                            main_local_files.append(save_path)
 
                     else:  # get first page in jpg
                         image = np.array(convert_from_path(main_file, first_page=1, last_page=1, fmt='jpg',
@@ -97,18 +117,9 @@ def main(dir_path: str = config['IN_FOLDER'], hide_logs=False, stop_when=-1):
                     continue
 
                 for i, image in enumerate(images):
-                    try:
-                        upstanding = image_upstanding(image)  # 0-90-180-270 rotate
-                    except:
-                        upstanding = image
-                    try:
-                        rotated = Image.fromarray(rotate(upstanding))  # accurate rotate
-                    except:
-                        rotated = upstanding
+                    rotated = image_upstanding_and_rotate(image)
                     name, ext = os.path.splitext(main_save_path)
                     idx_save_path = f'{name}({i}).jpg'
-                    if rotated.mode == "RGBA":
-                        rotated = rotated.convert('RGB')
                     rotated.save(idx_save_path, quality=100)
                     main_local_files.append(idx_save_path)
 
