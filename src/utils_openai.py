@@ -59,3 +59,23 @@ def extra_excel_to_ai(extra_files: list,
                         return f.read()
                 result = run_chat('', text_content=running_params['current_texts'])
                 return result
+
+
+def title_page_to_ai(title_path: str, test_mode: bool, text_to_assistant: bool, config: dict, running_params: dict):
+    if os.path.splitext(title_path)[-1].lower() == '.pdf':
+        running_params['title_page_texts'] = extract_text_with_fitz(title_path)
+        if test_mode:
+            with open(config['TESTFILE'], 'r', encoding='utf-8') as f:
+                return f.read()
+        if not text_to_assistant:
+            result = run_chat(title_path, text_content=running_params['title_page_texts'])
+            return result
+        else:
+            result = run_assistant(title_path)
+            return result
+    elif os.path.splitext(title_path)[-1].lower() in ['.jpg', '.jpeg', '.png']:
+        if test_mode:
+            with open(config['TESTFILE'], 'r', encoding='utf-8') as f:
+                return f.read()
+        result = run_chat(title_path, detail='high', text_content=None)
+        return result
