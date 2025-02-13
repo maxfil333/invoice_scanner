@@ -38,6 +38,7 @@ config['server_datas'] = os.path.normpath("\\\\10.10.0.3\\docs\\Transfer\\Filipp
 config['CONFIG'] = os.path.join(config['BASE_DIR'], 'config')
 config['IN_FOLDER'] = os.path.join(config['BASE_DIR'], 'IN')
 config['EDITED'] = os.path.join(config['BASE_DIR'], 'EDITED')
+config['EDITED_title_page'] = 'title_page'
 os.makedirs(config['EDITED'], exist_ok=True)
 config['CHECK_FOLDER'] = os.path.join(config['BASE_DIR'], 'CHECK')
 os.makedirs(config['CHECK_FOLDER'], exist_ok=True)
@@ -143,6 +144,10 @@ config['excel_ext'] = ['.xls', '.xltx', '.xlsx']
 
 
 class ConfigNames:
+    supplier = 'Банковские реквизиты поставщика'
+    customer = 'Банковские реквизиты покупателя'
+    invoice_number = 'Номер счета'
+    invoice_date = 'Дата счета'
     goods = 'Услуги'
     name = 'Наименование'  # 1
     good1C = 'Услуга1С'
