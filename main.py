@@ -108,7 +108,7 @@ def main(date_folder: str,
                     title_file = os.path.join(folder, config['EDITED_title_page'], title_folder_files[0])
                     title_result = title_page_to_ai(title_file, test_mode, text_to_assistant, config, running_params)
                     if title_result:
-                        logger.print("REPLACING TITLE FROM EXCEL ...")
+                        logger.print("REPLACING TITLE FROM TITLE_PAGE ...")
                         result_dct = json.loads(result)
                         title_result_dct = json.loads(title_result)
                         result_dct[NAMES.invoice_number] = title_result_dct[NAMES.invoice_number]
