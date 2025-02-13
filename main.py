@@ -15,7 +15,7 @@ from config.config import config, running_params, NAMES
 from src.logger import logger
 from src.connector import create_connection
 from src.main_edit import main as main_edit
-from src.utils_openai import pdf_to_ai, excel_to_ai, images_to_ai, extra_excel_to_ai
+from src.utils_openai import pdf_to_ai, excel_to_ai, images_to_ai, extra_excel_to_ai, title_page_to_ai
 from src.response_postprocessing import local_postprocessing
 from src.transactions import get_transaction_number
 from src.generate_html import create_html_form
@@ -100,6 +100,23 @@ def main(date_folder: str,
                     excel_result_dct = json.loads(extra_excel_result)
                     result_dct[NAMES.goods] = excel_result_dct[NAMES.goods]  # replace common-goods by excel-goods
                     result = json.dumps(result_dct, ensure_ascii=False)
+
+            # _____________________ RUN MAIN_OPENAI (TITLE FILE) _____________________
+            if os.path.exists(os.path.join(folder, config['EDITED_title_page'])):
+                title_folder_files = os.listdir(os.path.join(folder, config['EDITED_title_page']))
+                if title_folder_files:
+                    title_file = os.path.join(folder, config['EDITED_title_page'], title_folder_files[0])
+                    title_result = title_page_to_ai(title_file, test_mode, text_to_assistant, config, running_params)
+                    if title_result:
+                        logger.print("REPLACING TITLE FROM EXCEL ...")
+                        result_dct = json.loads(result)
+                        title_result_dct = json.loads(title_result)
+                        result_dct[NAMES.invoice_number] = title_result_dct[NAMES.invoice_number]
+                        result_dct[NAMES.invoice_date] = title_result_dct[NAMES.invoice_date]
+                        result_dct[NAMES.supplier] = title_result_dct[NAMES.supplier]
+                        result_dct[NAMES.customer] = title_result_dct[NAMES.customer]
+                        result = json.dumps(result_dct, ensure_ascii=False)
+                        running_params['title_fixed'] = True
 
             # _____________________ LOGS _____________________
             logger.print('openai result:\n', repr(result))
