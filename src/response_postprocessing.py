@@ -175,7 +175,7 @@ def local_postprocessing(response, **kwargs) -> str | None:
             if perfect_result:
                 service, code = perfect_result['service'], perfect_result['code']
                 # заполняем поле "Услуга1С"
-                good_dct['Услуга1С'] = f"{service}#{code}"
+                good_dct['Услуга1С'] = f"{service}#{code}#"
                 logger.print(f"--- perfect match ---")
                 logger.print(f"response:\n{perfect_result}")
 

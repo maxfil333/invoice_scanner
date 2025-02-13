@@ -47,8 +47,7 @@ config['JS_PATH'] = "../../../../config/scripts.js"
 config['crypto_env'] = os.path.join(config['CONFIG'], 'encrypted.env')
 config['TESTFILE'] = os.path.join(config['CONFIG'], 'test.json')
 config['GPTMODEL'] = 'gpt-4o-2024-08-06'
-# config['GPTMODEL'] = 'gpt-4o'
-# config['GPTMODEL'] = 'gpt-4o-mini'
+# TODO: config['GPTMODEL'] = 'o3-mini-2025-01-31'
 config['chroma_path'] = os.path.join(config['CONFIG'], 'chroma')
 config['embedding_model'] = "text-embedding-3-large"
 
@@ -299,8 +298,9 @@ config['response_format'] = {"type": "json_schema", "json_schema": JSON_SCHEMA}
 
 config['system_prompt'] = f"""
 Ты бот, анализирующий документы (счета).
-Если какой-то из параметров не найден, впиши значение ''.
 """.strip()
+
+# Если имеются две и более таблиц, описывающих один и тот же набор данных, собирай как можно больше информации со всех таблиц.
 
 # if not getattr(sys, 'frozen', False):  # не в сборке
 #     params_path = os.path.join(config['BASE_DIR'], 'config', 'parameters.json')
