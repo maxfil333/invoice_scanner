@@ -32,6 +32,7 @@ from natasha import Segmenter, NewsEmbedding, NewsNERTagger, Doc
 from src.logger import logger
 from src.utils_config import get_stream_dotenv
 from config.config import config, NAMES, running_params
+from src.rotator import main as custom_rotate
 
 
 # _____________________________________________________________________________________________________________ ENCODERS
@@ -389,6 +390,20 @@ def image_upstanding(img: np.ndarray) -> np.ndarray:
     if confidence > 3:
         return np.array(pil_img.rotate(-rotation, expand=True))
     return img
+
+
+def image_upstanding_and_rotate(image: np.ndarray) -> Image:
+    try:
+        upstanding = image_upstanding(image)  # 0-90-180-270 rotate
+    except:
+        upstanding = image
+    try:
+        rotated = Image.fromarray(custom_rotate(upstanding))  # accurate rotate
+    except:
+        rotated = upstanding
+    if rotated.mode == "RGBA":
+        rotated = rotated.convert('RGB')
+    return rotated
 
 
 # __________________________________________________________________________________________________________________ PDF
@@ -1381,8 +1396,8 @@ def mark_get_main_file(dir_path: str) -> str | None:
     # pdf, jpg or png files
     valid_files = [f for f in files if os.path.splitext(f)[-1] in config['valid_ext']]
 
-    # 1. Главный файл .pdf или .jpg/.png + содержит @1 или @
-    regex1 = r'(.*?)((?:@\d+)+)$'  # ...@1@2@3
+    # 1. Главный файл .pdf или .jpg/.png + содержит @1 или @@1 или @
+    regex1 = r'(.*?)(:?@)?((?:@\d+)+)$'  # ...@1@2@3 или ...@@1@2@3
     regex2 = r'(.*?)((?:@))$'  # ...@
     regexes = [regex1, regex2]
     for regex in regexes:
@@ -1394,6 +1409,19 @@ def mark_get_main_file(dir_path: str) -> str | None:
         return valid_files[0]
     else:  # 3. Главный файл - случайный
         return files[0]
+
+
+def mark_get_title(pdf_path: str) -> int | None:
+    regex = r'(.*?)(:?@)?((?:@\d+)+)$'
+    basename = os.path.basename(pdf_path)
+    name, ext = os.path.splitext(basename)
+    match = re.fullmatch(regex, name)
+    if match:
+        title_group = match.group(2)
+        if title_group:
+            main_group = match.group(3)
+            title_page = int(main_group.strip('@').split('@')[0])
+            return title_page
 
 
 # _________ TEST _________
