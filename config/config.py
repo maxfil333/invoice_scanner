@@ -140,6 +140,7 @@ config['currency_dict'] = {'BYN': 'BYN#933', 'CHF': 'CHF#756', 'CNY': 'CNY#156',
                            'TRY': 'TRY#949', 'USD': 'USD#840', 'VND': 'VND#704', 'РУБ': 'РУБ#643'}
 config['valid_ext'] = ['.pdf', '.jpg', '.jpeg', '.png']
 config['excel_ext'] = ['.xls', '.xltx', '.xlsx']
+config['date_regex'] = r'\d\d\.\d\d\.\d\d\d\d'
 
 
 class ConfigNames:
@@ -311,19 +312,19 @@ config['system_prompt'] = f"""
 logger.print("CONFIG INFO:")
 logger.print('sys.frozen:', getattr(sys, 'frozen', False))
 
-for k, v in config.items():
-    if k not in ['unique_comments_dict',
-                 'unique_services',
-                 'union_services',
-                 'crypto_key',
-                 'all_services_dict',
-                 'all_services',
-                 'all_services_file_server',
-                 'ships', 'currency_dict',
-                 'services_order',
-                 'response_format',
-                 'system_prompt']:
-        logger.print(f"{k}: {v}")
+# for k, v in config.items():
+#     if k not in ['unique_comments_dict',
+#                  'unique_services',
+#                  'union_services',
+#                  'crypto_key',
+#                  'all_services_dict',
+#                  'all_services',
+#                  'all_services_file_server',
+#                  'ships', 'currency_dict',
+#                  'services_order',
+#                  'response_format',
+#                  'system_prompt']:
+#         logger.print(f"{k}: {v}")
 
 
 if __name__ == '__main__':

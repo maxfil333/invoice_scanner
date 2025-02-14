@@ -4,7 +4,7 @@ from textwrap import dedent
 
 from src.connector import cup_http_request
 from src.logger import logger
-from config.config import NAMES
+from config.config import NAMES, config
 
 
 def details_from_result(result: str) -> dict | None:
@@ -22,9 +22,9 @@ def details_from_result(result: str) -> dict | None:
 def details_request(post_inn: str, post_kpp: str, pok_inn: str, date: str) -> dict | None:
     """ Send request to CUP for details """
 
-    date_regex = r'\d\d-\d\d-\d\d\d\d'
+    date_regex = config['date_regex']
     if not re.fullmatch(date_regex, date):
-        date = '01-01-1000'
+        date = '01.01.1000'
 
     if post_inn == '':
         post_inn = '**'
