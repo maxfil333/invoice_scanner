@@ -2,6 +2,7 @@ import copy
 import os
 import re
 import io
+import time
 import glob
 import json
 import fitz
@@ -64,6 +65,16 @@ def calculate_hash(file_path):
 
 
 # _______________________________________________________________________________________________________________ COMMON
+
+def time_it(func):
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        result = func(*args, **kwargs)
+        end_time = time.time()
+        print(f"Функция {func.__name__} выполнялась {end_time - start_time:.6f} секунд")
+        return result
+    return wrapper
+
 
 def group_files_by_name(file_list: list[str]) -> dict:
     groups = defaultdict(list)
@@ -559,6 +570,63 @@ def update_assistant_system_prompt(new_prompt: str):
 
 
 # _________________________________________________________________________________________________ LOCAL POSTPROCESSING
+
+@time_it
+def extract_goods_gaps(raw_text: str, names: list[str]) -> list[str] | None:
+    """ Extract full text gaps between goods """
+
+    # Создаём нормализованный текст без пробельных символов и карту соответствий позиций
+    normalized_chars = []
+    index_mapping = []  # для каждого символа нормализованного текста запоминаем его индекс в raw_text
+    for index, char in enumerate(raw_text):
+        if not char.isspace():
+            normalized_chars.append(char)
+            index_mapping.append(index)
+    normalized_text = ''.join(normalized_chars)
+
+    occurrences: list[tuple[int, int]] = []
+    search_start = 0  # Начальная позиция поиска в normalized_text
+
+    # Ищем каждое имя (нормализованное – без пробелов) в нормализованном тексте
+    for name in names:
+        # Берём первые 30 символов имени и удаляем пробельные символы
+        short_name = re.sub(r"\s+", "", name[:30])
+        # Ищем short_name начиная с search_start
+        match = re.search(re.escape(short_name), normalized_text[search_start:])
+        if not match:
+            return  # если хотя бы одно Наименование не найдено, это ошибка
+        match_start = search_start + match.start()
+        match_end = search_start + match.end()
+        occurrences.append((match_start, match_end))
+        search_start = match_end
+
+    # Обработка общего итогового шаблона.
+    # В нормализованном тексте пробелов нет, поэтому удаляем "\s" из шаблона.
+    total_regex = r"итого|в\sтом\sчисле\sндс|всего|общая\sсумма|т\.ч\.\sндс|без\sналога|без\sндс|сумма\sндс"
+    normalized_total_regex = total_regex.replace(r"\s", "")
+    total_match = re.search(normalized_total_regex, normalized_text[search_start:], re.IGNORECASE)
+    if occurrences:
+        last_start, last_end = occurrences[-1]
+        if total_match:
+            occurrences[-1] = (last_start, search_start + total_match.end())
+        else:
+            occurrences[-1] = (last_start, len(normalized_text) - 1)
+
+    # Если интервалов несколько, корректируем их так,
+    # чтобы граница одного совпадения была началом следующего
+    for i in range(len(occurrences) - 1):
+        occurrences[i] = (occurrences[i][0], occurrences[i + 1][0])
+
+    # Восстанавливаем отрезки исходного текста по найденным интервалам,
+    # преобразуя индексы из нормализованного текста в индексы оригинального
+    result = []
+    for start_norm, end_norm in occurrences:
+        if start_norm < len(index_mapping) and (end_norm - 1) < len(index_mapping):
+            start_orig = index_mapping[start_norm]
+            end_orig = index_mapping[end_norm - 1] + 1
+            result.append(raw_text[start_orig:end_orig])
+    return result
+
 
 def order_goods(dct: dict, new_order: list[str]) -> dict:
     """ Сортировка ключей Услуг """
