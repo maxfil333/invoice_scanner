@@ -1,9 +1,7 @@
-import openai
-from langchain_openai import OpenAIEmbeddings
-
 import os
 import re
 import json
+import openai
 import inspect
 import difflib
 import traceback
@@ -11,6 +9,7 @@ import numpy as np
 from PIL import Image
 from glob import glob
 from dotenv import load_dotenv
+from langchain_openai import OpenAIEmbeddings
 
 from src.logger import logger
 from config.config import config, NAMES, running_params
@@ -19,9 +18,10 @@ from src.utils import chroma_similarity_search, is_without_nds, is_invoice, perf
 from src.utils import convert_json_values_to_strings, handling_openai_json
 from src.utils import replace_container_with_latin, replace_container_with_none, remove_dates
 from src.utils import check_sums, propagate_nds, replace_conos_with_none, replace_ship_with_none, extract_date_range
-from src.utils_config import get_stream_dotenv
 from src.utils import delete_NER, delete_en_loc
+from src.utils import extract_goods_gaps
 
+from src.utils_config import get_stream_dotenv
 load_dotenv(stream=get_stream_dotenv())
 
 
@@ -54,13 +54,11 @@ def local_postprocessing(response, **kwargs) -> str | None:
     # если есть титул
     if running_params.get('title_page_texts', None):
         texts = running_params['title_page_texts']
-        current_text = '\n'.join(texts)
         current_text_page0 = texts[0]
 
     # если текст был извлечен из PDF с помощью fitz в run_chat или в run_assistant
     elif running_params.get('current_texts', None):
         texts = running_params['current_texts']
-        current_text = '\n'.join(texts)
         current_text_page0 = texts[0]
 
     # если из PDF нельзя извлечь (image OR scanned)
@@ -76,13 +74,22 @@ def local_postprocessing(response, **kwargs) -> str | None:
             params_dict = json.load(params_file)
             main_local_files = params_dict['main_local_files']
 
-        current_text = ''
+        current_texts = []
         for i, local_file in enumerate(main_local_files):
-            current_text += extract_text_from_image(np.array(Image.open(local_file)))
+            text = extract_text_from_image(np.array(Image.open(local_file)))
+            current_texts.append(text)
             if i == 0 and current_text_page0 is None:
-                current_text_page0 = current_text
+                current_text_page0 = text
 
-    # СЧЕТ / НЕ СЧЕТ
+        running_params['current_texts'] = current_texts
+
+    # __________ GOODS GAPS __________
+    if running_params.get('doc_ext', '') in ['pdf', 'excel']:
+        raw_texts = " ".join(running_params['current_texts'])
+        names = [good[NAMES.name] for good in dct[NAMES.goods]]
+        running_params['goods_gaps'] = extract_goods_gaps(raw_texts, names)
+
+    # __________ СЧЕТ / НЕ СЧЕТ __________
     is_inv = is_invoice(current_text_page0)
 
     if is_inv is True:
@@ -247,6 +254,7 @@ def local_postprocessing(response, **kwargs) -> str | None:
 
     # 6.1. уточнение НДС (0.0 или "Без НДС")
     if float(dct[NAMES.total_nds]) == 0:
+        current_text = '\n'.join(running_params['current_texts'])
         if is_without_nds(current_text):  # classify current text
             dct[NAMES.nds_percent] = NAMES.noNDS
 
