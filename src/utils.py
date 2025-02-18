@@ -965,6 +965,40 @@ def extract_date_range(text: str) -> str:
         return ''
 
 
+def DT_processing(dt_list: list[str], logger) -> list[str]:
+
+    dt_regex = r'\d{8}/\d{6}/\d{7}'  # регулярка для проверки ДТ
+
+    DT_true = []  # правильные ДТ
+    DT_true_indexes = []  # индексы правильных ДТ в result['add_inf...']['ДТ']
+    DT_buffer: list[str] = []  # не подошедшие под регулярку строки будут дополнительно проверены
+
+    for dt in dt_list:
+        if re.fullmatch(dt_regex, dt):
+            DT_true.append(dt)
+            DT_true_indexes.append(dt_list.index(dt))
+        else:
+            DT_buffer.append(dt)
+
+    # проверка спорных ДТ:
+    # бывает что ДТ "10131010/270125/5028217,5011336" распознается как ["10131010/270125/5028217","5011336"]
+    if DT_true:
+        for dt_buffer in DT_buffer:
+            if dt_buffer.isdigit() and len(dt_buffer) == 7:
+                dt_buffer_index = dt_list.index(dt_buffer)
+                if dt_buffer_index != 0:
+                    closest_smaller_dt_true_index = max([x for x in DT_true_indexes if x < dt_buffer_index])
+                    dt_buffer_base = dt_list[closest_smaller_dt_true_index]
+                    if re.fullmatch(dt_regex, dt_buffer_base):
+                        dt_buffer_base_parts = dt_buffer_base.split(r'/')
+                        if len(dt_buffer_base_parts) == 3:
+                            new_dt = dt_buffer_base_parts[0] + r'/' + dt_buffer_base_parts[1] + r'/' + dt_buffer
+                            logger.print(f"created DT: {dt_buffer} -> {new_dt}")
+                            DT_true.append(new_dt)
+
+    return DT_true
+
+
 # _________________________________________________________________________ LOCAL POSTPROCESSING (distribute_conversion)
 
 # Чтобы получить конвертацию в РУБ нужен текущий курс, поэтому передаем конвертацию в ЦУП только! в валюте.
