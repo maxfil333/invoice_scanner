@@ -7,6 +7,7 @@ from src.main_openai import run_chat, run_assistant
 def pdf_to_ai(file: str, test_mode: bool, text_to_assistant: bool, config: dict, running_params: dict) -> str:
     running_params['text_or_scanned_folder'] = config['NAME_text']
     running_params['current_texts'] = extract_text_with_fitz(file)
+    running_params['doc_type'] = 'pdf'
     if test_mode:
         with open(config['TESTFILE'], 'r', encoding='utf-8') as f:
             return f.read()
@@ -21,6 +22,7 @@ def pdf_to_ai(file: str, test_mode: bool, text_to_assistant: bool, config: dict,
 def excel_to_ai(file: str, test_mode: bool, text_to_assistant: bool, config: dict, running_params: dict) -> str:
     running_params['text_or_scanned_folder'] = config['NAME_text']
     running_params['current_texts'] = extract_excel_text(file)
+    running_params['doc_type'] = 'excel'
     if test_mode:
         with open(config['TESTFILE'], 'r', encoding='utf-8') as f:
             return f.read()
