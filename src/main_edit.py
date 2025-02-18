@@ -56,6 +56,7 @@ def main(dir_path: str = config['IN_FOLDER'], hide_logs=False, stop_when=-1):
         edited_folder = os.path.join(config['EDITED'], folder_name)
         main_save_path = os.path.join(edited_folder, main_base)
         os.makedirs(edited_folder, exist_ok=False)
+        goods_tables_images = []  # список изображений _TAB2+ (таблиц с услугами)
         main_local_files = []  # список главных изображений (без _TAB1, _TAB2);
         # если scannedPDF + required_pages, то len(main_local_files) может быть > 1
 
@@ -139,12 +140,16 @@ def main(dir_path: str = config['IN_FOLDER'], hide_logs=False, stop_when=-1):
                         command = [config["magick_exe"], "convert", cropped_save_pth2, *config["magick_opt"],
                                    cropped_save_pth2]
                         subprocess.run(command)
+                        goods_tables_images.append(cropped_save_pth2)
 
                     command = [config["magick_exe"], "convert", idx_save_path, *config["magick_opt"], idx_save_path]
                     subprocess.run(command)
 
             with open(os.path.join(edited_folder, 'params.json'), 'w', encoding='utf-8') as f:
-                params_dict = {"main_file": main_file, "extra_files": extra_files, "main_local_files": main_local_files}
+                params_dict = {"main_file": main_file,
+                               "extra_files": extra_files,
+                               "main_local_files": main_local_files,
+                               "goods_tables_images": goods_tables_images}
                 json.dump(params_dict, f, ensure_ascii=False, indent=4)
         except:
             logger.print("ERROR IN MAIN_EDIT:", traceback.format_exc(), sep='\n')
