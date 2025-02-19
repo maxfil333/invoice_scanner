@@ -23,6 +23,9 @@ function recalculate() {
                 sumWithNDS = quantity * priceWithNDS;
                 service.querySelector('.СуммасНДС').value = sumWithNDS.toFixed(2);
 
+                // Просто округление до двух знаков
+                service.querySelector('.ЦенабезНДС').value = priceWithoutNDS.toFixed(2);
+
             } else if (priceType === "В т.ч.") {
                 // СуммаС = Кол-во * ЦенаС
                 let sumWithNDS = quantity * priceWithNDS;
@@ -35,6 +38,9 @@ function recalculate() {
                 // СуммаБез = Кол-во * ЦенаБез
                 sumWithoutNDS = quantity * priceWithoutNDS;
                 service.querySelector('.СуммабезНДС').value = sumWithoutNDS.toFixed(2);
+
+                // Просто округление до двух знаков
+                service.querySelector('.ЦенасНДС').value = priceWithNDS.toFixed(2);
             }
         });
     }
