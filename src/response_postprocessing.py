@@ -74,7 +74,7 @@ def local_postprocessing(response, **kwargs) -> str | None:
             params_dict = json.load(params_file)
             main_local_files = params_dict['main_local_files']
 
-        current_texts = []
+        current_texts: list[str] = []
         for i, local_file in enumerate(main_local_files):
             text = extract_text_from_image(np.array(Image.open(local_file)))
             current_texts.append(text)
@@ -84,10 +84,10 @@ def local_postprocessing(response, **kwargs) -> str | None:
         running_params['current_texts'] = current_texts
 
     # __________ GOODS GAPS __________
-    if running_params.get('doc_ext', '') in ['pdf', 'excel']:
-        raw_texts = " ".join(running_params['current_texts'])
+    if running_params.get(NAMES.doc_type, '') in ['pdf', 'excel']:
+        raw_texts = "\n".join(running_params['current_texts'])
         names = [good[NAMES.name] for good in dct[NAMES.goods]]
-        running_params['goods_gaps'] = extract_goods_gaps(raw_texts, names)
+        running_params[NAMES.goods_gaps] = extract_goods_gaps(raw_texts, names)
 
     # __________ СЧЕТ / НЕ СЧЕТ __________
     is_inv = is_invoice(current_text_page0)
