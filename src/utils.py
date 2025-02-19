@@ -36,6 +36,10 @@ from config.config import config, NAMES, running_params
 from src.rotator import main as custom_rotate
 
 
+class BreakLoop(Exception):
+    pass
+
+
 # _____________________________________________________________________________________________________________ ENCODERS
 
 # Function to encode the image
@@ -967,6 +971,7 @@ def extract_date_range(text: str) -> str:
 
 def DT_processing(dt_list: list[str], logger) -> list[str]:
 
+    dt_list = list(dict.fromkeys(dt_list))
     dt_regex = r'\d{8}/\d{6}/\d{7}'  # регулярка для проверки ДТ
 
     DT_true = []  # правильные ДТ
@@ -1328,12 +1333,36 @@ def split_by_global_filed(json_formatted_str: str, global_field: str, local_fiel
         return split_objects
 
     dct = json.loads(json_formatted_str)
-    items = dct['additional_info'][global_field].split()  # разделение по global field (из additional_info)
-    goods = dct[NAMES.goods]
+    items: list[str] = dct['additional_info'][global_field].split()  # список всех (общих) ДТ/Заключений
+
     new_goods = []
-    for good in goods:
-        _new_goods = one_split(good=good, items=items)
-        new_goods.extend(_new_goods)
+
+    # частный алгоритм для ДТ (если есть goods_gaps)
+    try:
+        if running_params.get(NAMES.goods_gaps) and global_field == NAMES.dt:
+            for i, good in enumerate(dct[NAMES.goods]):
+                local_dts: list[str] = []
+                gap = running_params[NAMES.goods_gaps][i]
+                gap = re.sub(r'\s+', '', gap)
+                for global_dt in items:
+                    global_dt_last_part = global_dt.split(r'/')[-1]  # ищем не полный ДТ, а только последние 7 цифр
+                    if global_dt_last_part in gap:
+                        local_dts.append(global_dt)
+                # Если хотя бы 1 услуга не имеет в своем GAP части ДТ, переходим к общему алгоритму
+                if not local_dts:
+                    raise BreakLoop
+                else:
+                    _new_goods = one_split(good=good, items=local_dts)  # позицию разбиваем на len(local_dts) подпозиций
+                    new_goods.extend(_new_goods)
+    except BreakLoop:
+        new_goods = []
+        logger.print("--- В одной из услуг не найдено ДТ. Распределяю по всем ДТ ---")
+
+    # общий алгоритм (деление всех услуг на все ДТ)
+    if not new_goods:
+        for i, good in enumerate(dct[NAMES.goods]):
+            _new_goods = one_split(good=good, items=items)  # каждую позицию разбиваем на len(items) подпозиций
+            new_goods.extend(_new_goods)
 
     dct[NAMES.goods] = new_goods
     return json.dumps(dct, ensure_ascii=False, indent=4)
