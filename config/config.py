@@ -154,6 +154,7 @@ class ConfigNames:
     good1C_new = 'Услуга1С (новая)'
     cont = 'Контейнеры'  # 2
     local_conos = 'Коносаменты (для услуги)'
+    dt = 'ДТ'
     local_dt = 'ДТ (для услуги)'
     unit = 'Единица'  # 3
     amount = 'Количество'  # 4
@@ -186,6 +187,8 @@ class ConfigNames:
     conversion = 'Конвертация'
     init_id = "__исходный_айди"
     date_range = "Даты"
+    doc_type = "doc_type"  # тип главного документа (pdf | excel)
+    goods_gaps = "goods_gaps"  # интервалы услуг (текст от начала услуги до начала следующей услуги)
 
 
 NAMES = ConfigNames()
