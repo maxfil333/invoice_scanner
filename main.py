@@ -24,6 +24,8 @@ from src.utils import split_by_containers, split_by_conoses, split_by_dt, combin
 from src.utils import create_date_folder_in_check, distribute_conversion
 from src.utils import order_goods, cleanup_empty_fields, order_keys, convert_json_values_to_strings
 
+from config.project_config import main as project_postprocessing
+
 
 def main(date_folder: str,
          hide_logs: bool = False,
@@ -128,6 +130,9 @@ def main(date_folder: str,
 
             if result is None:
                 continue
+
+            # _____________ PROJECT PROCESSING _____________
+            result = project_postprocessing(result)
 
             # _____________ SPLIT BY CONTAINERS _____________
             result, was_edited = split_by_containers(result)
