@@ -13,6 +13,7 @@ import openai
 import hashlib
 import difflib
 import traceback
+import pdfplumber
 import pytesseract
 import numpy as np
 import pandas as pd
@@ -477,6 +478,16 @@ def extract_text_with_fitz(pdf_path) -> list[str]:
     for page_num in range(len(document)):
         page = document.load_page(page_num)  # загружаем страницу
         texts.append(page.get_text())  # извлекаем текст
+    return texts
+
+
+def extract_text_with_pdfplumber(pdf_path) -> list[str]:
+    """ return list of texts for every page """
+
+    texts = []
+    with pdfplumber.open(pdf_path) as pdf:
+        for page in pdf.pages:
+            texts.append(page.extract_text() or "")
     return texts
 
 
