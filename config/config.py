@@ -47,6 +47,7 @@ config['JS_PATH'] = "../../../../config/scripts.js"
 config['crypto_env'] = os.path.join(config['CONFIG'], 'encrypted.env')
 config['TESTFILE'] = os.path.join(config['CONFIG'], 'test.json')
 config['GPTMODEL'] = 'gpt-4o-2024-08-06'
+config['miniGPTMODEL'] = 'gpt-4o-mini-2024-07-18'
 # TODO: config['GPTMODEL'] = 'o3-mini-2025-01-31'
 config['chroma_path'] = os.path.join(config['CONFIG'], 'chroma')
 config['embedding_model'] = "text-embedding-3-large"
