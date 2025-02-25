@@ -15,7 +15,7 @@ from config.config import config, running_params, NAMES
 from src.logger import logger
 from src.connector import create_connection
 from src.main_edit import main as main_edit
-from src.utils_openai import pdf_to_ai, excel_to_ai, images_to_ai, extra_excel_to_ai, title_page_to_ai
+from src.utils_openai import pdf_to_ai, excel_to_ai, images_to_ai, extra_excel_to_ai, title_page_to_ai, pdf_to_ai_details
 from src.response_postprocessing import local_postprocessing
 from src.transactions import get_transaction_number
 from src.generate_html import create_html_form
@@ -85,7 +85,11 @@ def main(date_folder: str,
             # _____________ RUN MAIN_OPENAI.PY _____________
             if os.path.splitext(files[0])[-1].lower() == '.pdf':  # достаточно проверить 1-й файл, чтобы определить .ext
                 pdf_file = files[0]
-                result = pdf_to_ai(pdf_file, test_mode, text_to_assistant, config, running_params)
+                result_no_details = pdf_to_ai(pdf_file, test_mode, text_to_assistant, config, running_params,
+                                              response_format=config['no_details_response_format'])
+                result_details = pdf_to_ai_details(pdf_file, test_mode, text_to_assistant, config, running_params)
+                full_result = json.loads(result_details) | json.loads(result_no_details)
+                result = json.dumps(full_result, ensure_ascii=False)
             elif os.path.splitext(files[0])[-1].lower() in config['excel_ext']:
                 excel_file = files[0]
                 result = excel_to_ai(excel_file, test_mode, text_to_assistant, config, running_params)
