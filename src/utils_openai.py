@@ -12,7 +12,8 @@ def pdf_to_ai(file: str, test_mode: bool, text_to_assistant: bool, config: dict,
         with open(config['TESTFILE'], 'r', encoding='utf-8') as f:
             return f.read()
     if not text_to_assistant:
-        result = run_chat(file, text_content=running_params['current_texts'])
+        result = run_chat(file,
+                          response_format=config['response_format'], text_content=running_params['current_texts'])
         return result
     else:
         result = run_assistant(file)
@@ -26,7 +27,8 @@ def excel_to_ai(file: str, test_mode: bool, text_to_assistant: bool, config: dic
     if test_mode:
         with open(config['TESTFILE'], 'r', encoding='utf-8') as f:
             return f.read()
-    result = run_chat('', text_content=running_params['current_texts'])
+    result = run_chat('',
+                      response_format=config['response_format'], text_content=running_params['current_texts'])
     return result
 
 
@@ -36,7 +38,8 @@ def images_to_ai(files: list, test_mode: bool, text_to_assistant: bool, config: 
     if test_mode:
         with open(config['TESTFILE'], 'r', encoding='utf-8') as f:
             return f.read()
-    result = run_chat(*files, detail='high', text_content=None)
+    result = run_chat(*files,
+                      response_format=config['response_format'], text_content=None)
     return result
 
 
@@ -59,7 +62,8 @@ def extra_excel_to_ai(extra_files: list,
                 if test_mode:
                     with open(config['TESTFILE'], 'r', encoding='utf-8') as f:
                         return f.read()
-                result = run_chat('', text_content=running_params['current_texts'])
+                result = run_chat('',
+                                  response_format=config['response_format'], text_content=running_params['current_texts'])
                 return result
 
 
@@ -70,7 +74,8 @@ def title_page_to_ai(title_path: str, test_mode: bool, text_to_assistant: bool, 
             with open(config['TESTFILE'], 'r', encoding='utf-8') as f:
                 return f.read()
         if not text_to_assistant:
-            result = run_chat(title_path, text_content=running_params['title_page_texts'])
+            result = run_chat(title_path,
+                              response_format=config['response_format'], text_content=running_params['title_page_texts'])
             return result
         else:
             result = run_assistant(title_path)
@@ -79,5 +84,6 @@ def title_page_to_ai(title_path: str, test_mode: bool, text_to_assistant: bool, 
         if test_mode:
             with open(config['TESTFILE'], 'r', encoding='utf-8') as f:
                 return f.read()
-        result = run_chat(title_path, detail='high', text_content=None)
+        result = run_chat(title_path,
+                          response_format=config['response_format'], text_content=None)
         return result

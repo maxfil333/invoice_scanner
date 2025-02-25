@@ -1,5 +1,6 @@
 import openai
 from openai import OpenAI
+from openai.types.chat import ChatCompletion, ParsedChatCompletion
 
 import os
 from PIL import Image
@@ -20,12 +21,25 @@ ASSISTANT_ID = os.environ.get("ASSISTANT_ID")
 client = OpenAI()
 
 
-# ___________________________ CHAT ___________________________
+def log_response(response: ChatCompletion | ParsedChatCompletion, time_start: float) -> None:
+    logger.print('chat model:', response.model)
+    logger.print(f'completion_tokens: {response.usage.completion_tokens}')
+    logger.print(f'cached_tokens: {response.usage.prompt_tokens_details}')
+    logger.print(f'prompt_tokens: {response.usage.prompt_tokens}')
+    logger.print(f'total_tokens: {response.usage.total_tokens}')
+    logger.print(f'time: {perf_counter() - time_start:.2f}')
 
-def run_chat(*file_paths: str, detail='high', text_content: list | None = None) -> str:
+
+# ___________________________ CHAT (json_schema) ___________________________
+
+def run_chat(*file_paths: str,
+             response_format,
+             prompt=config['system_prompt'],
+             model=config['GPTMODEL'],
+             text_content: list | None = None
+             ) -> str:
+
     if text_content:
-        if len(file_paths) != 1:
-            logger.print("ВНИМАНИЕ! На вход run_chat пришли pdf-файлы в количестве != 1")
         content = '\n'.join(text_content)
     else:
         content = []
@@ -33,26 +47,58 @@ def run_chat(*file_paths: str, detail='high', text_content: list | None = None) 
             d = {
                 "type": "image_url",
                 "image_url": {"url": f"data:image/jpeg;base64,{base64_encode_pil(Image.open(img_path))}",
-                              "detail": detail}
+                              "detail": "high"}
             }
             content.append(d)
 
     response = client.chat.completions.create(
-        model=config['GPTMODEL'],
+        model=model,
         temperature=0.1,
         messages=[
-            {"role": "system", "content": config['system_prompt']},
+            {"role": "system", "content": prompt},
             {"role": "user", "content": content}
         ],
         max_tokens=3000,
-        response_format=config['response_format'],
+        response_format=response_format,
     )
-    logger.print('chat model:', response.model)
-    logger.print(f'time: {perf_counter() - start:.2f}')
-    logger.print(f'completion_tokens: {response.usage.completion_tokens}')
-    logger.print(f'cached_tokens: {response.usage.prompt_tokens_details}')
-    logger.print(f'prompt_tokens: {response.usage.prompt_tokens}')
-    logger.print(f'total_tokens: {response.usage.total_tokens}')
+
+    log_response(response=response, time_start=start)
+
+    response = response.choices[0].message.content
+    return response
+
+
+def run_chat_pydantic(*file_paths: str,
+                      response_format_pydantic,
+                      prompt=config['system_prompt'],
+                      model=config['miniGPTMODEL'],
+                      text_content: list | None = None,
+                      ) -> str:
+
+    if text_content:
+        content = '\n'.join(text_content)
+    else:
+        content = []
+        for img_path in file_paths:
+            d = {
+                "type": "image_url",
+                "image_url": {"url": f"data:image/jpeg;base64,{base64_encode_pil(Image.open(img_path))}",
+                              "detail": "high"}
+            }
+            content.append(d)
+
+    response = client.beta.chat.completions.parse(
+        model=model,
+        temperature=0.1,
+        messages=[
+            {"role": "system", "content": prompt},
+            {"role": "user", "content": content}
+        ],
+        max_tokens=3000,
+        response_format=response_format_pydantic,
+    )
+
+    log_response(response=response, time_start=start)
 
     response = response.choices[0].message.content
     return response
