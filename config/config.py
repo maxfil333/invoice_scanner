@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import copy
 import msvcrt
 import shutil
 
@@ -299,7 +300,14 @@ JSON_SCHEMA = {
     }
 }
 
-config['response_format'] = {"type": "json_schema", "json_schema": JSON_SCHEMA}
+config['full_response_format'] = {"type": "json_schema", "json_schema": JSON_SCHEMA}
+
+JSON_SCHEMA_WITHOUT_DETAILS = copy.deepcopy(JSON_SCHEMA)
+del JSON_SCHEMA_WITHOUT_DETAILS['schema']['properties'][NAMES.supplier]
+del JSON_SCHEMA_WITHOUT_DETAILS['schema']['properties'][NAMES.customer]
+JSON_SCHEMA_WITHOUT_DETAILS['schema']['required'].remove(NAMES.supplier)
+JSON_SCHEMA_WITHOUT_DETAILS['schema']['required'].remove(NAMES.customer)
+config['no_details_response_format'] = {"type": "json_schema", "json_schema": JSON_SCHEMA_WITHOUT_DETAILS}
 
 config['system_prompt'] = f"""
 Ты бот, анализирующий документы (счета).
