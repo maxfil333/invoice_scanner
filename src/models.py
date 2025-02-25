@@ -1,24 +1,46 @@
+import json
+
 from pydantic import BaseModel, Field
+from config.config import NAMES
 
 
 class SupplierDetails(BaseModel):
-    inn: str = Field(..., title="ИНН")
-    kpp: str = Field(..., title="КПП")
-    bik: str = Field(..., title="БИК")
-    cs: str = Field(..., title="Корреспондентский счет")
-    rs: str = Field(..., title="Расчетный счет")
+    inn: str = Field(..., title="ИНН поставщика")
+    kpp: str = Field(..., title="КПП поставщика")
+    bik: str = Field(..., title="БИК поставщика")
+    cs: str = Field(..., title="Корреспондентский счет поставщика")
+    rs: str = Field(..., title="Расчетный счет поставщика")
 
 
 class CustomerDetails(BaseModel):
-    inn: str = Field(..., title="ИНН")
-    kpp: str = Field(..., title="КПП")
+    inn: str = Field(..., title="ИНН покупателя")
+    kpp: str = Field(..., title="КПП покупателя")
 
 
 class Details(BaseModel):
-    supplier: SupplierDetails = Field(..., title="Реквизиты поставщика")
-    customer: CustomerDetails = Field(..., title="Реквизиты покупателя")
+    supplier: SupplierDetails
+    customer: CustomerDetails
 
 
 class ResponseDetails(BaseModel):
     details: Details
 
+
+def processResponseDetails(response: str) -> str:
+    response = json.loads(response)
+    result = {
+        NAMES.supplier:
+            {
+                "ИНН": response['details']['supplier']['inn'],
+                "КПП": response['details']['supplier']['kpp'],
+                "БИК": response['details']['supplier']['bik'],
+                "корреспондентский счет": response['details']['supplier']['cs'],
+                "расчетный счет": response['details']['supplier']['rs']
+            },
+        NAMES.customer:
+            {
+                "ИНН": response['details']['customer']['inn'],
+                "КПП": response['details']['customer']['kpp']
+            }
+    }
+    return json.dumps(result)
