@@ -5,16 +5,16 @@ from config.config import NAMES
 
 
 class SupplierDetails(BaseModel):
-    inn: str = Field(..., title="ИНН поставщика")
-    kpp: str = Field(..., title="КПП поставщика")
-    bik: str = Field(..., title="БИК поставщика")
-    cs: str = Field(..., title="Корреспондентский счет поставщика")
-    rs: str = Field(..., title="Расчетный счет поставщика")
+    inn: str = Field(..., description="ИНН поставщика")
+    kpp: str = Field(..., description="КПП поставщика")
+    bik: str = Field(..., description="БИК поставщика")
+    cs: str = Field(..., description="Корреспондентский счет поставщика")
+    rs: str = Field(..., description="Расчетный счет поставщика")
 
 
 class CustomerDetails(BaseModel):
-    inn: str = Field(..., title="ИНН покупателя")
-    kpp: str = Field(..., title="КПП покупателя")
+    inn: str = Field(..., description="ИНН покупателя")
+    kpp: str = Field(..., description="КПП покупателя")
 
 
 class Details(BaseModel):
@@ -43,4 +43,4 @@ def processResponseDetails(response: str) -> str:
                 "КПП": response['details']['customer']['kpp']
             }
     }
-    return json.dumps(result)
+    return json.dumps(result, ensure_ascii=False)
