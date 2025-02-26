@@ -71,7 +71,7 @@ def run_chat(*file_paths: str,
 def run_chat_pydantic(*file_paths: str,
                       response_format_pydantic,
                       prompt=config['system_prompt'],
-                      model=config['miniGPTMODEL'],
+                      model=config['GPTMODEL'],
                       text_content: list | None = None,
                       ) -> str:
 
