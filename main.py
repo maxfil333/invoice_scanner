@@ -12,6 +12,7 @@ from natsort import os_sorted
 from openai import PermissionDeniedError
 
 from config.config import config, running_params, NAMES
+from config.project_config import main as project_postprocessing
 from src.logger import logger
 from src.connector import create_connection
 from src.main_edit import main as main_edit
@@ -19,12 +20,9 @@ from src.utils_openai import pdf_to_ai, excel_to_ai, images_to_ai, extra_excel_t
 from src.response_postprocessing import local_postprocessing
 from src.transactions import get_transaction_number
 from src.generate_html import create_html_form
-from src.utils import create_vector_database, balance_remainders_intact
-from src.utils import split_by_containers, split_by_conoses, split_by_dt, combined_split_by_reports
-from src.utils import create_date_folder_in_check, distribute_conversion
+from src.utils import create_vector_database, balance_remainders_intact, create_date_folder_in_check
+from src.utils import split_by_local_field, split_by_dt, combined_split_by_reports, distribute_conversion
 from src.utils import order_goods, cleanup_empty_fields, order_keys, convert_json_values_to_strings
-
-from config.project_config import main as project_postprocessing
 
 
 def main(date_folder: str,
@@ -139,12 +137,12 @@ def main(date_folder: str,
             result = project_postprocessing(result)
 
             # _____________ SPLIT BY CONTAINERS _____________
-            result, was_edited = split_by_containers(result)
+            result, was_edited = split_by_local_field(result, loc_field_name=NAMES.cont)
 
             # _____________ SPLIT BY CONOSES _____________
             if not was_edited:  # если уже было распределение по контейнерам, ничего не делать
                 if json.loads(result)['additional_info']['Коносаменты']:
-                    result, was_edited = split_by_conoses(result)
+                    result, was_edited = split_by_local_field(result, loc_field_name=NAMES.local_conos)
 
             # _____________ SPLIT BY DT _____________
             if not was_edited:  # если уже было распределение по контейнерам/коносаментам, ничего не делать

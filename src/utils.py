@@ -1264,22 +1264,7 @@ def split_one_good(good: dict, loc_field_name: str) -> list[dict]:
     return split_objects
 
 
-def one_good_split_by_containers(good: dict) -> list[dict]:
-    """ Вспомогательная функция """
-    return split_one_good(good, NAMES.cont)
-
-
-def one_good_split_by_conoses(good: dict) -> list[dict]:
-    """ Вспомогательная функция """
-    return split_one_good(good, NAMES.local_conos)
-
-
-def one_good_split_by_reports(good: dict) -> list[dict]:
-    """ Вспомогательная функция """
-    return split_one_good(good, NAMES.local_reports)
-
-
-def split_by_local_field(json_formatted_str: str, loc_field_name: str, split_function) -> tuple[str, bool]:
+def split_by_local_field(json_formatted_str: str, loc_field_name: str) -> tuple[str, bool]:
     """ Разделяет услугу если в local_field несколько (конт/кс/закл.) """
 
     dct = json.loads(json_formatted_str)
@@ -1288,7 +1273,7 @@ def split_by_local_field(json_formatted_str: str, loc_field_name: str, split_fun
     new_goods = []
     for good in goods:
         if len(good.get(loc_field_name, '').split()) > 1:
-            _new_goods = split_function(good)
+            _new_goods = split_one_good(good, loc_field_name)
             new_goods.extend(_new_goods)
             was_edited = True
         else:
@@ -1297,18 +1282,6 @@ def split_by_local_field(json_formatted_str: str, loc_field_name: str, split_fun
     dct[NAMES.goods] = new_goods
 
     return json.dumps(dct, ensure_ascii=False, indent=4), was_edited
-
-
-def split_by_conoses(json_str: str) -> tuple[str, bool]:
-    return split_by_local_field(json_str, loc_field_name=NAMES.local_conos, split_function=one_good_split_by_conoses)
-
-
-def split_by_containers(json_str: str) -> tuple[str, bool]:
-    return split_by_local_field(json_str, loc_field_name=NAMES.cont, split_function=one_good_split_by_containers)
-
-
-def split_by_reports(json_str: str) -> tuple[str, bool]:
-    return split_by_local_field(json_str, loc_field_name=NAMES.local_reports, split_function=one_good_split_by_reports)
 
 
 def split_by_global_filed(json_formatted_str: str, global_field: str, local_field: str) -> str:
@@ -1392,7 +1365,7 @@ def split_by_dt(json_str: str) -> tuple[str, bool]:
 
 def combined_split_by_reports(json_str: str) -> tuple[str, bool]:
     # try to split by local_reports
-    result, was_edited = split_by_reports(json_str)
+    result, was_edited = split_by_local_field(json_str, loc_field_name=NAMES.local_reports)
 
     if was_edited:
         return result, was_edited
