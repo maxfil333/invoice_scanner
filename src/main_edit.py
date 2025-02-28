@@ -127,7 +127,7 @@ def main(dir_path: str = config['IN_FOLDER'], hide_logs=False, stop_when=-1):
                     # extract and crop two tables
                     cropped_save_pth1 = os.path.splitext(idx_save_path)[0] + '_TAB1+' + os.path.splitext(idx_save_path)[1]
                     cropped_save_pth2 = os.path.splitext(idx_save_path)[0] + '_TAB2+' + os.path.splitext(idx_save_path)[1]
-                    table_title, table_ship = define_and_return(idx_save_path)
+                    table_title, table_ship, coords = define_and_return(idx_save_path)
                     if table_title:
                         table_title = add_text_bar(table_title, 'Банковские реквизиты поставщика')
                         table_title.save(cropped_save_pth1)
@@ -141,6 +141,17 @@ def main(dir_path: str = config['IN_FOLDER'], hide_logs=False, stop_when=-1):
                                    cropped_save_pth2]
                         subprocess.run(command)
                         goods_tables_images.append(cropped_save_pth2)
+                    if coords and coords['table_shp']:
+                        try:
+                            x1, y1, x2, y2 = coords['table_shp']
+                            coords_name, coords_ext = os.path.splitext(idx_save_path)
+                            cropped_save_pth3 = coords_name + '_TAB3+' + coords_ext
+                            Image.fromarray(image).crop((x1, 0, x2, y1)).save(cropped_save_pth3)
+                            command = [config["magick_exe"], "convert", cropped_save_pth3, *config["magick_opt"],
+                                       cropped_save_pth3]
+                            subprocess.run(command)
+                        except Exception:
+                            logger.print(traceback.format_exc())
 
                     command = [config["magick_exe"], "convert", idx_save_path, *config["magick_opt"], idx_save_path]
                     subprocess.run(command)

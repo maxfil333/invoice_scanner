@@ -114,17 +114,20 @@ def define_and_return(image_path: str):
     image = Image.open(image_path)
     defined_tables_on_bboxes = define_tables_on_bboxes(image_path)
 
+    coords = {"table_ttl": [], "table_shp": []}
     table_ttl = defined_tables_on_bboxes['title']
     if table_ttl:
         x1, y1, x2, y2 = table_ttl.bbox.x1, table_ttl.bbox.y1, table_ttl.bbox.x2, table_ttl.bbox.y2
+        coords["table_ttl"].extend([x1, y1, x2, y2])
         table_ttl = image.crop((x1, y1, x2, y2))
 
     table_shp = defined_tables_on_bboxes['shipment']
     if table_shp:
         x1, y1, x2, y2 = table_shp.bbox.x1, table_shp.bbox.y1, table_shp.bbox.x2, table_shp.bbox.y2
+        coords["table_shp"].extend([x1, y1, x2, y2])
         table_shp = image.crop((x1, y1, x2, y2))
 
-    return table_ttl, table_shp
+    return table_ttl, table_shp, coords
 
 
 if __name__ == '__main__':
