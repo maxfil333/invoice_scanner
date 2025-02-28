@@ -15,13 +15,14 @@ from src.logger import logger
 from config.config import config, NAMES, running_params
 from src.crop_tables import extract_text_from_image
 from src.utils import chroma_similarity_search, is_without_nds, is_invoice, perfect_similarity, switch_to_latin
-from src.utils import convert_json_values_to_strings, handling_openai_json
-from src.utils import replace_container_with_latin, replace_container_with_none, remove_dates, DT_processing
+from src.utils import convert_json_values_to_strings, handling_openai_json, remove_dates
+from src.utils import replace_container_with_latin, replace_container_with_none, DT_processing, reports_processing
 from src.utils import check_sums, propagate_nds, replace_conos_with_none, replace_ship_with_none, extract_date_range
 from src.utils import delete_NER, delete_en_loc
 from src.utils import extract_goods_gaps
 
 from src.utils_config import get_stream_dotenv
+
 load_dotenv(stream=get_stream_dotenv())
 
 
@@ -292,22 +293,16 @@ def local_postprocessing(response, **kwargs) -> str | None:
                 good_dct[NAMES.local_conos] = ''
 
     # 10.5 Заключения
-    if not dct['additional_info']['Заключения']:
-        dct['additional_info']['Заключения'] = ''
+    if not dct[NAMES.add_info][NAMES.reports]:
+        dct[NAMES.add_info][NAMES.reports] = ''
     else:
-        dct['additional_info']['Заключения'] = list(set(map(lambda x: x.replace(' ', ''),
-                                                            dct['additional_info']['Заключения'])))
-        report_copy = dct['additional_info']['Заключения'].copy()  # изначальный список Заключений (копия)
-        report_regex = r'\d{6}-\d{3}-\d{2}'  # регулярка для проверки ДТ
-        for report in report_copy:
-            if not re.fullmatch(report_regex, report):
-                dct['additional_info']['Заключения'].remove(report)
+        reports_list = list(dict.fromkeys(map(lambda x: x.replace(' ', ''), dct[NAMES.add_info][NAMES.reports])))
+        dct[NAMES.add_info][NAMES.reports] = " ".join(reports_processing(reports_list, logger))
 
-        dct['additional_info']['Заключения'] = " ".join(dct['additional_info']['Заключения'])  # from list to string
         # Заполняем "Заключения (для услуги)" на основе "Наименования"
         for i_, good_dct in enumerate(dct[NAMES.goods]):
-            original_name = good_dct[NAMES.name]  # Наименование
-            reports = dct['additional_info'][NAMES.reports].split()
+            original_name = good_dct[NAMES.name]
+            reports = dct[NAMES.add_info][NAMES.reports].split()
             reports_regex = r'|'.join(reports)  # регулярка формата 'FOO|BAR|...'
             list_of_reports = list(set([x for x in re.findall(reports_regex, original_name) if x]))
 

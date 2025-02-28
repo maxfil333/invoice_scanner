@@ -1015,6 +1015,40 @@ def DT_processing(dt_list: list[str], logger) -> list[str]:
     return DT_true
 
 
+def reports_processing(reports_list: list[str], logger) -> list[str]:
+
+    reports_regex = r'\d{6}-\d{3}-\d{2}'  # регулярка для проверки
+
+    reports_true = []
+    reports_true_indexes = []
+    reports_buffer = []
+
+    for report in reports_list:
+        match = re.search(reports_regex, report)
+        if match:
+            reports_true.append(match.group())
+            reports_true_indexes.append(reports_list.index(report))
+        else:
+            reports_buffer.append(report)
+
+    # проверка спорных Заключений:
+    # бывает что Заключения "059612,059614,059611-015-24" распознается как ["059612", "059614", "059611-015-24"]
+    if reports_true:
+        for report_buffer in reports_buffer:
+            if report_buffer.isdigit() and len(report_buffer) == 6:
+                report_buffer_index = reports_list.index(report_buffer)
+                if report_buffer_index != len(reports_list) - 1:  # если не последний
+                    closest_bigger_dt_true_index = min([x for x in reports_true_indexes if x > report_buffer_index])
+                    reports_buffer_base = reports_list[closest_bigger_dt_true_index]
+                    if re.fullmatch(reports_regex, reports_buffer_base):
+                        reports_buffer_base_parts = reports_buffer_base.split(r'-')
+                        if len(reports_buffer_base_parts) == 3:
+                            new_report = report_buffer + '-' + reports_buffer_base_parts[1] + '-' + reports_buffer_base_parts[2]
+                            logger.print(f"created report: {report_buffer} -> {new_report}")
+                            reports_true.append(new_report)
+    return reports_true
+
+
 # _________________________________________________________________________ LOCAL POSTPROCESSING (distribute_conversion)
 
 # Чтобы получить конвертацию в РУБ нужен текущий курс, поэтому передаем конвертацию в ЦУП только! в валюте.
@@ -1222,9 +1256,9 @@ def balance_remainders_intact(result: str) -> str:
         else:
             intact_total -= float(good[NAMES.sum_w_nds])
             intact_total_nds -= float(good[NAMES.sum_w_nds]) - float(good[NAMES.sum_wo_nds])
-
-    balance_remainders(intact_goods, NAMES.sum_w_nds, intact_total, param_file=running_params)
-    balance_remainders(intact_goods, NAMES.sum_wo_nds, intact_total - intact_total_nds, param_file=running_params)
+    if intact_goods:
+        balance_remainders(intact_goods, NAMES.sum_w_nds, intact_total, param_file=running_params)
+        balance_remainders(intact_goods, NAMES.sum_wo_nds, intact_total - intact_total_nds, param_file=running_params)
     return json.dumps(result_dct, ensure_ascii=False)
 
 
