@@ -1,5 +1,6 @@
 import os
 import re
+import copy
 import json
 import openai
 import inspect
@@ -35,6 +36,7 @@ def local_postprocessing(response, **kwargs) -> str | None:
     logger.print(f'function "{inspect.stack()[1].function}":')
     dct = json.loads(re_response)
     dct = convert_json_values_to_strings(dct)
+    original_dct = copy.deepcopy(dct)
 
     additional_info: dict = dct['additional_info']
     container_regex = r'[A-ZА-Я]{3}U\s?[0-9]{6}-?[0-9]'
@@ -115,7 +117,7 @@ def local_postprocessing(response, **kwargs) -> str | None:
 
     for i_, good_dct in enumerate(dct[NAMES.goods]):
 
-        original_name = good_dct[NAMES.name]  # Наименование
+        original_name = original_dct[NAMES.goods][i_][NAMES.name]  # Наименование
 
         # 0 Извлекаем даты из наименования
         dates = extract_date_range(original_name)
@@ -175,7 +177,7 @@ def local_postprocessing(response, **kwargs) -> str | None:
         # query = re.sub(r'[^\s\w]', '', query)  # убираем спец символы: влияют на смысл больше чем нужно
         logger.print(f"query:\n{query}")
 
-        # 5.0 DIFFLIB (PERFECT MATCH)
+        # 5.1 DIFFLIB (PERFECT MATCH)
         perfect_result = None
         data = config.get('all_services_dict')
         if data:
@@ -187,7 +189,7 @@ def local_postprocessing(response, **kwargs) -> str | None:
                 logger.print(f"--- perfect match ---")
                 logger.print(f"response:\n{perfect_result}")
 
-        # 5.5 CHROMA (FULL SEARCH)
+        # 5.2 CHROMA (FULL SEARCH)
         if not perfect_result:
 
             def fill_in_service1c(good_dct: dict, prefix='') -> None:
@@ -237,7 +239,7 @@ def local_postprocessing(response, **kwargs) -> str | None:
         good_dct[NAMES.transactions_new] = ''
         good_dct[NAMES.transactions_type] = ''
 
-    # 6. check_sums
+    # check_sums
     try:
         dct = check_sums(dct)
     except Exception as error:
@@ -246,53 +248,52 @@ def local_postprocessing(response, **kwargs) -> str | None:
             good.pop(NAMES.price, None)
             good.pop(NAMES.sum_with, None)
             good.pop(NAMES.sum_nds, None)
-            good["Цена (без НДС)"] = ""
-            good["Сумма (без НДС)"] = ""
-            good["Цена (с НДС)"] = ""
-            good["Сумма (с НДС)"] = ""
-            good["price_type"] = ""
+            good[NAMES.price_wo_nds] = ""
+            good[NAMES.sum_wo_nds] = ""
+            good[NAMES.price_w_nds] = ""
+            good[NAMES.sum_w_nds] = ""
+            good[NAMES.price_type] = ""
         logger.print(f'!! ОШИБКА В CHECK_SUMS: {error} !!', traceback.format_exc())
 
-    # 6.1. уточнение НДС (0.0 или "Без НДС")
+    # Уточнение НДС (0.0 или "Без НДС")
     if float(dct[NAMES.total_nds]) == 0:
         current_text = '\n'.join(running_params['current_texts'])
         if is_without_nds(current_text):  # classify current text
             dct[NAMES.nds_percent] = NAMES.noNDS
 
-    # 6.2. split nds
+    # split nds
     dct = propagate_nds(dct)
 
-    # 8. AUTO | TRAILER
+    # AUTO | TRAILER
     dct['additional_info']['Номера_Авто'] = " ".join(am_plates_ru)
     dct['additional_info']['Номера_Прицепов'] = " ".join(am_trailer_plates_ru)
 
-    # 9. ДТ
-    DT_copy = dct['additional_info']['ДТ'].copy()  # изначальный список ДТ (копия)
-    dct['additional_info']['ДТ'] = " ".join(DT_processing(dt_list=DT_copy, logger=logger))
+    # ДТ
+    DT_copy = dct[NAMES.add_info][NAMES.dt].copy()  # изначальный список ДТ (копия)
+    dct[NAMES.add_info][NAMES.dt] = " ".join(DT_processing(dt_list=DT_copy, logger=logger))
 
-    # 10. Коносаменты
-    if not dct['additional_info']['Коносаменты']:
-        dct['additional_info']['Коносаменты'] = ''
+    # КС
+    if not dct[NAMES.add_info][NAMES.conos]:
+        dct[NAMES.add_info][NAMES.conos] = ''
     else:
         # Коносаменты from list to string: ["RU0163 075", "CO-NC94999", "CONOS 88"] -> "CO-NC94999 CONOS88 RU0163075"
-        list_of_conos = list(set(map(lambda x: x.replace(' ', ''), dct['additional_info']['Коносаменты'])))
-        # Убираем из кс контейнеры и ДТ, которые могли случайно попасть в кс
-        dct['additional_info']['Коносаменты'] = " ".join(list(filter(lambda x: x not in containers and x not in DT_copy,
-                                                                     list_of_conos)))
+        list_of_conos = list(dict.fromkeys(map(lambda x: x.replace(' ', ''), dct[NAMES.add_info][NAMES.conos])))
+        # Убираем из кс контейнеры и ДТ, которые могли случайно попасть
+        dct[NAMES.add_info][NAMES.conos] = " ".join(list(filter(lambda x: x not in containers and x not in DT_copy,
+                                                                list_of_conos)))
         # Заполняем "Коносаменты (для услуги)" на основе "Наименования"
         for i_, good_dct in enumerate(dct[NAMES.goods]):
-            original_name = good_dct[NAMES.name]  # Наименование
-            conoses = dct['additional_info']['Коносаменты'].split()
-            conoses_regex = r'|'.join(conoses)  # регулярка формата 'RU1234|RU5678|...'
-            list_of_conos = list(set([x for x in re.findall(conoses_regex, original_name) if x]))
+            original_name_ = original_dct[NAMES.goods][i_][NAMES.name]  # Наименование (без изменений)
+            conoses = dct[NAMES.add_info][NAMES.conos].split()
+            matched_conoses = [re.search(x, original_name_).group() for x in conoses if re.search(x, original_name_)]
 
             # INIT local_conos
-            if list_of_conos:
-                good_dct[NAMES.local_conos] = " ".join(list(filter(lambda x: x not in containers, list_of_conos)))
+            if matched_conoses:
+                good_dct[NAMES.local_conos] = " ".join(list(filter(lambda x: x not in containers, matched_conoses)))
             else:
                 good_dct[NAMES.local_conos] = ''
 
-    # 10.5 Заключения
+    # Заключения
     if not dct[NAMES.add_info][NAMES.reports]:
         dct[NAMES.add_info][NAMES.reports] = ''
     else:
@@ -312,14 +313,14 @@ def local_postprocessing(response, **kwargs) -> str | None:
             else:
                 good_dct[NAMES.local_reports] = ''
 
-    # 11. Судно
+    # Судно
     ship = dct['additional_info']['Судно']
     closest_match = difflib.get_close_matches(ship.upper(), config['ships'], n=1, cutoff=0.7)
     if closest_match:
         dct['additional_info']['Судно'] = closest_match[0]
         logger.print(f'find ship: {ship} --> {closest_match[0]}')
 
-    # 12. Идентификатор исходной позиции
+    # Идентификатор исходной позиции
     initial_id_counter = 1
     for i_, good_dct in enumerate(dct[NAMES.goods]):
         good_dct['__исходный_айди'] = f"{initial_id_counter}|{good_dct['Сумма (без НДС)']}|{good_dct['Сумма (с НДС)']}"
