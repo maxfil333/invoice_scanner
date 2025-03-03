@@ -156,7 +156,7 @@ class ConfigNames:
     good1C_new = 'Услуга1С (новая)'
     cont = 'Контейнеры'  # 2
     local_conos = 'Коносаменты (для услуги)'
-    dt = 'ДТ'
+    local_reports = 'Заключения (для услуги)'
     local_dt = 'ДТ (для услуги)'
     unit = 'Единица'  # 3
     amount = 'Количество'  # 4
@@ -180,8 +180,9 @@ class ConfigNames:
     type_of_document_opts = ['Счет', 'Другое']
     currency = 'Валюта документа'
     currency_opts = list(config['currency_dict'].values())
+    conos = 'Коносаменты'
     reports = 'Заключения'
-    local_reports = 'Заключения (для услуги)'
+    dt = 'ДТ'
     extra_deals = 'Найденные сделки'
     extra_deals_not = 'Ненайденные сделки'
     contract_details = "contract_details"
