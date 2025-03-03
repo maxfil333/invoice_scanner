@@ -137,22 +137,23 @@ def main(date_folder: str,
             result = project_postprocessing(result)
 
             # _____________ SPLIT BY CONTAINERS _____________
-            result, was_edited = split_by_local_field(result, loc_field_name=NAMES.cont)
+            original_goods = json.loads(result)[NAMES.goods]
+            result, was_edited = split_by_local_field(result=result, loc_field_name=NAMES.cont, was_edited=[])
 
             # _____________ SPLIT BY CONOSES _____________
-            if not was_edited:  # если уже было распределение по контейнерам, ничего не делать
+            if len(was_edited) < len(original_goods):  # Если есть услуги, которые не были split
                 if json.loads(result)['additional_info']['Коносаменты']:
-                    result, was_edited = split_by_local_field(result, loc_field_name=NAMES.local_conos)
+                    result, was_edited = split_by_local_field(result, NAMES.local_conos, was_edited)
+
+            # _____________ SPLIT BY REPORT _____________
+            if not was_edited:  # если уже было распределение по контейнерам/коносаментам/ДТ, ничего не делать
+                if json.loads(result)['additional_info'][NAMES.reports]:
+                    result, was_edited = combined_split_by_reports(json_str=result, was_edited=[])
 
             # _____________ SPLIT BY DT _____________
             if not was_edited:  # если уже было распределение по контейнерам/коносаментам, ничего не делать
                 if json.loads(result)['additional_info']['ДТ']:
                     result, was_edited = split_by_dt(result)
-
-            # _____________ SPLIT BY REPORT _____________
-            if not was_edited:  # если уже было распределение по контейнерам/коносаментам/ДТ, ничего не делать
-                if json.loads(result)['additional_info'][NAMES.reports]:
-                    result, was_edited = combined_split_by_reports(result)
 
             # _____________ BALANCE REMAINDERS _____________
             result = balance_remainders_intact(result)

@@ -1122,7 +1122,7 @@ def distribute_conversion(result: str):
         new_conversion_services.append(new_conversion_service)
         goods.extend(new_conversion_services)
         update_total(dct, new_conversion_services)
-        return json.dumps(dct, indent=4)
+        return json.dumps(dct, indent=4, ensure_ascii=False)
 
     # {'ABCU1234567': {'Сумма (без НДС)': 6000, 'Сумма (c НДС)': 7000}, 'DFGU1234567': {... }}
     conv_part_for_service = {}
@@ -1167,7 +1167,7 @@ def distribute_conversion(result: str):
 
     goods.extend(new_conversion_services)
     update_total(dct, new_conversion_services)
-    return json.dumps(dct, indent=4)
+    return json.dumps(dct, indent=4, ensure_ascii=False)
 
 
 # _________________________________________________________________________________________________________ TRANSACTIONS
@@ -1298,18 +1298,18 @@ def split_one_good(good: dict, loc_field_name: str) -> list[dict]:
     return split_objects
 
 
-def split_by_local_field(json_formatted_str: str, loc_field_name: str) -> tuple[str, bool]:
+def split_by_local_field(result: str, loc_field_name: str, was_edited: list) -> tuple[str, list]:
     """ Разделяет услугу если в local_field несколько (конт/кс/закл.) """
 
-    dct = json.loads(json_formatted_str)
+    dct = json.loads(result)
     goods = dct[NAMES.goods]
-    was_edited = False
     new_goods = []
     for good in goods:
-        if len(good.get(loc_field_name, '').split()) > 1:
+        init_id = good[NAMES.init_id].split("|")[0]
+        if len(good.get(loc_field_name, '').split()) > 1 and init_id not in was_edited:
             _new_goods = split_one_good(good, loc_field_name)
             new_goods.extend(_new_goods)
-            was_edited = True
+            was_edited.append(init_id)
         else:
             new_goods.append(good)
 
@@ -1397,25 +1397,23 @@ def split_by_dt(json_str: str) -> tuple[str, bool]:
         return json_str, False  # если нет, возвращаем без изменений
 
 
-def combined_split_by_reports(json_str: str) -> tuple[str, bool]:
+def combined_split_by_reports(json_str: str, was_edited) -> tuple[str, list]:
     # try to split by local_reports
-    result, was_edited = split_by_local_field(json_str, loc_field_name=NAMES.local_reports)
-
-    if was_edited:
+    start_was_edited = copy.copy(was_edited)
+    result, was_edited = split_by_local_field(json_str, loc_field_name=NAMES.local_reports, was_edited=was_edited)
+    end_was_edited = copy.copy(was_edited)
+    if start_was_edited != end_was_edited:
         return result, was_edited
 
     # try to split by global reports
-    else:
-        # если все local_reports пустые, сплит по global reports
-        if not any([x.get(NAMES.local_reports) for x in json.loads(result)[NAMES.goods]]):
-            reports = json.loads(result)['additional_info']['Заключения']
-            if reports and len(reports.split()) > 1:  # если есть Заключения и их несколько
-                was_edited = True
-                result = split_by_global_filed(json_str, global_field='Заключения', local_field=NAMES.local_reports)
-                return result, was_edited
+    # если все local_reports пустые, сплит по global reports
+    if not any([x.get(NAMES.local_reports) for x in json.loads(result)[NAMES.goods]]):
+        reports = json.loads(result)[NAMES.add_info][NAMES.reports]
+        if reports and len(reports.split()) > 1:  # если есть Заключения и их несколько
+            result = split_by_global_filed(json_str, global_field=NAMES.reports, local_field=NAMES.local_reports)
+            return result, was_edited
 
-        was_edited = False
-        return json_str, was_edited
+    return json_str, was_edited
 
 
 # _________ CHROMA DATABASE (CREATE CHUNKS AND DB) _________
