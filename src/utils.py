@@ -1072,10 +1072,6 @@ def distribute_conversion(result: str):
     if float(dct[NAMES.add_info][NAMES.conversion]) == 0:
         return result
 
-    if any([re.findall(r'конвертация|комиссия', x[NAMES.name], re.IGNORECASE) for x in dct[NAMES.goods]]):
-        dct[NAMES.add_info][NAMES.conversion] = '0'
-        return json.dumps(dct, ensure_ascii=False, indent=4)
-
     goods = dct[NAMES.goods]
 
     uniq_containers, uniq_conoses = {}, {}

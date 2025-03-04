@@ -34,11 +34,9 @@ def local_postprocessing(response, **kwargs) -> str | None:
     if re_response is None:
         return None
     logger.print(f'function "{inspect.stack()[1].function}":')
-    dct = json.loads(re_response)
-    dct = convert_json_values_to_strings(dct)
+    dct = convert_json_values_to_strings(json.loads(re_response))
     original_dct = copy.deepcopy(dct)
 
-    additional_info: dict = dct['additional_info']
     container_regex = r'[A-ZА-Я]{3}U\s?[0-9]{6}-?[0-9]'
     container_regex_lt = r'[A-Z]{3}U\s?[0-9]{6}-?[0-9]'
     am_plate_regex = r'[АВЕКМНОРСТУХABEKMHOPCTYX]{1}\s{0,3}\d{3}\s*[АВЕКМНОРСТУХABEKMHOPCTYX]{2}\s{0,3}\d{2,3}'
@@ -109,9 +107,12 @@ def local_postprocessing(response, **kwargs) -> str | None:
 
     # конвертация
     if currency == "РУБ":
-        additional_info['Конвертация'] = 0
+        dct[NAMES.add_info][NAMES.conversion] = 0
     else:
-        additional_info['Конвертация'] = int(float(additional_info['Конвертация']))
+        dct[NAMES.add_info][NAMES.conversion] = int(float(dct[NAMES.add_info][NAMES.conversion]))
+
+    if any([re.findall(r'конвертация|комиссия', x[NAMES.name], re.IGNORECASE) for x in dct[NAMES.goods]]):
+        dct[NAMES.add_info][NAMES.conversion] = 0
 
     # Услуги
 
@@ -171,8 +172,8 @@ def local_postprocessing(response, **kwargs) -> str | None:
 
         query = replace_container_with_none(good_dct[NAMES.name], container_regex)
         query = remove_dates(query)
-        query = replace_conos_with_none(query, additional_info['Коносаменты'])
-        query = replace_ship_with_none(query, additional_info['Судно'])
+        query = replace_conos_with_none(query, dct[NAMES.add_info][NAMES.conos])
+        query = replace_ship_with_none(query, dct[NAMES.add_info][NAMES.ship])
 
         # query = re.sub(r'[^\s\w]', '', query)  # убираем спец символы: влияют на смысл больше чем нужно
         logger.print(f"query:\n{query}")
@@ -265,8 +266,8 @@ def local_postprocessing(response, **kwargs) -> str | None:
     dct = propagate_nds(dct)
 
     # AUTO | TRAILER
-    dct['additional_info']['Номера_Авто'] = " ".join(am_plates_ru)
-    dct['additional_info']['Номера_Прицепов'] = " ".join(am_trailer_plates_ru)
+    dct[NAMES.add_info]['Номера_Авто'] = " ".join(am_plates_ru)
+    dct[NAMES.add_info]['Номера_Прицепов'] = " ".join(am_trailer_plates_ru)
 
     # ДТ
     DT_copy = dct[NAMES.add_info][NAMES.dt].copy()  # изначальный список ДТ (копия)
@@ -314,10 +315,10 @@ def local_postprocessing(response, **kwargs) -> str | None:
                 good_dct[NAMES.local_reports] = ''
 
     # Судно
-    ship = dct['additional_info']['Судно']
+    ship = dct[NAMES.add_info][NAMES.ship]
     closest_match = difflib.get_close_matches(ship.upper(), config['ships'], n=1, cutoff=0.7)
     if closest_match:
-        dct['additional_info']['Судно'] = closest_match[0]
+        dct[NAMES.add_info][NAMES.ship] = closest_match[0]
         logger.print(f'find ship: {ship} --> {closest_match[0]}')
 
     # Идентификатор исходной позиции
