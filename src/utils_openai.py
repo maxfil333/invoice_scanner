@@ -110,6 +110,7 @@ def pdf_to_ai_details(file: str, test_mode: bool, text_to_assistant: bool, confi
     if not text_to_assistant:
         result = run_chat_pydantic(file,
                                    response_format_pydantic=ResponseDetails,
+                                   prompt=config['system_prompt_details'],
                                    text_content=running_params['current_texts_plumber'])
         return processResponseDetails(result)
     else:

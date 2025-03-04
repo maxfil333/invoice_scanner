@@ -183,6 +183,7 @@ class ConfigNames:
     conos = 'Коносаменты'
     reports = 'Заключения'
     dt = 'ДТ'
+    ship = 'Судно'
     extra_deals = 'Найденные сделки'
     extra_deals_not = 'Ненайденные сделки'
     contract_details = "contract_details"
@@ -312,6 +313,11 @@ config['no_details_response_format'] = {"type": "json_schema", "json_schema": JS
 
 config['system_prompt'] = f"""
 Ты бот, анализирующий документы (счета).
+""".strip()
+
+config['system_prompt_details'] = f"""
+Поставщик (supplier) - получатель платежа.
+Покупатель (customer) - отправитель платежа.
 """.strip()
 
 # Если имеются две и более таблиц, описывающих один и тот же набор данных, собирай как можно больше информации со всех таблиц.
