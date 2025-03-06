@@ -408,15 +408,16 @@ def image_upstanding(img: np.ndarray) -> np.ndarray:
     return img
 
 
-def image_upstanding_and_rotate(image: np.ndarray) -> Image:
+def image_upstanding_and_rotate(image: np.ndarray) -> Image.Image:
     try:
         upstanding = image_upstanding(image)  # 0-90-180-270 rotate
     except:
         upstanding = image
     try:
-        rotated = Image.fromarray(custom_rotate(upstanding))  # accurate rotate
+        rotated = custom_rotate(upstanding)  # accurate rotate
     except:
         rotated = upstanding
+    rotated = Image.fromarray(rotated)
     if rotated.mode == "RGBA":
         rotated = rotated.convert('RGB')
     return rotated
@@ -440,7 +441,7 @@ def is_scanned_pdf(file_path, pages_to_analyse=None) -> Optional[bool]:
             for page_num in pages:
                 page = reader.pages[page_num]
                 text = page.extract_text()
-                if text.strip():
+                if text.strip() and len(text.strip()) > 30:
                     digit_list.append(page_num)  # Если текст найден
                 else:
                     scan_list.append(page_num)  # Если текст не найден
