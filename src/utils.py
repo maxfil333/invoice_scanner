@@ -78,6 +78,7 @@ def time_it(func):
         end_time = time.time()
         print(f"Функция {func.__name__} выполнялась {end_time - start_time:.6f} секунд")
         return result
+
     return wrapper
 
 
@@ -982,7 +983,6 @@ def extract_date_range(text: str) -> str:
 
 
 def DT_processing(dt_list: list[str], logger) -> list[str]:
-
     dt_list = list(dict.fromkeys(dt_list))
     dt_regex = r'\d{8}/\d{6}/\d{7}'  # регулярка для проверки ДТ
 
@@ -1017,7 +1017,6 @@ def DT_processing(dt_list: list[str], logger) -> list[str]:
 
 
 def reports_processing(reports_list: list[str], logger) -> list[str]:
-
     reports_regex = r'\d{6}-\d{3}-\d{2}'  # регулярка для проверки
 
     reports_true = []
@@ -1044,7 +1043,8 @@ def reports_processing(reports_list: list[str], logger) -> list[str]:
                     if re.fullmatch(reports_regex, reports_buffer_base):
                         reports_buffer_base_parts = reports_buffer_base.split(r'-')
                         if len(reports_buffer_base_parts) == 3:
-                            new_report = report_buffer + '-' + reports_buffer_base_parts[1] + '-' + reports_buffer_base_parts[2]
+                            new_report = report_buffer + '-' + reports_buffer_base_parts[1] + '-' + \
+                                         reports_buffer_base_parts[2]
                             logger.print(f"created report: {report_buffer} -> {new_report}")
                             reports_true.append(new_report)
     return reports_true
@@ -1260,21 +1260,24 @@ def balance_remainders_intact(result: str) -> str:
 
 
 # _________________________________________________________________________________________ TRANSACTIONS (service_split)
-def split_one_good(good: dict, loc_field_name: str) -> list[dict]:
-    """ Вспомогательная функция для split_by_local_field """
+def split_one_good(good: dict, items: list[str], loc_field_name: str) -> list[dict]:
+    """
+    Вспомогательная функция для split_by_local_field
 
-    # Разделение строки по указанному полю
-    items = good[loc_field_name].split()  # разделение по local параметру
-    num_items = len(items)
+    good: Услуга (позиция), которая будет разделена;
+    items: Список конт/кс/заключений/дт, на которые будет разбита позиция;
+    loc_field_name: Поле для записи локального item
+    """
 
     # Исходные суммы позиции
     old_sum_without_tax = float(good[NAMES.sum_wo_nds])
     old_sum_with_tax = float(good[NAMES.sum_w_nds])
+    amount = float(good[NAMES.amount])
 
     # Разделение количественных данных
-    quantity_per_item = float(good[NAMES.amount]) / num_items
-    sum_without_tax_per_item = old_sum_without_tax / num_items
-    sum_with_tax_per_item = old_sum_with_tax / num_items
+    quantity_per_item = float(good[NAMES.amount]) / len(items)
+    sum_without_tax_per_item = old_sum_without_tax / len(items)
+    sum_with_tax_per_item = old_sum_with_tax / len(items)
 
     # Создание списка новых объектов
     split_objects = []
@@ -1282,13 +1285,14 @@ def split_one_good(good: dict, loc_field_name: str) -> list[dict]:
         new_obj = good.copy()  # Копирование исходного объекта
 
         # INIT local_param
-        new_obj[loc_field_name] = item  # Присваивание одного элемента (контейнер/коносамент)
+        new_obj[loc_field_name] = item
         new_obj[NAMES.amount] = round(quantity_per_item, 2)  # Новое количество
         new_obj[NAMES.sum_wo_nds] = round(sum_without_tax_per_item, 2)  # Новая сумма без НДС
         new_obj[NAMES.sum_w_nds] = round(sum_with_tax_per_item, 2)  # Новая сумма с НДС
         split_objects.append(new_obj)
 
     # Распределение остатков
+    balance_remainders(split_objects, NAMES.amount, amount, param_file=running_params)
     balance_remainders(split_objects, NAMES.sum_w_nds, old_sum_with_tax, param_file=running_params)
     balance_remainders(split_objects, NAMES.sum_wo_nds, old_sum_without_tax, param_file=running_params)
 
@@ -1303,8 +1307,9 @@ def split_by_local_field(result: str, loc_field_name: str, was_edited: list) -> 
     new_goods = []
     for good in goods:
         init_id = good[NAMES.init_id].split("|")[0]
-        if len(good.get(loc_field_name, '').split()) > 1 and init_id not in was_edited:
-            _new_goods = split_one_good(good, loc_field_name)
+        items = good.get(loc_field_name, '').split()
+        if len(items) > 1 and init_id not in was_edited:
+            _new_goods = split_one_good(good=good, items=items, loc_field_name=loc_field_name)
             new_goods.extend(_new_goods)
             was_edited.append(init_id)
         else:
@@ -1316,43 +1321,13 @@ def split_by_local_field(result: str, loc_field_name: str, was_edited: list) -> 
 
 
 def split_by_global_filed(json_formatted_str: str, global_field: str, local_field: str) -> str:
-    def one_split(good: dict, items) -> list[dict]:
-
-        # Исходные суммы позиции
-        old_sum_without_tax = float(good[NAMES.sum_wo_nds])
-        old_sum_with_tax = float(good[NAMES.sum_w_nds])
-        amount = float(good[NAMES.amount])
-
-        # Разделение количественных данных
-        quantity_per_item = float(good[NAMES.amount]) / len(items)
-        sum_without_tax_per_item = old_sum_without_tax / len(items)
-        sum_with_tax_per_item = old_sum_with_tax / len(items)
-
-        # Создание списка новых объектов
-        split_objects = []
-        for item in items:
-            new_obj = good.copy()  # Копирование исходного объекта
-
-            # INIT local_field:
-            new_obj[local_field] = item
-            new_obj[NAMES.amount] = round(quantity_per_item, 2)  # Новое количество
-            new_obj[NAMES.sum_wo_nds] = round(sum_without_tax_per_item, 2)  # Новая сумма без НДС
-            new_obj[NAMES.sum_w_nds] = round(sum_with_tax_per_item, 2)  # Новая сумма с НДС
-            split_objects.append(new_obj)
-
-        # Распределение остатков
-        balance_remainders(split_objects, NAMES.amount, amount, param_file=running_params)
-        balance_remainders(split_objects, NAMES.sum_w_nds, old_sum_with_tax, param_file=running_params)
-        balance_remainders(split_objects, NAMES.sum_wo_nds, old_sum_without_tax, param_file=running_params)
-
-        return split_objects
 
     dct = json.loads(json_formatted_str)
     items: list[str] = dct['additional_info'][global_field].split()  # список всех (общих) ДТ/Заключений
 
     new_goods = []
 
-    # частный алгоритм для ДТ (если есть goods_gaps)
+    # >>> частный алгоритм для ДТ (если есть goods_gaps)
     try:
         if running_params.get(NAMES.goods_gaps) and global_field == NAMES.dt:
             for i, good in enumerate(dct[NAMES.goods]):
@@ -1367,16 +1342,19 @@ def split_by_global_filed(json_formatted_str: str, global_field: str, local_fiel
                 if not local_dts:
                     raise BreakLoop
                 else:
-                    _new_goods = one_split(good=good, items=local_dts)  # позицию разбиваем на len(local_dts) подпозиций
+                    # позицию разбиваем на len(local_dts) подпозиций
+                    _new_goods = split_one_good(good=good, items=local_dts, loc_field_name=local_field)
                     new_goods.extend(_new_goods)
     except BreakLoop:
         new_goods = []
         logger.print("--- В одной из услуг не найдено ДТ. Распределяю по всем ДТ ---")
+    # <<< частный алгоритм для ДТ (если есть goods_gaps)
 
     # общий алгоритм (деление всех услуг на все ДТ)
     if not new_goods:
         for i, good in enumerate(dct[NAMES.goods]):
-            _new_goods = one_split(good=good, items=items)  # каждую позицию разбиваем на len(items) подпозиций
+            # каждую позицию разбиваем на len(items) подпозиций
+            _new_goods = split_one_good(good=good, items=items, loc_field_name=local_field)
             new_goods.extend(_new_goods)
 
     dct[NAMES.goods] = new_goods
