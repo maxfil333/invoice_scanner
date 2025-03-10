@@ -138,22 +138,25 @@ def main(date_folder: str,
 
             # _____________ SPLIT BY CONTAINERS _____________
             original_goods = json.loads(result)[NAMES.goods]
-            result, was_edited = split_by_local_field(result=result, loc_field_name=NAMES.cont, was_edited=[])
-
-            # _____________ SPLIT BY CONOSES _____________
-            if len(was_edited) < len(original_goods):  # Если есть услуги, которые не были split
-                if json.loads(result)['additional_info']['Коносаменты']:
-                    result, was_edited = combined_split_by_conos(result, was_edited)
+            result, cont_edited = split_by_local_field(result=result, loc_field_name=NAMES.cont, was_edited=[])
 
             # _____________ SPLIT BY REPORT _____________
-            if not was_edited:  # если уже было распределение по контейнерам/коносаментам, ничего не делать
-                if json.loads(result)['additional_info'][NAMES.reports]:
-                    result, was_edited = combined_split_by_reports(json_str=result, was_edited=[])
+            report_edited = None
+            if not cont_edited:  # если не было распределения по контейнерам
+                if json.loads(result)[NAMES.add_info][NAMES.reports]:
+                    result, report_edited = combined_split_by_reports(json_str=result, was_edited=[])
 
             # _____________ SPLIT BY DT _____________
-            if not was_edited:  # если уже было распределение по контейнерам/коносаментам/заключениям, ничего не делать
-                if json.loads(result)['additional_info']['ДТ']:
-                    result, was_edited = split_by_dt(result)
+            dt_edited = None
+            if not cont_edited and not report_edited:  # если не было распределения по контейнерам/заключениям
+                if json.loads(result)[NAMES.add_info][NAMES.dt]:
+                    result, dt_edited = split_by_dt(result)
+
+            # _____________ SPLIT BY CONOSES _____________
+            if not report_edited and not dt_edited:  # если не было распределения по заключениям/ДТ
+                if len(cont_edited) < len(original_goods):  # если есть услуги, которые не были split
+                    if json.loads(result)[NAMES.add_info][NAMES.conos]:
+                        result, was_edited = combined_split_by_conos(result, cont_edited)
 
             # _____________ BALANCE REMAINDERS _____________
             result = balance_remainders_intact(result)
