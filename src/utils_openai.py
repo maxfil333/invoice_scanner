@@ -3,7 +3,7 @@ import json
 
 from config.config import config, NAMES
 from src.logger import logger
-from src.utils import extract_text_with_fitz, extract_text_with_pdfplumber, extract_excel_text, count_extensions
+from src.utils import extract_text_with_fitz, extract_text_with_miner_coords, extract_excel_text, count_extensions
 from src.main_openai import run_chat, run_assistant, run_chat_pydantic
 from src.models import ResponseDetails, processResponseDetails
 
@@ -99,7 +99,7 @@ def title_page_to_ai(title_path: str, test_mode: bool, text_to_assistant: bool, 
 def pdf_to_ai_details(file: str, test_mode: bool, text_to_assistant: bool, config: dict, running_params: dict) -> str:
     running_params.setdefault('text_or_scanned_folder', config['NAME_text'])
     running_params.setdefault('current_texts', extract_text_with_fitz(file))
-    running_params.setdefault('current_texts_plumber', extract_text_with_pdfplumber(file))
+    running_params.setdefault('current_texts_miner', extract_text_with_miner_coords(file))
     running_params.setdefault('doc_type', 'pdf')
     if test_mode:
         with open(config['TESTFILE'], 'r', encoding='utf-8') as f:
@@ -111,7 +111,7 @@ def pdf_to_ai_details(file: str, test_mode: bool, text_to_assistant: bool, confi
         result = run_chat_pydantic(file,
                                    response_format_pydantic=ResponseDetails,
                                    prompt=config['system_prompt_details'],
-                                   text_content=running_params['current_texts_plumber'])
+                                   text_content=running_params['current_texts_miner'])
         return processResponseDetails(result)
     else:
         result = run_assistant(file)
