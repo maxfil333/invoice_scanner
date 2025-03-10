@@ -28,6 +28,8 @@ from typing import Literal, Optional
 from PIL import Image, ImageDraw, ImageFont
 from decimal import Decimal, ROUND_HALF_DOWN
 from langchain_openai import OpenAIEmbeddings
+from pdfminer.layout import LTTextBox, LTTextLine
+from pdfminer.high_level import extract_pages as extract_pages_miner
 from langchain_community.vectorstores import Chroma
 from natasha import Segmenter, NewsEmbedding, NewsNERTagger, Doc
 
@@ -491,6 +493,66 @@ def extract_text_with_pdfplumber(pdf_path) -> list[str]:
         for page in pdf.pages:
             texts.append(page.extract_text() or "")
     return texts
+
+
+def extract_text_with_miner_coords(pdf_path, y_tolerance=5):
+    """
+    Извлекает текст из PDF-файла с координатами строк, учитывая запас смещения по y.
+
+    :param pdf_path: Путь к PDF-файлу (строка)
+    :param y_tolerance: Запас смещения по y для группировки строк (по умолчанию 10)
+    :return: Список строк, где каждая строка — это текст страницы с учетом структуры
+    """
+    text_with_coords = []
+
+    # Извлекаем страницы из PDF
+    for page_layout in extract_pages_miner(pdf_path):
+        lines = []
+        # Проходим по элементам страницы
+        for element in page_layout:
+            if isinstance(element, LTTextBox):
+                # Обрабатываем текстовые блоки
+                for text_line in element:
+                    if isinstance(text_line, LTTextLine):
+                        # Получаем координаты и текст строки
+                        x0, y0, x1, y1 = text_line.bbox
+                        text = text_line.get_text().strip()
+                        if text:  # Пропускаем пустые строки
+                            lines.append((text, (x0, y0, x1, y1)))
+
+        # Сортируем строки по y1 сверху вниз
+        lines.sort(key=lambda x: -x[1][1])
+
+        # Группируем строки по y-координате с учетом запаса смещения
+        grouped_lines = []
+        current_group = []
+        prev_y = None
+
+        for line in lines:
+            text, (x0, y0, x1, y1) = line
+            if prev_y is None or abs(y1 - prev_y) <= y_tolerance:
+                current_group.append(line)
+            else:
+                # Сортируем текущую группу по x0 (слева направо)
+                current_group.sort(key=lambda x: x[1][0])
+                grouped_lines.append(current_group)
+                current_group = [line]
+            prev_y = y1
+
+        # Добавляем последнюю группу
+        if current_group:
+            current_group.sort(key=lambda x: x[1][0])
+            grouped_lines.append(current_group)
+
+        # Объединяем текст из групп
+        page_text = ""
+        for group in grouped_lines:
+            group_text = " ".join([text for text, _ in group])
+            page_text += group_text + "\n"
+
+        text_with_coords.append(page_text)
+
+    return text_with_coords
 
 
 def align_pdf_orientation(input_file: str | bytes, output_pdf_path: str) -> None:
