@@ -1,5 +1,6 @@
 import os
 import json
+import fitz
 import shutil
 import traceback
 import subprocess
@@ -10,7 +11,7 @@ from pdf2image import convert_from_path
 
 from config.config import config, NAMES
 from src.logger import logger
-from src.utils import is_scanned_pdf, count_pages, align_pdf_orientation, extract_pages, delete_all_files
+from src.utils import is_scanned_pdf, count_pages, extract_pages, delete_all_files
 from src.utils import filtering_and_foldering_files, mark_get_required_pages, mark_get_main_file, mark_get_title
 from src.utils import add_text_bar, image_upstanding_and_rotate, rename_files_in_directory
 from src.crop_tables import define_and_return
@@ -66,17 +67,17 @@ def main(dir_path: str = config['IN_FOLDER'], hide_logs=False, stop_when=-1):
                 print('file type: digital')
                 if required_pages:
                     pdf_bytes = extract_pages(main_file, pages_to_keep=required_pages)
-                    align_pdf_orientation(pdf_bytes, main_save_path)
+                    fitz.open("pdf", pdf_bytes).save(main_save_path)
                     if title_page:
                         pdf_bytes = extract_pages(main_file, pages_to_keep=[title_page])
                         os.makedirs(os.path.join(edited_folder, 'title_page'))
-                        align_pdf_orientation(pdf_bytes, os.path.join(edited_folder, 'title_page', main_base))
+                        fitz.open("pdf", pdf_bytes).save(os.path.join(edited_folder, 'title_page', main_base))
 
                 else:
                     if count_pages(main_file) > 7:
                         logger.print(f'page limit exceeded in {main_file}')
                         continue
-                    align_pdf_orientation(main_file, main_save_path)
+                    fitz.open(main_file).save(main_save_path)
 
             # if file is (image | scanned pdf)
             else:
