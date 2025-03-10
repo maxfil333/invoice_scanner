@@ -146,12 +146,12 @@ def main(date_folder: str,
                     result, was_edited = combined_split_by_conos(result, was_edited)
 
             # _____________ SPLIT BY REPORT _____________
-            if not was_edited:  # если уже было распределение по контейнерам/коносаментам/ДТ, ничего не делать
+            if not was_edited:  # если уже было распределение по контейнерам/коносаментам, ничего не делать
                 if json.loads(result)['additional_info'][NAMES.reports]:
                     result, was_edited = combined_split_by_reports(json_str=result, was_edited=[])
 
             # _____________ SPLIT BY DT _____________
-            if not was_edited:  # если уже было распределение по контейнерам/коносаментам, ничего не делать
+            if not was_edited:  # если уже было распределение по контейнерам/коносаментам/заключениям, ничего не делать
                 if json.loads(result)['additional_info']['ДТ']:
                     result, was_edited = split_by_dt(result)
 

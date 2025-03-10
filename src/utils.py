@@ -1320,17 +1320,18 @@ def split_by_local_field(result: str, loc_field_name: str, was_edited: list) -> 
     return json.dumps(dct, ensure_ascii=False, indent=4), was_edited
 
 
-def split_by_global_filed(json_formatted_str: str, global_field: str, local_field: str) -> str:
-
+def split_by_global_filed(json_formatted_str: str, global_field: str, local_field: str) -> tuple[str, list]:
     dct = json.loads(json_formatted_str)
-    items: list[str] = dct['additional_info'][global_field].split()  # список всех (общих) ДТ/Заключений
+    items: list[str] = dct[NAMES.add_info][global_field].split()  # список всех (общих) ДТ/Заключений
 
     new_goods = []
+    was_edited = []
 
     # >>> частный алгоритм для ДТ (если есть goods_gaps)
     try:
         if running_params.get(NAMES.goods_gaps) and global_field == NAMES.dt:
             for i, good in enumerate(dct[NAMES.goods]):
+                init_id = good[NAMES.init_id].split("|")[0]
                 local_dts: list[str] = []
                 gap = running_params[NAMES.goods_gaps][i]
                 gap = re.sub(r'\s+', '', gap)
@@ -1345,31 +1346,35 @@ def split_by_global_filed(json_formatted_str: str, global_field: str, local_fiel
                     # позицию разбиваем на len(local_dts) подпозиций
                     _new_goods = split_one_good(good=good, items=local_dts, loc_field_name=local_field)
                     new_goods.extend(_new_goods)
+                    was_edited.append(init_id)
     except BreakLoop:
         new_goods = []
+        was_edited = []
         logger.print("--- В одной из услуг не найдено ДТ. Распределяю по всем ДТ ---")
     # <<< частный алгоритм для ДТ (если есть goods_gaps)
 
-    # общий алгоритм (деление всех услуг на все ДТ)
+    # общий алгоритм (деление всех услуг на все global_field items)
     if not new_goods:
         for i, good in enumerate(dct[NAMES.goods]):
+            init_id = good[NAMES.init_id].split("|")[0]
             # каждую позицию разбиваем на len(items) подпозиций
             _new_goods = split_one_good(good=good, items=items, loc_field_name=local_field)
             new_goods.extend(_new_goods)
+            was_edited.append(init_id)
 
     dct[NAMES.goods] = new_goods
-    return json.dumps(dct, ensure_ascii=False, indent=4)
+    return json.dumps(dct, ensure_ascii=False, indent=4), was_edited
 
 
-def split_by_dt(json_str: str) -> tuple[str, bool]:
+def split_by_dt(json_str: str) -> tuple[str, list]:
     """ split by global dt """
 
-    DT = json.loads(json_str)['additional_info']['ДТ']
+    DT = json.loads(json_str)[NAMES.add_info][NAMES.dt]
     if DT and len(DT.split()) > 1:  # если есть global ДТ и их несколько
-        result = split_by_global_filed(json_str, global_field='ДТ', local_field=NAMES.local_dt)
-        return result, True  # was_edited
+        result, was_edited = split_by_global_filed(json_str, global_field=NAMES.dt, local_field=NAMES.local_dt)
+        return result, was_edited
     else:
-        return json_str, False  # если нет, возвращаем без изменений
+        return json_str, []  # если нет, возвращаем без изменений
 
 
 def combined_split_by_reports(json_str: str, was_edited) -> tuple[str, list]:
@@ -1385,7 +1390,7 @@ def combined_split_by_reports(json_str: str, was_edited) -> tuple[str, list]:
     if not any([x.get(NAMES.local_reports) for x in json.loads(result)[NAMES.goods]]):
         reports = json.loads(result)[NAMES.add_info][NAMES.reports]
         if reports and len(reports.split()) > 1:  # если есть Заключения и их несколько
-            result = split_by_global_filed(json_str, global_field=NAMES.reports, local_field=NAMES.local_reports)
+            result, was_edited = split_by_global_filed(json_str, global_field=NAMES.reports, local_field=NAMES.local_reports)
             return result, was_edited
 
     return json_str, was_edited
@@ -1402,13 +1407,13 @@ def combined_split_by_conos(json_str: str, was_edited) -> tuple[str, list]:
     # try to split by global conos
     global_conos = json.loads(result)[NAMES.add_info][NAMES.conos]
     if global_conos and len(global_conos.split()) > 1:  # если есть Коносаменты и их несколько
-        result = split_by_global_filed(json_str, global_field=NAMES.conos, local_field=NAMES.local_conos)
+        result, was_edited = split_by_global_filed(json_str, global_field=NAMES.conos, local_field=NAMES.local_conos)
         return result, was_edited
 
     return json_str, was_edited
 
 
-# _________ CHROMA DATABASE (CREATE CHUNKS AND DB) _________
+# _______________________________________________________________________________ CHROMA DATABASE (CREATE CHUNKS AND DB)
 
 def create_chunks_from_json(json_path: str, truncation=200) -> dict:
     with open(json_path, encoding='utf-8') as f:
