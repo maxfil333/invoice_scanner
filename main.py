@@ -21,7 +21,7 @@ from src.response_postprocessing import local_postprocessing
 from src.transactions import get_transaction_number
 from src.generate_html import create_html_form
 from src.utils import create_vector_database, balance_remainders_intact, create_date_folder_in_check
-from src.utils import split_by_local_field, split_by_dt, combined_split_by_reports, distribute_conversion
+from src.utils import split_by_local_field, split_by_dt, combined_split_by_conos, combined_split_by_reports, distribute_conversion
 from src.utils import order_goods, cleanup_empty_fields, order_keys, convert_json_values_to_strings
 
 
@@ -143,7 +143,7 @@ def main(date_folder: str,
             # _____________ SPLIT BY CONOSES _____________
             if len(was_edited) < len(original_goods):  # Если есть услуги, которые не были split
                 if json.loads(result)['additional_info']['Коносаменты']:
-                    result, was_edited = split_by_local_field(result, NAMES.local_conos, was_edited)
+                    result, was_edited = combined_split_by_conos(result, was_edited)
 
             # _____________ SPLIT BY REPORT _____________
             if not was_edited:  # если уже было распределение по контейнерам/коносаментам/ДТ, ничего не делать

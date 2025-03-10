@@ -1391,6 +1391,23 @@ def combined_split_by_reports(json_str: str, was_edited) -> tuple[str, list]:
     return json_str, was_edited
 
 
+def combined_split_by_conos(json_str: str, was_edited) -> tuple[str, list]:
+    # try to split by local_conos
+    result, was_edited = split_by_local_field(json_str, NAMES.local_conos, was_edited)
+    if was_edited:
+        return result, was_edited
+    if any([(good.get(NAMES.cont) or good.get(NAMES.local_conos)) for good in json.loads(json_str)[NAMES.goods]]):
+        return result, was_edited
+
+    # try to split by global conos
+    global_conos = json.loads(result)[NAMES.add_info][NAMES.conos]
+    if global_conos and len(global_conos.split()) > 1:  # если есть Коносаменты и их несколько
+        result = split_by_global_filed(json_str, global_field=NAMES.conos, local_field=NAMES.local_conos)
+        return result, was_edited
+
+    return json_str, was_edited
+
+
 # _________ CHROMA DATABASE (CREATE CHUNKS AND DB) _________
 
 def create_chunks_from_json(json_path: str, truncation=200) -> dict:
